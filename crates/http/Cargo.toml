@@ -4,7 +4,7 @@
 
 [package]
 name = "reallyme-openid4vp-http"
-version = "0.1.0"
+version = "0.1.1"
 description = "Optional OpenID4VP HTTP transport adapter traits."
 edition.workspace = true
 rust-version.workspace = true
@@ -19,8 +19,8 @@ native = ["reallyme-openid4vp-wallet/native"]
 wasm = ["reallyme-openid4vp-wallet/wasm"]
 
 [dependencies]
-reallyme-openid4vp-types = { path = "../types", version = "0.1.0", default-features = false }
-reallyme-openid4vp-wallet = { path = "../wallet", version = "0.1.0", default-features = false }
+reallyme-openid4vp-types = { path = "../types", version = "0.1.1", default-features = false }
+reallyme-openid4vp-wallet = { path = "../wallet", version = "0.1.1", default-features = false }
 thiserror = { workspace = true }
 zeroize = { workspace = true }
 

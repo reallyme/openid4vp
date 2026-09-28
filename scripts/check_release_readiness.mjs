@@ -385,7 +385,7 @@ function checkWorkspacePackagePolicy(metadata) {
         if (
           approvedPathSuffix === undefined
           || !normalizedPath.endsWith(approvedPathSuffix)
-          || !isCaretReqSatisfied(dep.req, "0.1.0")
+          || !isCaretReqSatisfied(dep.req, "0.1.1")
         ) {
           recordFailure(`${pkg.name}: unapproved external path dependency ${depName}`);
         }
@@ -601,7 +601,7 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "README.md",
-    "crates.io version `0.3.3`",
+    "crates.io version `0.3.4`",
     "current exact SSI dependency version",
   );
   rejectText(
@@ -620,12 +620,12 @@ function checkRepositoryPolicy() {
     "ConnectServer",
     "Connect-owned runtime error",
   );
-  requireText("Cargo.toml", 'reallyme-jose = { version = "=0.4.0", default-features = false }', "registry ReallyMe jose dependency");
+  requireText("Cargo.toml", 'reallyme-jose = { version = "=0.4.2", default-features = false }', "registry ReallyMe jose dependency");
   requireText("Cargo.toml", 'reallyme-codec = { version = "=0.2.3", default-features = false }', "registry ReallyMe codec dependency");
   requireText("Cargo.toml", 'reallyme-crypto = { version = "=0.3.9", default-features = false }', "registry ReallyMe crypto dependency");
   requireText(
     "Cargo.toml",
-    'reallyme-ssi-proto = { version = "=0.3.3", default-features = false }',
+    'reallyme-ssi-proto = { version = "=0.3.4", default-features = false }',
     "registry SSI canonical proto dependency",
   );
   rejectText(
@@ -640,14 +640,14 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "Cargo.toml",
-    'reallyme-openid4vc-profiles = { version = "=0.3.3", default-features = false }',
+    'reallyme-openid4vc-profiles = { version = "=0.3.4", default-features = false }',
     "registry shared OpenID4VC profiles dependency",
   );
   rejectText("Cargo.toml", 'path = "../ssi/', "SSI sibling dependency path");
   rejectText("Cargo.toml", 'path = "../identity/', "old identity sibling dependency path");
   requireText(
     "crates/dc-api/Cargo.toml",
-    'reallyme-mdoc = { version = "=0.3.3", default-features = false }',
+    'reallyme-mdoc = { version = "=0.3.4", default-features = false }',
     "registry SSI mdoc dependency",
   );
   rejectText(
@@ -662,12 +662,12 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "crates/formats/Cargo.toml",
-    'reallyme-mdoc = { version = "=0.3.3", default-features = false }',
+    'reallyme-mdoc = { version = "=0.3.4", default-features = false }',
     "formats registry SSI mdoc dependency",
   );
   requireText(
     "crates/formats/Cargo.toml",
-    'reallyme-sd-jwt = { version = "=0.3.3", default-features = false }',
+    'reallyme-sd-jwt = { version = "=0.3.4", default-features = false }',
     "formats registry SSI SD-JWT dependency",
   );
   rejectText(
@@ -900,7 +900,7 @@ function checkRepositoryPolicy() {
   );
   requireText(
     ".github/workflows/crates-package-preflight.yml",
-    "default: 0.1.0",
+    "default: 0.1.1",
     "package preflight version default",
   );
   requireText(

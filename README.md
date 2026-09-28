@@ -180,7 +180,7 @@ Without that adapter, ZK presentations fail closed.
 
 Released dependencies resolve from crates.io; a sibling checkout is not
 required. Released SSI dependencies are exact-version pinned by the workspace
-and release gate; the current assurance baseline is crates.io version `0.3.3`.
+and release gate; the current assurance baseline is crates.io version `0.3.4`.
 
 ## Repository structure
 

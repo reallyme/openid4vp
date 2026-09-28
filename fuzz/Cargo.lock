@@ -3,6 +3,12 @@
 version = 4
 
 [[package]]
+name = "adler2"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
+
+[[package]]
 name = "aead"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -411,6 +417,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crc32fast"
+version = "1.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01a7799fd6b852db0e61728dde9a204c423b44d689dbd432522543614b490e78"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "crunchy"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -694,6 +709,16 @@ name = "find-msvc-tools"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ef25905e51abafe4dcea6c15fec58c57b601cdbd0ee53d22ea1d3016c587d39b"
+
+[[package]]
+name = "flate2"
+version = "1.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e634e2e0ebac1ee034020da1ca582e17ffe4e0f5e985823721e168928136dcb"
+dependencies = [
+ "crc32fast",
+ "miniz_oxide",
+]
 
 [[package]]
 name = "foldhash"
@@ -1147,6 +1172,16 @@ name = "memchr"
 version = "2.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
+
+[[package]]
+name = "miniz_oxide"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b63fbc4a50860e98e7b2aa7804ded1db5cbc3aff9193adaff57a6931bf7c4b4c"
+dependencies = [
+ "adler2",
+ "simd-adler32",
+]
 
 [[package]]
 name = "ml-dsa"
@@ -2156,10 +2191,11 @@ dependencies = [
 
 [[package]]
 name = "reallyme-jose"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a4b17fc2621c715cb0a235cc38a1945522935c63c0aec921f47bea93573e2a0"
+checksum = "f358d88f166bf5f3e9d6569bbd044c17f1f6d7b8e0aa5dfb4de4ef3681d89d4d"
 dependencies = [
+ "flate2",
  "getrandom 0.2.17",
  "reallyme-codec",
  "reallyme-crypto",
@@ -2171,9 +2207,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-mdoc"
-version = "0.3.3"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "236567f182a15326f2e67df833a936ec58a2d123faaece91eeeffbdcbaf7b6c7"
+checksum = "1541f139f2416a7880427f95455986b8a51cd841a207c3dc5a785eca2f3aee04"
 dependencies = [
  "ciborium",
  "reallyme-codec",
@@ -2190,7 +2226,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-dc-api"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "reallyme-codec",
  "reallyme-mdoc",
@@ -2205,7 +2241,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-dcql"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "reallyme-codec",
  "serde",
@@ -2216,7 +2252,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-formats"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "reallyme-codec",
  "reallyme-crypto",
@@ -2235,7 +2271,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-proto"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "buffa",
  "serde",
@@ -2244,7 +2280,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-proto-codec"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "buffa",
  "reallyme-openid4vp-dc-api",
@@ -2263,7 +2299,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "buffa",
  "reallyme-codec",
@@ -2285,7 +2321,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-types"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "idna",
  "reallyme-codec",
@@ -2300,7 +2336,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-verifier"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "reallyme-codec",
  "reallyme-openid4vp-dc-api",
@@ -2318,7 +2354,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-wallet"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "reallyme-codec",
  "reallyme-openid4vp-dc-api",
@@ -2337,9 +2373,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-sd-jwt"
-version = "0.3.3"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d03c092093efc43a591a0819362f9c6263802a112d90369d4308a6ec05394b22"
+checksum = "eca631ac904a8d04ba5b81c18e7ddb09c72826979d0e86c43d0af4c028b9387e"
 dependencies = [
  "reallyme-codec",
  "reallyme-crypto",
@@ -2352,9 +2388,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-ssi-proto"
-version = "0.3.3"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dfd423f28c0b128db10c4b7e6be4a876cb24ad9a1feec5c0a53fa076c652f826"
+checksum = "a54430a4946632c8de780256f6097dc538d70fcb4cc314432fbb97121ba21ebf"
 dependencies = [
  "buffa",
  "buffa-types",
@@ -2585,6 +2621,12 @@ dependencies = [
  "digest 0.11.3",
  "rand_core",
 ]
+
+[[package]]
+name = "simd-adler32"
+version = "0.3.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a219298ac11a56ea9a6d2120044824d6f01aeb034955e7af7bc16858527deea"
 
 [[package]]
 name = "simdutf8"

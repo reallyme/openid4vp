@@ -4,7 +4,7 @@
 
 [package]
 name = "reallyme-openid4vp-types"
-version = "0.1.0"
+version = "0.1.1"
 description = "OpenID4VP authorization request, response, metadata, and transaction data types."
 edition.workspace = true
 rust-version.workspace = true
@@ -33,7 +33,7 @@ wasm = []
 
 [dependencies]
 idna = { workspace = true }
-reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.0" }
+reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.1" }
 reallyme-codec = { workspace = true, features = ["base64url", "jcs"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

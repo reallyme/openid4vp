@@ -38,12 +38,12 @@ the repository's protobuf-first boundary checks pass.
 
 The exact release order is enforced by release tooling:
 
-1. `reallyme-openid4vp-proto` 0.1.0
-2. `reallyme-openid4vp-dcql` 0.1.0
-3. `reallyme-openid4vp-types` 0.1.0
-4. `reallyme-openid4vp-dc-api` 0.1.0
-5. `reallyme-openid4vp-formats` 0.1.0
-6. `reallyme-openid4vp-wallet` 0.1.0
+1. `reallyme-openid4vp-proto` 0.1.1
+2. `reallyme-openid4vp-dcql` 0.1.1
+3. `reallyme-openid4vp-types` 0.1.1
+4. `reallyme-openid4vp-dc-api` 0.1.1
+5. `reallyme-openid4vp-formats` 0.1.1
+6. `reallyme-openid4vp-wallet` 0.1.1
 
 Adding or publishing any other crate requires a separately reviewed policy and
 release-tooling change. Cargo metadata alone cannot expand the publish set.
@@ -71,7 +71,7 @@ cargo test --workspace --all-features
 node scripts/check-proto-first-boundaries.mjs
 npm exec --yes --package=github:reallyme/release-readiness#bdedc88f3f25fcc14242730d4dec6ce6a0c75531 -- \
   reallyme-release-readiness
-node scripts/publish-crates-in-order.mjs inspect --allow-dirty
+RELEASE_VERSION=0.1.1 node scripts/publish-crates-in-order.mjs inspect --allow-dirty
 ```
 
 The inspector derives dependency order from Cargo metadata, constructs the
@@ -84,9 +84,10 @@ uploading. CI runs the same command without `--allow-dirty`.
 OpenID4VP uses the same reviewed two-workflow release process as
 `reallyme/cose`:
 
-1. Commit the release version to all six approved public crate manifests, their
-   internal dependency requirements, `Cargo.lock`, and the default version
-   displayed by **Crates Package Preflight**.
+1. Commit the release version to every workspace package manifest, all internal
+   dependency requirements, both lockfiles, and the default version displayed
+   by **Crates Package Preflight**. Only the six approved public crates are
+   packaged and uploaded.
 2. Push that exact commit to `main`.
 3. Dispatch **Crates Package Preflight** with the release version.
 4. Review the successful package summary, the exact archived `.crate` files,
@@ -116,8 +117,8 @@ release artifacts.
 For local review only:
 
 ```sh
-RELEASE_VERSION=0.1.0 node scripts/publish-crates-in-order.mjs order
-RELEASE_VERSION=0.1.0 node scripts/publish-crates-in-order.mjs inspect --allow-dirty
+RELEASE_VERSION=0.1.1 node scripts/publish-crates-in-order.mjs order
+RELEASE_VERSION=0.1.1 node scripts/publish-crates-in-order.mjs inspect --allow-dirty
 node --test scripts/*.test.mjs
 ```
 
@@ -148,6 +149,6 @@ Cargo cannot satisfy the query from the local package; do not attempt the wallet
 upload until both dependency versions resolve from crates.io. If crates.io
 rate-limits an upload, wait for the registry's reported retry interval and rerun
 only the same command. The general
-`reallyme-openid4vp` facade is not part of this supplement. Starting with the
-next version, use the reviewed main release workflow for the complete six-crate
+`reallyme-openid4vp` facade is not part of this supplement. Starting with
+0.1.1, use the reviewed main release workflow for the complete six-crate
 cohort.

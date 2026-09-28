@@ -11,14 +11,14 @@ const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const manifest = readFileSync(resolve(root, "Cargo.toml"), "utf8");
 const cratesIoSource = "registry+https://github.com/rust-lang/crates.io-index";
 const directDependencies = [
-  { name: "reallyme-jose", version: "0.4.0" },
-  { name: "reallyme-openid4vc-profiles", version: "0.3.3" },
-  { name: "reallyme-ssi-proto", version: "0.3.3" },
+  { name: "reallyme-jose", version: "0.4.2" },
+  { name: "reallyme-openid4vc-profiles", version: "0.3.4" },
+  { name: "reallyme-ssi-proto", version: "0.3.4" },
 ];
 const rootLockedDependencies = [
   ...directDependencies,
-  { name: "reallyme-mdoc", version: "0.3.3" },
-  { name: "reallyme-sd-jwt", version: "0.3.3" },
+  { name: "reallyme-mdoc", version: "0.3.4" },
+  { name: "reallyme-sd-jwt", version: "0.3.4" },
 ];
 const fuzzLockedDependencies = rootLockedDependencies.filter(
   ({ name }) => name !== "reallyme-openid4vc-profiles",

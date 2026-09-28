@@ -23,12 +23,12 @@ const CRATES_IO_ARCHIVE_VERIFY_RETRIES = "12";
 const CRATES_IO_ARCHIVE_VERIFY_RETRY_DELAY_SECONDS = "10";
 const CRATES_IO_ARCHIVE_VERIFY_MAX_SECONDS = "180";
 const APPROVED_PUBLISH_SEQUENCE = [
-  { name: "reallyme-openid4vp-proto", version: "0.1.0" },
-  { name: "reallyme-openid4vp-dcql", version: "0.1.0" },
-  { name: "reallyme-openid4vp-types", version: "0.1.0" },
-  { name: "reallyme-openid4vp-dc-api", version: "0.1.0" },
-  { name: "reallyme-openid4vp-formats", version: "0.1.0" },
-  { name: "reallyme-openid4vp-wallet", version: "0.1.0" },
+  { name: "reallyme-openid4vp-proto", version: "0.1.1" },
+  { name: "reallyme-openid4vp-dcql", version: "0.1.1" },
+  { name: "reallyme-openid4vp-types", version: "0.1.1" },
+  { name: "reallyme-openid4vp-dc-api", version: "0.1.1" },
+  { name: "reallyme-openid4vp-formats", version: "0.1.1" },
+  { name: "reallyme-openid4vp-wallet", version: "0.1.1" },
 ];
 const APPROVED_MSRV = "1.96";
 const REQUIRED_PUBLISH_ORDER_EDGES = [

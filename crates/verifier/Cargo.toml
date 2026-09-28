@@ -4,7 +4,7 @@
 
 [package]
 name = "reallyme-openid4vp-verifier"
-version = "0.1.0"
+version = "0.1.1"
 description = "OpenID4VP verifier request and response validation boundary."
 edition.workspace = true
 rust-version.workspace = true
@@ -26,10 +26,10 @@ wasm = [
 
 [dependencies]
 reallyme-codec = { workspace = true, features = ["base64url"] }
-reallyme-openid4vp-dc-api = { path = "../dc-api", version = "0.1.0", default-features = false }
-reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.0" }
-reallyme-openid4vp-formats = { path = "../formats", version = "0.1.0", default-features = false }
-reallyme-openid4vp-types = { path = "../types", version = "0.1.0", default-features = false }
+reallyme-openid4vp-dc-api = { path = "../dc-api", version = "0.1.1", default-features = false }
+reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.1" }
+reallyme-openid4vp-formats = { path = "../formats", version = "0.1.1", default-features = false }
+reallyme-openid4vp-types = { path = "../types", version = "0.1.1", default-features = false }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 sha2 = { workspace = true }

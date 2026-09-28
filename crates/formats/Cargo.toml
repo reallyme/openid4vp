@@ -4,7 +4,7 @@
 
 [package]
 name = "reallyme-openid4vp-formats"
-version = "0.1.0"
+version = "0.1.1"
 description = "Format-specific OpenID4VP presentation glue."
 edition.workspace = true
 rust-version.workspace = true
@@ -20,13 +20,13 @@ native = ["reallyme-mdoc/native", "reallyme-sd-jwt/native", "reallyme-crypto/nat
 wasm = ["reallyme-mdoc/wasm", "reallyme-sd-jwt/wasm", "reallyme-crypto/wasm", "reallyme-jose/wasm"]
 
 [dependencies]
-reallyme-mdoc = { version = "=0.3.3", default-features = false }
-reallyme-sd-jwt = { version = "=0.3.3", default-features = false }
+reallyme-mdoc = { version = "=0.3.4", default-features = false }
+reallyme-sd-jwt = { version = "=0.3.4", default-features = false }
 reallyme-crypto = { workspace = true }
 reallyme-codec = { workspace = true, features = ["base64url"] }
 reallyme-jose = { workspace = true }
-reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.0" }
-reallyme-openid4vp-types = { path = "../types", version = "0.1.0", default-features = false }
+reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.1" }
+reallyme-openid4vp-types = { path = "../types", version = "0.1.1", default-features = false }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 sha2 = { workspace = true }

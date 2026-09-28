@@ -625,6 +625,7 @@ fn compact_jwe_ecdh_es_a128gcm(payload: &[u8]) -> Result<String, reallyme_jose::
         apu: Some(apu.clone()),
         apv: Some(apv.clone()),
         epk: Some(epk.clone()),
+        zip: None,
         typ: None,
         cty: None,
     };

@@ -4,7 +4,7 @@
 
 [package]
 name = "reallyme-openid4vp-wallet"
-version = "0.1.0"
+version = "0.1.1"
 description = "OpenID4VP wallet-side request verification and response construction boundary."
 edition.workspace = true
 rust-version.workspace = true
@@ -38,10 +38,10 @@ wasm = [
 
 [dependencies]
 reallyme-codec = { workspace = true, features = ["base64", "base64url"] }
-reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.0" }
-reallyme-openid4vp-dc-api = { path = "../dc-api", version = "0.1.0", default-features = false }
-reallyme-openid4vp-formats = { path = "../formats", version = "0.1.0", default-features = false }
-reallyme-openid4vp-types = { path = "../types", version = "0.1.0", default-features = false }
+reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.1" }
+reallyme-openid4vp-dc-api = { path = "../dc-api", version = "0.1.1", default-features = false }
+reallyme-openid4vp-formats = { path = "../formats", version = "0.1.1", default-features = false }
+reallyme-openid4vp-types = { path = "../types", version = "0.1.1", default-features = false }
 reallyme-crypto = { workspace = true, optional = true }
 reallyme-jose = { workspace = true, optional = true }
 serde = { workspace = true }
