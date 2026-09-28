@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+artifacts/
+corpus/*
+!corpus/problem_details_proto_json/
+corpus/problem_details_proto_json/*
+!corpus/problem_details_proto_json/problem-details.json
+!corpus/service_envelope_proto_json/
+corpus/service_envelope_proto_json/*
+!corpus/service_envelope_proto_json/build-authorization-request.json
+!corpus/service_envelope_proto_json/validate-authorization-response.json
+!corpus/sd_jwt_presentation/
+corpus/sd_jwt_presentation/*
+!corpus/sd_jwt_presentation/malformed-compact.jwt
+!corpus/mdoc_presentation/
+corpus/mdoc_presentation/*
+!corpus/mdoc_presentation/malformed-device-response.cbor
+target/

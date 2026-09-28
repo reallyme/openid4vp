@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[oidf]
+suite = "https://gitlab.com/openid/conformance-suite"
+pinned_commit = "440eec8bac7b12b7389d7ca9cbc459b53507a443"
+plan = "oid4vp-1final-wallet-haip-test-plan"
+matrix = "conformance/oidf/profile-matrix.json"
+certification_profiles = 4
+
+[target]
+crate = "reallyme-openid4vp-wallet"
+host_endpoint_env = "OIDF_WALLET_HARNESS_ENDPOINT"
+wallet_core_owner = "reallyme/wallet"
+
+[wire]
+openid4vp = "1.0-final"
+dcql = true
+presentation_exchange = false
+vp_token_shape = "dcql_query_id_object"
+client_id_prefixes = true
+
+[fixtures]
+eudi = "conformance/fixtures/eudi"
+ewc = "conformance/fixtures/ewc"

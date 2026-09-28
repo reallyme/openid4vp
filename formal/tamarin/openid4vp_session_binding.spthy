@@ -1,0 +1,228 @@
+/*
+SPDX-FileCopyrightText: 2026 ReallyMe LLC
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+
+Symbolic (Dolev-Yao) model of the OpenID4VP session-binding composition used by
+the verifier and wallet crates.
+
+Scope and abstractions:
+
+  * Request Objects and holder proofs are explicit symbolic signatures. The
+    verifier and wallet accept them only after the signing equation succeeds;
+    authenticity is not represented by a pre-authorized fact.
+  * The network is adversary controlled. Request Objects and Authorization
+    Responses may be delayed, duplicated, reordered, or replayed.
+  * A verifier session is linear and is consumed by acceptance. Hosted Request
+    Objects are persistent because OpenID4VP 1.0 Final permits repeated
+    request_uri retrieval.
+  * The holder-compromise rule is explicit. Authenticity permits only a
+    matching honest presentation or disclosure of that holder's key before
+    acceptance.
+
+Properties proven:
+
+  * every accepted presentation uses the exact session id, nonce, audience,
+    state, credential, and holder key committed by the verifier session;
+  * one verifier session cannot accept two responses, including replay of an
+    otherwise valid response;
+  * acceptance follows creation of the same verifier session;
+  * the same hosted Request Object remains available for multiple fetches.
+*/
+
+theory OpenID4VP_Session_Binding
+begin
+
+builtins: signing
+
+/* The only use of Eq is to enforce successful symbolic signature checks. */
+restriction Equality:
+  "All x y #i. Eq(x, y) @ i ==> x = y"
+
+/* Register one holder credential and its proof-verification key. The public
+   key is intentionally public; the private key remains in a persistent fact. */
+rule Register_Holder:
+    [ Fr(~holder_key), Fr(~credential) ]
+  --[ HolderRegistered($W, ~credential, ~holder_key) ]->
+    [ !HolderKey($W, ~holder_key)
+    , !CredentialOwner(~credential, $W, pk(~holder_key))
+    ]
+
+/* A verifier creates an exact session tuple and a signed Request Object.
+   ValidRequest abstracts successful verifier signature production and later
+   wallet-side verification. Only this rule can create that fact. */
+rule Start_Verifier_Session:
+    [ Fr(~session), Fr(~nonce), Fr(~state), Fr(~verifier_key) ]
+  --[ SessionStarted(~session, $V, $W, ~nonce, $audience, ~state)
+    , RequestHosted(
+        ~session,
+        <<'request', ~session, $V, $W, ~nonce, $audience, ~state>,
+          sign(
+            <'request', ~session, $V, $W, ~nonce, $audience, ~state>,
+            ~verifier_key
+          )>
+      )
+    ]->
+    [ Session(~session, $V, $W, ~nonce, $audience, ~state)
+    , !VerifierVerificationKey($V, pk(~verifier_key))
+    , !HostedRequest(
+        ~session,
+        <<'request', ~session, $V, $W, ~nonce, $audience, ~state>,
+          sign(
+            <'request', ~session, $V, $W, ~nonce, $audience, ~state>,
+            ~verifier_key
+          )>
+      )
+    , Out(<'request_uri', ~session>)
+    ]
+
+/* Hosted Request Objects are deliberately not consumed. A wallet, browser,
+   retry, or background validator may fetch the same request_uri again. */
+rule Fetch_Request_Object:
+    [ !HostedRequest(session, request_object)
+    , In(<'fetch_request', session>)
+    ]
+  --[ RequestFetched(session, request_object) ]->
+    [ Out(request_object) ]
+
+/* An honest wallet acts only on an authenticated Request Object and emits a
+   proof fact bound to every verifier-controlled session value. */
+rule Wallet_Presents:
+    [ !VerifierVerificationKey(V, verifier_public_key)
+    , In(<<'request', session, V, W, nonce, audience, state>, request_signature>)
+    , !HolderKey(W, holder_key)
+    , !CredentialOwner(credential, W, pk(holder_key))
+    ]
+  --[ Eq(
+        verify(
+          request_signature,
+          <'request', session, V, W, nonce, audience, state>,
+          verifier_public_key
+        ),
+        true
+      )
+    , WalletPresented(
+        session,
+        V,
+        W,
+        nonce,
+        audience,
+        state,
+        credential,
+        pk(holder_key),
+        sign(
+          <session, V, W, nonce, audience, state, credential>,
+          holder_key
+        )
+      )
+    ]->
+    [ Out(
+        <session,
+         state,
+         credential,
+         sign(
+           <session, V, W, nonce, audience, state, credential>,
+           holder_key
+         )>
+      )
+    ]
+
+/* Compromise is explicit and observable. Possession of a revealed holder key
+   permits the adversary to construct a cryptographically valid proof, but not
+   to change the tuple retained in the verifier session. */
+rule Reveal_Holder_Key:
+    [ !HolderKey(W, holder_key) ]
+  --[ HolderKeyRevealed(W, pk(holder_key)) ]->
+    [ Out(holder_key) ]
+
+/* Acceptance consumes Session. Pattern matching requires the received
+   response, signature verification equation, retained session tuple, and
+   credential's registered holder key to agree. */
+rule Verifier_Accepts:
+    [ Session(session, V, W, nonce, audience, state)
+    , !CredentialOwner(credential, W, holder_public_key)
+    , In(<session, state, credential, proof>)
+    ]
+  --[ Eq(
+        verify(
+          proof,
+          <session, V, W, nonce, audience, state, credential>,
+          holder_public_key
+        ),
+        true
+      )
+    , VerifierAccepted(
+        session,
+        V,
+        W,
+        nonce,
+        audience,
+        state,
+        credential,
+        holder_public_key,
+        proof
+      )
+    ]->
+    [ ]
+
+/* Sanity: the honest flow can reach acceptance. */
+lemma sanity_acceptance_exists:
+  exists-trace
+  "Ex session V W nonce audience state credential holder_key proof #i.
+     VerifierAccepted(
+       session, V, W, nonce, audience, state, credential, holder_key, proof
+     ) @ i"
+
+/* Sanity: the persistent hosted object admits two distinct retrieval events. */
+lemma sanity_request_object_refetch_exists:
+  exists-trace
+  "Ex session request_object #i #j.
+     RequestFetched(session, request_object) @ i
+     & RequestFetched(session, request_object) @ j
+     & not (#i = #j)"
+
+/* Authentication and exact binding: acceptance has one matching honest
+   presentation, unless that exact holder key was revealed before acceptance. */
+lemma accepted_presentation_has_exact_session_binding:
+  all-traces
+  "All session V W nonce audience state credential holder_key proof #accept.
+     VerifierAccepted(
+       session, V, W, nonce, audience, state, credential, holder_key, proof
+     ) @ accept
+     ==>
+       (Ex #present.
+          WalletPresented(
+            session, V, W, nonce, audience, state, credential, holder_key, proof
+          ) @ present
+          & present < accept)
+       | (Ex #reveal.
+          HolderKeyRevealed(W, holder_key) @ reveal
+          & reveal < accept)"
+
+/* Linear session consumption rejects a second acceptance of the same session. */
+lemma verifier_session_accepts_at_most_once:
+  all-traces
+  "All session V1 W1 nonce1 audience1 state1 credential1 key1 proof1
+       V2 W2 nonce2 audience2 state2 credential2 key2 proof2 #i #j.
+     VerifierAccepted(
+       session, V1, W1, nonce1, audience1, state1, credential1, key1, proof1
+     ) @ i
+     & VerifierAccepted(
+       session, V2, W2, nonce2, audience2, state2, credential2, key2, proof2
+     ) @ j
+     ==> #i = #j"
+
+/* Acceptance cannot arise independently of the exact session created by the
+   verifier, even if the holder key is later compromised. */
+lemma accepted_presentation_follows_session_start:
+  all-traces
+  "All session V W nonce audience state credential holder_key proof #accept.
+     VerifierAccepted(
+       session, V, W, nonce, audience, state, credential, holder_key, proof
+     ) @ accept
+     ==>
+       (Ex #start.
+          SessionStarted(session, V, W, nonce, audience, state) @ start
+          & start < accept)"
+
+end

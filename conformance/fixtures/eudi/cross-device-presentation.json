@@ -1,0 +1,65 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 1,
+  "fixture_id": "eudi-openid4vp-cross-device-presentation",
+  "source_repository": "https://github.com/eu-digital-identity-wallet/eudi-lib-jvm-openid4vp-kt",
+  "role_under_test": "wallet",
+  "profile": "eudi",
+  "flow": "cross_device",
+  "authorization_request_transport": {
+    "request_uri": "https://verifier.eudi.example/request/eudi-cross-device.jwt",
+    "request_uri_method": "post",
+    "wallet_nonce": "wallet-nonce-cross-device"
+  },
+  "authorization_request": {
+    "client_id": "x509_san_dns:verifier.eudi.example",
+    "response_type": "vp_token",
+    "response_mode": "direct_post.jwt",
+    "response_uri": "https://verifier.eudi.example/direct_post.jwt",
+    "nonce": "eudi-cross-device-nonce",
+    "state": "eudi-cross-device-state",
+    "transaction_data": [
+      {
+        "type": "eudi_pid_age_check",
+        "credential_ids": ["pid"],
+        "payload": {
+          "purpose": "age_over_18"
+        }
+      }
+    ],
+    "dcql_query": {
+      "credentials": [
+        {
+          "id": "pid",
+          "format": "dc+sd-jwt",
+          "multiple": false,
+          "claims": [
+            {
+              "id": "age_over_18",
+              "path": ["age_over_18"],
+              "values": [true]
+            }
+          ],
+          "claim_sets": [["age_over_18"]]
+        }
+      ]
+    }
+  },
+  "authorization_response_jwt": {
+    "alg": "ECDH-ES",
+    "enc": "A128GCM",
+    "payload_shape": {
+      "state": "eudi-cross-device-state",
+      "vp_token": {
+        "pid": ["encrypted-sd-jwt-vc-presentation-fixture"]
+      }
+    }
+  },
+  "expected_checks": [
+    "post_request_uri_wallet_nonce",
+    "transaction_data_hash_binding",
+    "encrypted_direct_post_jwt",
+    "dcql_keyed_vp_token_response"
+  ]
+}

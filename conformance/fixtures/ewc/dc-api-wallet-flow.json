@@ -1,0 +1,40 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 1,
+  "fixture_id": "ewc-eudi-wallet-rfcs-openid4vp-dc-api-flow",
+  "source_repository": "https://github.com/EWC-consortium/eudi-wallet-rfcs",
+  "role_under_test": "wallet",
+  "profile": "ewc-eudi",
+  "response_mode": "dc_api.jwt",
+  "digital_credentials_request": {
+    "protocol": "openid4vp-v1-signed",
+    "client_id": "origin:https://verifier.ewc.example",
+    "nonce": "ewc-dc-api-nonce",
+    "expected_origins": ["https://verifier.ewc.example"],
+    "dcql_query": {
+      "credentials": [
+        {
+          "id": "pid",
+          "format": "dc+sd-jwt",
+          "multiple": false,
+          "claims": [
+            {
+              "id": "age_over_18",
+              "path": ["age_over_18"],
+              "values": [true]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "encrypted_response": {
+    "response": "compact-jwe-fixture"
+  },
+  "expected_checks": [
+    "dc_api_origin_binding",
+    "dc_api_jwt_response_encryption",
+    "dcql_keyed_vp_token_payload"
+  ]
+}

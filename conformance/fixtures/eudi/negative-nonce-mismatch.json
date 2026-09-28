@@ -1,0 +1,34 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 1,
+  "fixture_id": "eudi-openid4vp-negative-nonce-mismatch",
+  "source_repository": "https://github.com/eu-digital-identity-wallet/eudi-lib-jvm-openid4vp-kt",
+  "role_under_test": "verifier",
+  "profile": "eudi",
+  "flow": "negative_binding",
+  "request_binding": {
+    "client_id": "x509_san_dns:verifier.eudi.example",
+    "nonce": "expected-nonce",
+    "response_uri": "https://verifier.eudi.example/direct_post",
+    "expiry_unix": 200
+  },
+  "authorization_response": {
+    "state": "binding-state",
+    "vp_token": {
+      "pid": [
+        {
+          "format": "reallyme.openid4vp.zk_presentation.v1",
+          "nonce": "different-nonce",
+          "audience": "x509_san_dns:verifier.eudi.example"
+        }
+      ]
+    }
+  },
+  "expected_result": "reject_binding_mismatch",
+  "expected_checks": [
+    "nonce_public_input_binding",
+    "audience_public_input_binding",
+    "fail_closed_before_backend_acceptance"
+  ]
+}

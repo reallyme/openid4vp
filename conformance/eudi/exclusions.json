@@ -1,0 +1,17 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 1,
+  "exclusions": [
+    {
+      "id": "credential_issuance",
+      "reason": "OpenID4VCI and issuer behavior are out of scope for reallyme/openid4vp.",
+      "review_required_before_release": false
+    },
+    {
+      "id": "wallet_ui_lifecycle",
+      "reason": "Wallet UI, consent rendering, storage, and provisioning belong in reallyme/wallet and reallyme/identity.",
+      "review_required_before_release": false
+    }
+  ]
+}

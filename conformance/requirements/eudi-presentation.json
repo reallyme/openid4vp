@@ -1,0 +1,23 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 1,
+  "specification": "eudi-presentation",
+  "requirements": [
+    {
+      "id": "eudi-reference-fixtures",
+      "level": "SHOULD",
+      "summary": "Track EUDI verifier and wallet reference presentation flows as interoperability fixtures.",
+      "implementation_paths": [
+        "conformance/fixtures/eudi/reference-verifier-wallet.json",
+        "conformance/eudi/fixture-inventory.json",
+        "conformance/eudi/upstream-tests.json"
+      ],
+      "positive_tests": [],
+      "negative_tests": [],
+      "oidf_modules": [],
+      "eudi_tests": [],
+      "status": "pending_discovery"
+    }
+  ]
+}

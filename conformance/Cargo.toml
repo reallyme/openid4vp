@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "reallyme-openid4vp-conformance"
+version = "0.1.0"
+description = "Machine-readable OpenID4VP conformance vector harness."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[features]
+default = ["native"]
+native = [
+    "reallyme-openid4vp-types/native",
+    "reallyme-openid4vp-verifier/native",
+    "reallyme-openid4vp-wallet/native",
+]
+
+[dependencies]
+reallyme-openid4vp-dcql = { path = "../crates/dcql", version = "0.1.0" }
+reallyme-openid4vp-types = { path = "../crates/types", version = "0.1.0", default-features = false }
+reallyme-openid4vp-verifier = { path = "../crates/verifier", version = "0.1.0", default-features = false }
+reallyme-openid4vp-wallet = { path = "../crates/wallet", version = "0.1.0", default-features = false }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+reallyme-codec = { workspace = true, features = ["base64", "base64url"] }
+reallyme-openid4vp-dc-api = { path = "../crates/dc-api", version = "0.1.0", default-features = false }
+reallyme-openid4vp-proto = { path = "../crates/proto", version = "0.1.0", default-features = false, features = ["generated"] }
+reallyme-openid4vp-proto-codec = { path = "../crates/proto-codec", version = "0.1.0", default-features = false }
+reallyme-openid4vp-runtime = { path = "../crates/runtime", version = "0.1.0", default-features = false }
+sha2 = { workspace = true }
+
+[lints]
+workspace = true

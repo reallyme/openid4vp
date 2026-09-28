@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "reallyme-openid4vp-dcql"
+version = "0.1.0"
+description = "Digital Credentials Query Language model and evaluation engine."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+documentation = "https://docs.rs/reallyme-openid4vp-dcql"
+keywords = ["openid4vp", "dcql", "identity", "credentials"]
+categories = ["authentication"]
+publish = true
+include = [
+    "/src/**/*.rs",
+    "/Cargo.toml",
+    "/README.md",
+    "/LICENSE-APACHE",
+    "/LICENSE-MIT",
+]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+reallyme-codec = { workspace = true, features = ["jcs"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+zeroize = { workspace = true }
+
+[lints]
+workspace = true

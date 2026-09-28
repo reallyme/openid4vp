@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabled": true,
+  "extends": ["helpers:pinGitHubActionDigests"],
+  "minimumReleaseAge": "7 days",
+  "packageRules": [
+    {
+      "matchManagers": ["cargo"],
+      "matchPackageNames": [
+        "reallyme-jose",
+        "reallyme-mdoc",
+        "reallyme-openid4vc-profiles",
+        "reallyme-sd-jwt",
+        "reallyme-ssi-proto"
+      ],
+      "groupName": "Published ReallyMe SSI crates"
+    }
+  ]
+}

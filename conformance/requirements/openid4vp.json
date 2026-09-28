@@ -1,0 +1,645 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 2,
+  "specification": "openid4vp-1.0-final",
+  "coverage_policy": "Every implemented atomic normative statement requires executable positive and negative evidence bound to an immutable specification section and digest.",
+  "requirements": [
+    {
+      "id": "openid4vp-final-dcql-request",
+      "level": "MUST",
+      "summary": "Authorization Requests use final DCQL request structures rather than Presentation Exchange.",
+      "implementation_paths": [
+        "crates/types/src/request.rs",
+        "crates/dcql/src/model.rs",
+        "crates/dcql/src/validate.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_dcql::evaluate::tests::evaluates_required_query_with_selected_claims",
+        "reallyme_openid4vp_proto_codec::verify_codec::encodes_and_decodes_authorization_request_proto"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_dcql::evaluate::tests::rejects_duplicate_query_ids"
+      ],
+      "oidf_modules": [],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Authorization Requests use final DCQL request structures rather than Presentation Exchange.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Section 6",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-final-vp-token-object",
+      "level": "MUST",
+      "summary": "Authorization Responses model vp_token as an object keyed by DCQL Credential Query id.",
+      "implementation_paths": [
+        "crates/types/src/response.rs",
+        "crates/proto-codec/src/map_authorization_response.rs",
+        "crates/verifier/src/response.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_types::response::tests::serializes_vp_token_as_dcql_keyed_object",
+        "reallyme_openid4vp_proto_codec::verify_codec::encodes_and_decodes_authorization_response_proto"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_verifier::response::tests::rejects_empty_vp_token_object",
+        "reallyme_openid4vp_proto_codec::verify_codec::rejects_empty_presentation_list_in_response_proto"
+      ],
+      "oidf_modules": [],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Authorization Responses model vp_token as an object keyed by DCQL Credential Query id.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Section 8.1",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-client-id-prefixes",
+      "level": "MUST",
+      "summary": "Client identifiers use OpenID4VP 1.0 Client Identifier Prefixes and request-by-reference transport rejects unsupported outer parameters.",
+      "implementation_paths": [
+        "crates/types/src/client_id.rs",
+        "crates/types/src/endpoint.rs",
+        "crates/wallet/src/jar.rs",
+        "crates/wallet/src/endpoint_binding_policy.rs",
+        "crates/wallet/src/validate_endpoint_binding.rs",
+        "crates/wallet/src/verify_signed_request_object_with_jose.rs",
+        "crates/proto-codec/src/map_client_identifier.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_types::client_id::tests::parses_final_spec_prefix",
+        "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::verifies_signed_request_object_with_jose",
+        "reallyme_openid4vp_wallet::jar::tests::accepts_x509_hash_matching_leaf_certificate",
+        "reallyme_openid4vp_wallet::jar::tests::accepts_x509_san_dns_response_uri_host_binding",
+        "reallyme_openid4vp_wallet::validate_endpoint_binding::tests::receipt_retains_exact_chain_and_versioned_wrpac_provenance",
+        "reallyme_openid4vp_conformance::vectors_tests::x509_request_binding_vectors_match_implementation",
+        "reallyme_openid4vp_proto_codec::verify_codec::maps_client_identifier_to_generated_proto"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_wallet::jar::tests::rejects_unsigned_client_identifier_prefix",
+        "reallyme_openid4vp_wallet::jar::tests::rejects_origin_client_identifier_prefix_for_signed_request_object",
+        "reallyme_openid4vp_wallet::jar::tests::rejects_redirect_uri_prefix_for_signed_request_object",
+        "reallyme_openid4vp_wallet::jar::tests::rejects_x509_hash_that_does_not_match_leaf_certificate",
+        "reallyme_openid4vp_wallet::jar::tests::rejects_x509_hash_without_certificate_binding",
+        "reallyme_openid4vp_wallet::jar::tests::rejects_x509_san_dns_client_identifier_missing_from_leaf_certificate",
+        "reallyme_openid4vp_wallet::jar::tests::rejects_x509_san_dns_without_certificate_binding",
+        "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::rejects_x509_request_without_x5c_header",
+        "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::rejects_malformed_and_oversized_x5c_headers_before_trust_resolution",
+        "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::rejects_duplicate_x5c_header_members_before_resolver_use",
+        "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::rejects_trust_result_bound_to_a_different_leaf_key_or_chain",
+        "reallyme_openid4vp_wallet::validate_endpoint_binding::tests::preserves_rejected_versus_indeterminate_trust_outcomes",
+        "reallyme_openid4vp_wallet::validate_endpoint_binding::tests::enforces_x5c_count_and_certificate_size_bounds",
+        "reallyme_openid4vp_wallet::transport::tests::rejects_unknown_request_uri_transport_parameter"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix",
+        "oid4vp-1final-wallet-negative-test-mismatched-client-id"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Client identifiers use OpenID4VP 1.0 Client Identifier Prefixes and request-by-reference transport rejects unsupported outer parameters.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Sections 5.9 and 5.10",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-rfc9101-request-objects",
+      "level": "MUST",
+      "summary": "Request Object processing supports signed, encrypted, nested, by-value, and by-reference RFC 9101 paths with network-free JOSE boundaries.",
+      "implementation_paths": [
+        "crates/types/src/classify_request_object_jwt.rs",
+        "crates/wallet/src/verify_signed_request_object_with_jose.rs",
+        "crates/wallet/src/verify_nested_request_object_with_jose.rs",
+        "crates/wallet/src/jar.rs",
+        "crates/http/src/resolve_request_uri.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::verifies_signed_request_object_with_jose",
+        "reallyme_openid4vp_wallet::verify_nested_request_object_with_jose::tests::verifies_nested_signed_then_encrypted_request_object_with_jose",
+        "reallyme_openid4vp_wallet::verify_nested_request_object_with_jose::tests::preserves_verifier_attestation_evidence_from_inner_signed_request",
+        "reallyme_openid4vp_wallet::verify_nested_request_object_with_jose::tests::preserves_metadata_evidence_from_inner_signed_request",
+        "reallyme_openid4vp_wallet::verify_nested_request_object_with_jose::tests::preserves_x509_evidence_from_inner_signed_request",
+        "reallyme_openid4vp_http::resolve_request_uri::tests::resolves_encrypted_request_uri_transport_to_request_jwt"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::rejects_signed_request_object_with_wrong_key",
+        "reallyme_openid4vp_wallet::verify_nested_request_object_with_jose::tests::rejects_nested_request_object_with_unsigned_plaintext",
+        "reallyme_openid4vp_wallet::verify_nested_request_object_with_jose::tests::rejects_oversized_outer_jwe_with_typed_size_error",
+        "reallyme_openid4vp_http::resolve_request_uri::tests::rejects_malformed_fetched_request_object"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-wallet-negative-test-invalid-request-object-signature"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Request Object processing supports signed, encrypted, nested, by-value, and by-reference RFC 9101 paths with network-free JOSE boundaries.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Sections 5.7 and 5.10",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-request-uri-retrieval",
+      "level": "MUST",
+      "summary": "Wallets retrieve Request Objects with the declared GET or POST method, and verifier hosts serve a POST-bound Request Object repeatedly without consuming it.",
+      "implementation_paths": [
+        "crates/http/src/build_request_uri_http_request.rs",
+        "crates/http/src/resolve_request_uri.rs",
+        "crates/runtime/src/serve_request_object.rs",
+        "crates/runtime/src/route_verifier_http.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_http::build_request_uri_http_request::tests::builds_post_request_uri_http_request_without_optional_parameters",
+        "reallyme_openid4vp_http::resolve_request_uri::tests::resolves_request_uri_transport_to_request_jwt",
+        "reallyme_openid4vp_http::resolve_request_uri::tests::resolves_post_request_uri_without_optional_wallet_nonce",
+        "reallyme_openid4vp_runtime::verify_runtime::serves_request_object_by_post_with_wallet_nonce",
+        "reallyme_openid4vp_runtime::verify_runtime::verifier_http_runtime_routes_request_object_endpoint",
+        "reallyme_openid4vp_runtime::verify_runtime::verifier_http_runtime_records_request_object_retrievals"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_http::build_request_uri_http_request::tests::rejects_explicitly_empty_post_wallet_nonce",
+        "reallyme_openid4vp_runtime::verify_runtime::rejects_request_object_post_wallet_nonce_mismatch",
+        "reallyme_openid4vp_runtime::verify_runtime::rejects_duplicate_request_object_post_wallet_metadata"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-verifier-request-uri-method-post",
+        "oid4vp-1final-verifier-request-uri-fetched-twice",
+        "oid4vp-1final-wallet-request-uri-method-post"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Wallets retrieve Request Objects with the declared GET or POST method, and verifier hosts serve a POST-bound Request Object repeatedly without consuming it.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Sections 5.7 and 5.10",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-wallet-dcql-satisfaction",
+      "level": "MUST",
+      "summary": "Wallet selection honors requested claims and required credential sets, permits unsatisfied optional sets, and returns a DCQL-keyed response only for a satisfiable selection.",
+      "implementation_paths": [
+        "crates/dcql/src/evaluate.rs",
+        "crates/wallet/src/prepare_consent_data.rs",
+        "crates/wallet/src/build_authorization_response.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_dcql::evaluate::tests::evaluates_required_query_with_selected_claims",
+        "reallyme_openid4vp_dcql::evaluate::tests::evaluates_query_without_claims_as_a_matching_credential",
+        "reallyme_openid4vp_dcql::evaluate::tests::ignores_an_unsatisfied_optional_credential_set",
+        "reallyme_openid4vp_wallet::build_authorization_response::tests::builds_dcql_keyed_response_and_echoes_state",
+        "reallyme_openid4vp_wallet::build_authorization_response::tests::requires_one_complete_option_from_each_required_credential_set"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_dcql::evaluate::tests::enforces_required_credential_sets",
+        "reallyme_openid4vp_wallet::build_authorization_response::tests::requires_every_query_when_no_credential_sets_are_present"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-wallet-happy-flow",
+        "oid4vp-1final-wallet-all-mandatory-claims",
+        "oid4vp-1final-wallet-optional-credential-set",
+        "oid4vp-1final-wallet-no-claims-in-dcql-query",
+        "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Wallet selection honors requested claims and required credential sets, permits unsatisfied optional sets, and returns a DCQL-keyed response only for a satisfiable selection.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Section 6.4",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-wallet-response-encryption-key-selection",
+      "level": "MUST",
+      "summary": "Wallet response encryption skips unusable verifier keys, selects a supported ECDH-ES key and content-encryption algorithm, and rejects unsafe key sets.",
+      "implementation_paths": [
+        "crates/wallet/src/encrypt_authorization_response_with_jose.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_wallet::encrypt_authorization_response_with_jose::tests::encrypts_with_selected_ecdh_es_key_and_json_content_type",
+        "reallyme_openid4vp_wallet::encrypt_authorization_response_with_jose::tests::selects_a256gcm_and_rejects_missing_key_algorithm_or_unsupported_content_encryption"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_wallet::encrypt_authorization_response_with_jose::tests::rejects_private_keys_unsupported_encryption_and_oversized_sets"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-wallet-ignores-unusable-encryption-key"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Wallet response encryption skips unusable verifier keys, selects a supported ECDH-ES key and content-encryption algorithm, and rejects unsafe key sets.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Section 8.3",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-signed-dc-api-expected-origin-binding",
+      "level": "MUST",
+      "summary": "Signed DC API Request Objects bind the calling browser origin to expected_origins and reject missing or mismatched origin evidence.",
+      "implementation_paths": [
+        "crates/wallet/src/jar.rs",
+        "crates/wallet/src/multisigned_request_object.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::verifies_signed_request_object_with_jose"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_wallet::jar::tests::rejects_unbound_origin",
+        "reallyme_openid4vp_wallet::jar::tests::rejects_missing_expected_origin_binding"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-wallet-negative-test-wrong-expected-origins"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Signed DC API Request Objects bind the calling browser origin to expected_origins and reject missing or mismatched origin evidence.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Appendix A.3.2",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-direct-post-jwt",
+      "level": "MUST",
+      "summary": "direct_post.jwt decrypts encrypted Authorization Responses and permits plain Authorization Error Response fallback.",
+      "implementation_paths": [
+        "crates/runtime/src/handle_direct_post_jwt.rs",
+        "crates/runtime/src/decrypt_authorization_response_with_jose.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_runtime::verify_runtime::jose_decryptor_handles_valid_a128gcm_direct_post_jwt",
+        "reallyme_openid4vp_runtime::verify_runtime::jose_decryptor_handles_valid_ecdh_es_direct_post_jwt",
+        "reallyme_openid4vp_runtime::verify_runtime::direct_post_jwt_accepts_plain_authorization_error_fallback"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_runtime::verify_runtime::rejects_direct_post_jwt_without_decryptor",
+        "reallyme_openid4vp_runtime::verify_runtime::rejects_direct_post_jwt_with_non_base64url_segment"
+      ],
+      "oidf_modules": [],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "direct_post.jwt decrypts encrypted Authorization Responses and permits plain Authorization Error Response fallback.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Sections 8.3.1 and 8.5",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-dc-api-unsigned-origin-bound-request",
+      "level": "MUST",
+      "summary": "Unsigned DC API requests use browser-origin binding, ignore request client_id and expected_origins members, and still enforce nonce, DCQL, endpoint, metadata, and transaction-data policy.",
+      "implementation_paths": [
+        "crates/dc-api/src/request.rs",
+        "crates/wallet/src/unsigned_dc_api_request.rs",
+        "crates/wallet/src/transaction_data_policy.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_dc_api::request::tests::deserializes_unsigned_dc_api_request_while_ignoring_invalid_identity_members",
+        "reallyme_openid4vp_wallet::unsigned_dc_api_request::tests::accepts_unsigned_dc_api_request_and_ignores_identity_members"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_dc_api::request::tests::rejects_protocol_and_request_data_mismatch_during_deserialization",
+        "reallyme_openid4vp_proto_codec::verify_codec::rejects_dc_api_protocol_data_mismatch_in_proto",
+        "reallyme_openid4vp_wallet::unsigned_dc_api_request::tests::rejects_unsigned_dc_api_request_without_nonce",
+        "reallyme_openid4vp_wallet::unsigned_dc_api_request::tests::rejects_unsigned_dc_api_request_with_response_endpoint"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-wallet-alternate-happy-flow",
+        "oid4vp-1final-wallet-negative-test-missing-nonce"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Unsigned DC API requests use browser-origin binding, ignore request client_id and expected_origins members, and still enforce nonce, DCQL, endpoint, metadata, and transaction-data policy.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Appendix A.3.1",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-dc-api-multisigned-request-object",
+      "level": "MUST",
+      "summary": "DC API multi-signed Request Objects bind client_id per protected header and are accepted when at least one complete signature and trust path is valid.",
+      "implementation_paths": [
+        "crates/proto/proto/reallyme/openid4vp/v1/openid4vp.proto",
+        "crates/dc-api/src/request.rs",
+        "crates/wallet/src/multisigned_request_object.rs",
+        "crates/wallet/src/verify_signed_request_object_with_jose.rs",
+        "crates/proto-codec/src/map_dc_api.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_wallet::multisigned_request_object::tests::accepts_when_one_of_multiple_signatures_is_valid",
+        "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::accepts_multisigned_x509_request_when_one_signature_is_valid",
+        "reallyme_openid4vp_proto_codec::verify_codec::maps_multisigned_dc_api_request_options"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_wallet::multisigned_request_object::tests::rejects_when_every_signature_is_invalid",
+        "reallyme_openid4vp_wallet::multisigned_request_object::tests::rejects_duplicate_general_jws_members",
+        "reallyme_openid4vp_dc_api::request::tests::rejects_invalid_or_excessive_multisigned_jws_signatures"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-wallet-multisigned-one-invalid-signature"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "DC API multi-signed Request Objects bind client_id per protected header and are accepted when at least one complete signature and trust path is valid.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Appendix A.3.2",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-transaction-data-type-policy",
+      "level": "MUST",
+      "summary": "Wallets reject transaction_data with unknown application types unless every type is explicitly enabled by host policy.",
+      "implementation_paths": [
+        "crates/types/src/transaction_data.rs",
+        "crates/wallet/src/transaction_data_policy.rs",
+        "crates/wallet/src/jar.rs",
+        "crates/wallet/src/multisigned_request_object.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_wallet::jar::tests::accepts_explicitly_supported_transaction_data_type"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_wallet::jar::tests::rejects_unknown_transaction_data_type_without_explicit_policy",
+        "reallyme_openid4vp_wallet::jar::tests::rejects_transaction_data_type_absent_from_explicit_policy",
+        "reallyme_openid4vp_wallet::jar::tests::rejects_ambiguous_transaction_data_policy_configuration"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Wallets reject transaction_data with unknown application types unless every type is explicitly enabled by host policy.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Section 8.4",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-metadata-capabilities",
+      "level": "MUST",
+      "summary": "Verifier and wallet metadata preserve the final protocol object shapes, including format-specific objects, while permitted extensions remain forward-compatible.",
+      "implementation_paths": [
+        "crates/types/src/define_metadata.rs",
+        "crates/types/src/request.rs",
+        "crates/http/src/resolve_request_uri.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_types::define_metadata::tests::client_metadata_uses_the_final_protocol_object_shape",
+        "reallyme_openid4vp_runtime::verify_runtime::serves_request_object_post_with_bounded_wallet_metadata"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_runtime::verify_runtime::rejects_malformed_duplicate_and_non_object_wallet_metadata",
+        "reallyme_openid4vp_runtime::verify_runtime::rejects_overdeep_and_oversized_wallet_metadata"
+      ],
+      "oidf_modules": [],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Verifier and wallet metadata preserve the final protocol object shapes, including format-specific objects, while permitted extensions remain forward-compatible.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Sections 10 and 11",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-response-replay-prevention",
+      "level": "MUST",
+      "summary": "Verifier response endpoints consume session state so replayed direct_post responses cannot validate twice.",
+      "implementation_paths": [
+        "crates/runtime/src/consume_verifier_session.rs",
+        "crates/runtime/src/route_verifier_http.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_runtime::verify_runtime::verifier_http_runtime_consumes_session_after_direct_post"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_runtime::verify_runtime::verifier_http_runtime_maps_missing_session_to_problem"
+      ],
+      "oidf_modules": [],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Verifier response endpoints consume session state so replayed direct_post responses cannot validate twice.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Section 14.1",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-response-uri-validation",
+      "level": "MUST",
+      "summary": "Verifier and wallet response bindings require safe HTTPS endpoints and enforce response-mode-specific response_uri and redirect_uri cardinality.",
+      "implementation_paths": [
+        "crates/types/src/endpoint.rs",
+        "crates/verifier/src/binding.rs",
+        "crates/wallet/src/endpoint_binding_policy.rs",
+        "crates/wallet/src/validate_endpoint_binding.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_verifier::binding::tests::accepts_https_response_uri_with_query",
+        "reallyme_openid4vp_verifier::binding::tests::accepts_idna_equivalent_x509_san_dns_endpoint_host"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_verifier::binding::tests::rejects_non_https_response_uri",
+        "reallyme_openid4vp_verifier::binding::tests::rejects_response_uri_with_fragment",
+        "reallyme_openid4vp_verifier::binding::tests::rejects_response_uri_with_userinfo",
+        "reallyme_openid4vp_verifier::binding::tests::rejects_empty_response_uri_authority",
+        "reallyme_openid4vp_verifier::binding::tests::rejects_percent_encoded_or_trailing_dot_endpoint_hosts",
+        "reallyme_openid4vp_wallet::jar::tests::rejects_redirect_uri_with_direct_post_response_mode"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-wallet-negative-test-redirect-uri-with-direct-post"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Verifier and wallet response bindings require safe HTTPS endpoints and enforce response-mode-specific response_uri and redirect_uri cardinality.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Sections 8.2 and 14.3.1",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-claim-sets-preference-order",
+      "level": "SHOULD",
+      "summary": "DCQL evaluation selects the first satisfied claim_sets alternative in verifier preference order.",
+      "implementation_paths": [
+        "crates/dcql/src/evaluate.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_dcql::evaluate::tests::claim_sets_select_verifier_preferred_satisfied_option"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_dcql::evaluate::tests::rejects_credential_when_no_claim_set_is_satisfiable"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-wallet-fewer-claims-than-available"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "DCQL evaluation selects the first satisfied claim_sets alternative in verifier preference order.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Section 6.4.1",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-sd-jwt-vc-holder-and-credential-validation",
+      "level": "MUST",
+      "summary": "Verifier processing accepts only final dc+sd-jwt credentials after issuer signature, disclosure, confirmation-key, KB-JWT, session-binding, temporal, status, and DCQL validation.",
+      "implementation_paths": [
+        "crates/formats/src/sd_jwt.rs",
+        "crates/formats/src/parse_transaction_data_binding.rs",
+        "crates/verifier/src/sd_jwt_holder_binding.rs",
+        "crates/verifier/src/holder_binding.rs",
+        "crates/verifier/src/response.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_formats::sd_jwt::tests::verifies_session_bound_sd_jwt_and_status",
+        "reallyme_openid4vp_formats::sd_jwt::tests::accepts_absent_optional_issuer_temporal_claims",
+        "reallyme_openid4vp_formats::sd_jwt::tests::accepts_issuer_temporal_claims_at_clock_skew_boundaries",
+        "reallyme_openid4vp_formats::parse_transaction_data_binding::tests::parses_exact_sha256_transaction_data_binding"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_formats::sd_jwt::tests::rejects_non_final_or_missing_issuer_type",
+        "reallyme_openid4vp_formats::sd_jwt::tests::rejects_stale_key_binding_proof",
+        "reallyme_openid4vp_formats::sd_jwt::tests::rejects_audience_mismatch",
+        "reallyme_openid4vp_formats::sd_jwt::tests::rejects_nonce_mismatch",
+        "reallyme_openid4vp_formats::sd_jwt::tests::rejects_holder_key_that_differs_from_issuer_confirmation",
+        "reallyme_openid4vp_formats::sd_jwt::tests::rejects_malformed_issuer_temporal_claims",
+        "reallyme_openid4vp_formats::sd_jwt::tests::rejects_issuer_credential_that_is_not_yet_valid",
+        "reallyme_openid4vp_formats::sd_jwt::tests::rejects_expired_issuer_credential",
+        "reallyme_openid4vp_formats::parse_transaction_data_binding::tests::rejects_malformed_or_incomplete_transaction_data_binding"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-verifier-happy-flow",
+        "oid4vp-1final-verifier-minimal-cnf-jwk",
+        "oid4vp-1final-verifier-invalid-kb-jwt-signature",
+        "oid4vp-1final-verifier-invalid-credential-signature",
+        "oid4vp-1final-verifier-invalid-sd-hash",
+        "oid4vp-1final-verifier-invalid-kb-jwt-nonce",
+        "oid4vp-1final-verifier-invalid-kb-jwt-aud",
+        "oid4vp-1final-verifier-kb-jwt-iat-in-past",
+        "oid4vp-1final-verifier-kb-jwt-iat-in-future"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Verifier processing accepts only final dc+sd-jwt credentials after issuer signature, disclosure, confirmation-key, KB-JWT, session-binding, temporal, status, and DCQL validation.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Sections 8.6, 14.9, and Appendix B.3",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-mdoc-session-transcript-binding",
+      "level": "MUST",
+      "summary": "Verifier processing authenticates mdoc DeviceAuth over the exact retained OpenID4VP SessionTranscript, evaluates the issuer certificate path and MSO at one injected time, and rejects missing, substituted, malformed, or temporally invalid trust material.",
+      "implementation_paths": [
+        "crates/formats/src/mdoc.rs",
+        "crates/verifier/src/mdoc_holder_binding.rs",
+        "crates/verifier/src/session.rs",
+        "crates/runtime/src/prepare_authorization_request_launch.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_formats::mdoc::tests::verifies_x5chain_mdoc_at_authenticated_signing_time",
+        "reallyme_openid4vp_verifier::mdoc_holder_binding::tests::retained_transcript_provider_rebuilds_the_exact_redirect_handover"
+      ],
+    "negative_tests": [
+      "reallyme_openid4vp_formats::mdoc::tests::rejects_empty_session_transcript_before_identity_verify"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-verifier-happy-flow",
+        "oid4vp-1final-verifier-invalid-session-transcript"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Verifier processing authenticates mdoc DeviceAuth over the exact retained OpenID4VP SessionTranscript, evaluates the issuer certificate path and MSO at one injected time, and rejects missing, substituted, malformed, or temporally invalid trust material.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Sections 8.6, 14.9, and Appendix B.2.6",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-verifier-attestation-prefix",
+      "level": "MUST",
+      "summary": "Wallet request validation rejects verifier_attestation client identifiers unless injected Request Object verification supplies verified attestation evidence bound to the request.",
+      "implementation_paths": [
+        "crates/wallet/src/verifier_attestation.rs",
+        "crates/wallet/src/jar.rs",
+        "crates/wallet/src/verify_signed_request_object_with_jose.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_wallet::jar::tests::accepts_verifier_attestation_prefix_with_verified_attestation",
+        "reallyme_openid4vp_wallet::verifier_attestation::tests::accepts_matching_verifier_attestation_binding"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_wallet::jar::tests::rejects_verifier_attestation_prefix_without_verified_attestation",
+        "reallyme_openid4vp_wallet::verifier_attestation::tests::rejects_verifier_attestation_subject_mismatch",
+        "reallyme_openid4vp_wallet::verifier_attestation::tests::rejects_verifier_attestation_redirect_uri_mismatch"
+      ],
+      "oidf_modules": [],
+      "eudi_tests": [],
+      "status": "partial",
+      "normative_statement": "Wallet request validation rejects verifier_attestation client identifiers unless injected Request Object verification supplies verified attestation evidence bound to the request.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Sections 5.9.3 and 12",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-client-metadata-reference-fail-closed",
+      "level": "MUST",
+      "summary": "Wallet request validation rejects metadata-by-reference extensions unless a host injects fresh trusted metadata evidence for the exact URI.",
+      "implementation_paths": [
+        "crates/types/src/request.rs",
+        "crates/wallet/src/metadata_reference.rs",
+        "crates/wallet/src/jar.rs",
+        "crates/wallet/src/verify_signed_request_object_with_jose.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_wallet::jar::tests::accepts_client_metadata_uri_with_fresh_verified_evidence",
+        "reallyme_openid4vp_wallet::metadata_reference::tests::accepts_fresh_matching_metadata_reference"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_wallet::jar::tests::rejects_client_metadata_uri_without_verified_evidence",
+        "reallyme_openid4vp_wallet::metadata_reference::tests::rejects_metadata_reference_without_verified_evidence",
+        "reallyme_openid4vp_wallet::metadata_reference::tests::rejects_stale_metadata_reference_evidence",
+        "reallyme_openid4vp_wallet::metadata_reference::tests::rejects_conflicting_inline_and_referenced_metadata"
+      ],
+      "oidf_modules": [],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Wallet request validation rejects metadata-by-reference extensions unless a host injects fresh trusted metadata evidence for the exact URI.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Section 11",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    }
+  ],
+  "specification_sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+}

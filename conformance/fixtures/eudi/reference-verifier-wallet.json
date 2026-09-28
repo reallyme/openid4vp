@@ -1,0 +1,78 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 1,
+  "fixture_id": "eudi-reference-verifier-wallet-openid4vp",
+  "source_repositories": [
+    {
+      "id": "eudi-lib-jvm-openid4vp-kt",
+      "url": "https://github.com/eu-digital-identity-wallet/eudi-lib-jvm-openid4vp-kt",
+      "pinned_commit": "f07f06834264313e53fa4852fc824fd2d7e5f5d4"
+    },
+    {
+      "id": "eudi-srv-verifier-endpoint",
+      "url": "https://github.com/eu-digital-identity-wallet/eudi-srv-verifier-endpoint",
+      "pinned_commit": "de66a3e311ed413838de240affef4511072b8687"
+    }
+  ],
+  "profile": "eudi-openid4vp-pid",
+  "synthetic": true,
+  "authorization_request": {
+    "client_id": "x509_san_dns:verifier.example",
+    "response_type": "vp_token",
+    "response_mode": "direct_post.jwt",
+    "response_uri": "https://verifier.example/direct_post.jwt/session-1",
+    "nonce": "n-0S6_WzA2Mj",
+    "state": "state-1",
+    "dcql_query": {
+      "credentials": [
+        {
+          "id": "pid",
+          "format": "dc+sd-jwt",
+          "meta": {
+            "vct_values": ["urn:eudi:pid:1"]
+          },
+          "claims": [
+            {
+              "id": "age_over_18",
+              "path": ["age_over_18"],
+              "values": [true]
+            },
+            {
+              "id": "family_name",
+              "path": ["family_name"]
+            }
+          ],
+          "claim_sets": [["age_over_18"]]
+        }
+      ]
+    },
+    "client_metadata": {
+      "vp_formats_supported": {
+        "dc+sd-jwt": {
+          "sd-jwt_alg_values": ["ES256"],
+          "kb-jwt_alg_values": ["ES256"]
+        },
+        "mso_mdoc": {}
+      },
+      "encrypted_response_alg_values_supported": ["ECDH-ES"],
+      "encrypted_response_enc_values_supported": ["A128GCM"]
+    },
+    "iss": "x509_san_dns:verifier.example",
+    "aud": ["openid4vp://"],
+    "iat": 1767225600,
+    "exp": 1767225900
+  },
+  "authorization_response": {
+    "vp_token": {
+      "pid": ["synthetic.sd-jwt.presentation"]
+    },
+    "state": "state-1"
+  },
+  "coverage": [
+    "request_object_signature",
+    "dcql_vp_token_object",
+    "direct_post_jwt",
+    "dc_api_origin_binding"
+  ]
+}

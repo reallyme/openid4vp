@@ -1,0 +1,19 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 1,
+  "exclusions": [
+    {
+      "id": "openid4vci",
+      "scope": "suite",
+      "reason": "OpenID4VCI is out of scope for reallyme/openid4vp.",
+      "review_required_before_release": false
+    },
+    {
+      "id": "presentation_exchange",
+      "scope": "module_family",
+      "reason": "Presentation Exchange was removed from OpenID4VP 1.0 final and is replaced by DCQL in this repository.",
+      "review_required_before_release": false
+    }
+  ]
+}

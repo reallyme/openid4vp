@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "reallyme-openid4vp-types"
+version = "0.1.0"
+description = "OpenID4VP authorization request, response, metadata, and transaction data types."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+documentation = "https://docs.rs/reallyme-openid4vp-types"
+keywords = ["openid4vp", "identity", "credentials", "oauth2"]
+categories = ["authentication"]
+publish = true
+include = [
+    "/src/**/*.rs",
+    "/Cargo.toml",
+    "/README.md",
+    "/LICENSE-APACHE",
+    "/LICENSE-MIT",
+]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[features]
+default = []
+native = []
+wasm = []
+
+[dependencies]
+idna = { workspace = true }
+reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.0" }
+reallyme-codec = { workspace = true, features = ["base64url", "jcs"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+url = { workspace = true }
+zeroize = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,51 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 1,
+  "fixture_id": "ewc-eudi-wallet-rfcs-openid4vp-presentation",
+  "source_repository": "https://github.com/EWC-consortium/eudi-wallet-rfcs",
+  "profile": "ewc-eudi-pid-presentation",
+  "synthetic": true,
+  "flows": [
+    {
+      "id": "pid-presentation-dcql",
+      "role_under_test": "wallet",
+      "request": {
+        "client_id": "openid_federation:https://verifier.example",
+        "response_type": "vp_token",
+        "response_mode": "direct_post",
+        "response_uri": "https://verifier.example/direct_post/session-2",
+        "nonce": "ewc-nonce-1",
+        "state": "ewc-state-1",
+        "dcql_query": {
+          "credentials": [
+            {
+              "id": "pid",
+              "format": "dc+sd-jwt",
+              "meta": {
+                "vct_values": ["urn:eudi:pid:1"]
+              },
+              "claims": [
+                {
+                  "id": "given_name",
+                  "path": ["given_name"]
+                },
+                {
+                  "id": "birth_date",
+                  "path": ["birth_date"]
+                }
+              ],
+              "claim_sets": [["given_name"], ["birth_date"]]
+            }
+          ]
+        }
+      },
+      "response": {
+        "vp_token": {
+          "pid": ["synthetic.ewc.pid.presentation"]
+        },
+        "state": "ewc-state-1"
+      }
+    }
+  ]
+}

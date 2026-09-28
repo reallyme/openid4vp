@@ -1,0 +1,94 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 2,
+  "specification": "haip-1.0-final",
+  "requirements": [
+    {
+      "id": "haip-presentation-capability-profile",
+      "level": "MUST",
+      "summary": "Expose HAIP presentation capability profile without weakening base OpenID4VP security rules.",
+      "implementation_paths": [
+        "crates/profiles/src/describe_haip.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_profiles::describe_haip::tests::haip_profile_includes_dc_api_and_mdoc",
+        "reallyme_openid4vp_profiles::describe_haip::tests::haip_shares_cross_protocol_identity"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_profiles::describe_haip::tests::haip_profile_rejects_plaintext_response_modes"
+      ],
+      "oidf_modules": [],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Expose HAIP presentation capability profile without weakening base OpenID4VP security rules.",
+      "normative_reference": {
+        "specification_id": "haip-1.0-final",
+        "section": "Section 4.2.2",
+        "sha256": "3996e0479d06b72d6d68668b8ae3cd39fddfc29ae9220c0c3fead7dc060ec4fb"
+      }
+    },
+    {
+      "id": "haip-presentation-post-response-redirect",
+      "level": "MUST",
+      "summary": "HAIP verifier sessions retain a validated HTTPS post-response destination and return it as the exact redirect_uri success member after a verified presentation.",
+      "implementation_paths": [
+        "crates/proto/proto/reallyme/openid4vp/v1/openid4vp.proto",
+        "crates/verifier/src/session.rs",
+        "crates/runtime/src/build_direct_post_success_response.rs",
+        "crates/runtime/src/prepare_authorization_request_launch.rs",
+        "crates/runtime/src/validate_authorization_response.rs",
+        "crates/runtime/src/handle_authorization_error_response.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_runtime::build_direct_post_success_response::tests::serializes_optional_redirect_from_the_generated_proto_contract"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_runtime::build_direct_post_success_response::tests::rejects_non_https_post_response_redirects"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-verifier-happy-flow"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "HAIP verifier sessions retain a validated HTTPS post-response destination and return it as the exact redirect_uri success member after a verified presentation.",
+      "normative_reference": {
+        "specification_id": "haip-1.0-final",
+        "section": "Section 4.2.2",
+        "sha256": "3996e0479d06b72d6d68668b8ae3cd39fddfc29ae9220c0c3fead7dc060ec4fb"
+      }
+    },
+    {
+      "id": "haip-presentation-same-device-follow-back",
+      "level": "MUST",
+      "summary": "A verifier releases an accepted same-device presentation result only after one timely follow-back from the browser session that initiated the flow.",
+      "implementation_paths": [
+        "crates/verifier/src/session.rs",
+        "crates/runtime/src/consume_verifier_session.rs",
+        "crates/runtime/src/route_verifier_http.rs",
+        "crates/proto-codec/src/map_session_binding.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_runtime::verify_runtime::verifier_http_runtime_releases_follow_back_result_only_to_initiating_browser"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_runtime::verify_runtime::verifier_http_runtime_rejects_wrong_browser_and_replayed_follow_back",
+        "reallyme_openid4vp_runtime::verify_runtime::verifier_http_runtime_keeps_timed_out_follow_back_result_unreleased",
+        "reallyme_openid4vp_runtime::verify_runtime::authorization_error_does_not_create_a_follow_back_result"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-verifier-happy-flow"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "A verifier releases an accepted same-device presentation result only after one timely follow-back from the browser session that initiated the flow.",
+      "normative_reference": {
+        "specification_id": "haip-1.0-final",
+        "section": "Section 4.2.2",
+        "sha256": "3996e0479d06b72d6d68668b8ae3cd39fddfc29ae9220c0c3fead7dc060ec4fb"
+      }
+    }
+  ],
+  "specification_sha256": "3996e0479d06b72d6d68668b8ae3cd39fddfc29ae9220c0c3fead7dc060ec4fb",
+  "coverage_policy": "Every implemented atomic normative statement requires executable positive and negative evidence bound to an immutable specification section and digest."
+}

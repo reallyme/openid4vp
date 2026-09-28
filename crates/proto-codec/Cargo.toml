@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "reallyme-openid4vp-proto-codec"
+version = "0.1.0"
+description = "Buffa protobuf transport mappings for ReallyMe OpenID4VP."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+include = ["/src/**/*.rs", "/Cargo.toml", "/README.md"]
+
+[features]
+default = ["native"]
+native = ["reallyme-openid4vp-dc-api/native", "reallyme-openid4vp-formats/native"]
+wasm = ["reallyme-openid4vp-dc-api/wasm", "reallyme-openid4vp-formats/wasm"]
+
+[dependencies]
+buffa = { workspace = true }
+reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.0" }
+reallyme-openid4vp-dc-api = { path = "../dc-api", version = "0.1.0", default-features = false }
+reallyme-openid4vp-formats = { path = "../formats", version = "0.1.0", default-features = false }
+reallyme-ssi-proto = { workspace = true, features = ["generated"] }
+reallyme-openid4vp-proto = { path = "../proto", version = "0.1.0", features = ["generated"] }
+reallyme-openid4vp-types = { path = "../types", version = "0.1.0", default-features = false }
+reallyme-openid4vp-verifier = { path = "../verifier", version = "0.1.0", default-features = false }
+reallyme-openid4vp-wallet = { path = "../wallet", version = "0.1.0", default-features = false }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+zeroize = { workspace = true }
+
+[lints]
+workspace = true

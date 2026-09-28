@@ -1,0 +1,7 @@
+{
+  "type": "urn:reallyme:openid4vp:error:invalid_request",
+  "title": "Invalid OpenID4VP request",
+  "status": 400,
+  "instance": "urn:reallyme:request:fuzz-seed",
+  "kind": "PROBLEM_KIND_INVALID_REQUEST"
+}

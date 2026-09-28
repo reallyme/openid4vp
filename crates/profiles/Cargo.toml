@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "reallyme-openid4vp-profiles"
+version = "0.1.0"
+description = "OpenID4VP presentation profiles."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+include = ["/src/**/*.rs", "/Cargo.toml", "/README.md"]
+
+[dependencies]
+reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.0" }
+reallyme-openid4vp-types = { path = "../types", version = "0.1.0", default-features = false }
+reallyme-openid4vc-profiles = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,62 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 1,
+  "refreshed_at": "2026-07-12",
+  "sources": [
+    {
+      "id": "eudi-lib-jvm-openid4vp-kt",
+      "repository": "https://github.com/eu-digital-identity-wallet/eudi-lib-jvm-openid4vp-kt",
+      "pinned_commit": "f07f06834264313e53fa4852fc824fd2d7e5f5d4",
+      "status": "pinned_inventory_refreshed",
+      "inventory_paths": [
+        "src/test/kotlin/eu/europa/ec/eudi/openid4vp",
+        "src/test/resources/dcql",
+        "src/test/resources/example"
+      ]
+    },
+    {
+      "id": "eudi-srv-verifier-endpoint",
+      "repository": "https://github.com/eu-digital-identity-wallet/eudi-srv-verifier-endpoint",
+      "pinned_commit": "de66a3e311ed413838de240affef4511072b8687",
+      "status": "pinned_inventory_refreshed",
+      "inventory_paths": [
+        "src/test/kotlin/eu/europa/ec/eudi/verifier/endpoint",
+        "src/test/resources"
+      ]
+    },
+    {
+      "id": "eudi-web-verifier",
+      "repository": "https://github.com/eu-digital-identity-wallet/eudi-web-verifier",
+      "pinned_commit": "3585b6bd1e64224a5961f33d38583bc879db2ca6",
+      "status": "pinned_inventory_refreshed",
+      "inventory_paths": [
+        "src/app/core/models",
+        "src/app/core/services",
+        "src/app/features/invoke-wallet",
+        "src/app/features/presentation-request-preparation",
+        "Wallet.postman_collection.json"
+      ]
+    },
+    {
+      "id": "eudi-itb",
+      "repository": "https://github.com/eu-digital-identity-wallet/eudi-itb",
+      "pinned_commit": "57ea483e6b087a992a5abe93c7302cbc4431a5eb",
+      "status": "pinned_inventory_refreshed",
+      "inventory_paths": [
+        "tests/verifier-test-suite/tests"
+      ]
+    },
+    {
+      "id": "ewc-eudi-wallet-rfcs",
+      "repository": "https://github.com/EWC-consortium/eudi-wallet-rfcs",
+      "pinned_commit": "26028b7adc7345a660f3883d1ac70dbc11f031c9",
+      "status": "pinned_inventory_refreshed",
+      "inventory_paths": [
+        "ewc-rfc002-present-verifiable-credentials.md",
+        "ewc-rfc012-trust-mechanism.md",
+        "openapi-spec/bundled.yaml"
+      ]
+    }
+  ]
+}

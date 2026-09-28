@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "reallyme-openid4vp-wallet"
+version = "0.1.0"
+description = "OpenID4VP wallet-side request verification and response construction boundary."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+include = ["/src/**/*.rs", "/Cargo.toml", "/README.md"]
+
+[features]
+default = ["native"]
+jose = [
+    "dep:reallyme-crypto",
+    "dep:reallyme-jose",
+    "reallyme-jose/jose-crypto",
+    "reallyme-crypto/aes",
+    "reallyme-crypto/csprng",
+    "reallyme-crypto/jwk",
+    "reallyme-crypto/p256",
+]
+native = [
+    "reallyme-crypto?/native",
+    "reallyme-jose?/native",
+    "reallyme-openid4vp-formats/native",
+]
+wasm = [
+    "reallyme-crypto?/wasm",
+    "reallyme-jose?/wasm",
+    "reallyme-openid4vp-formats/wasm",
+]
+
+[dependencies]
+reallyme-codec = { workspace = true, features = ["base64", "base64url"] }
+reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.0" }
+reallyme-openid4vp-dc-api = { path = "../dc-api", version = "0.1.0", default-features = false }
+reallyme-openid4vp-formats = { path = "../formats", version = "0.1.0", default-features = false }
+reallyme-openid4vp-types = { path = "../types", version = "0.1.0", default-features = false }
+reallyme-crypto = { workspace = true, optional = true }
+reallyme-jose = { workspace = true, optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+secrecy = { workspace = true }
+sha2 = { workspace = true }
+subtle = { workspace = true }
+thiserror = { workspace = true }
+url = { workspace = true }
+zeroize = { workspace = true }
+
+[dev-dependencies]
+reallyme-crypto = { workspace = true, features = ["aes", "jwk", "p256"] }
+reallyme-jose = { workspace = true, features = ["jose-crypto"] }
+
+[lints]
+workspace = true

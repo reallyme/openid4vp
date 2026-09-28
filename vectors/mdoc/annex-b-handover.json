@@ -1,0 +1,29 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 1,
+  "fixture_id": "iso-18013-7-annex-b-openid4vp-handover",
+  "synthetic": true,
+  "format_boundary": "ISO 18013-5 DeviceResponse CBOR is delegated to reallyme-identity envelopes/mdoc.",
+  "openid4vp_inputs": {
+    "client_id": "x509_san_dns:verifier.example",
+    "response_uri": "https://verifier.example/direct_post/session-3",
+    "nonce": "mdoc-nonce-1",
+    "dcql_query_id": "mdl"
+  },
+  "handover": {
+    "session_transcript_cbor_b64url": "oWZzeW50aGV0aWNhbGx5LWJvdW5k",
+    "handover_digest_sha256_b64url": "z8B2k3S1QK2Q7mMj2zjCCeEhVj7bPeW3I4vq3G1gsB4"
+  },
+  "authorization_response": {
+    "vp_token": {
+      "mdl": [
+        {
+          "device_response": "synthetic-device-response-cbor-b64url",
+          "session_transcript": "oWZzeW50aGV0aWNhbGx5LWJvdW5k"
+        }
+      ]
+    },
+    "state": "mdoc-state-1"
+  }
+}

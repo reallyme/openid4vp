@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "purpose": "oidf-demo-pre-submission",
+  "suite": {
+    "repository": "https://gitlab.com/openid/conformance-suite",
+    "commit": "ac846b206dfa11602a6b773d7ae1c06cb379d53f",
+    "describe": "release-v5.2.4-206-gac846b206",
+    "version": "5.2.4"
+  },
+  "profile_additions": [
+    {
+      "profile_id": "verifier-sd-jwt-vc-direct-post-jwt",
+      "group_variants": {
+        "vp_profile": "haip",
+        "credential_format": "sd_jwt_vc",
+        "response_mode": "direct_post.jwt",
+        "client_id_prefix": "x509_hash",
+        "request_method": "request_uri_signed"
+      },
+      "modules": [
+        "oid4vp-1final-verifier-present-revoked-credential",
+        "oid4vp-1final-verifier-present-credential-without-status"
+      ],
+      "evidence_expectations": {
+        "oid4vp-1final-verifier-present-revoked-credential": {
+          "decision": "rejected",
+          "observation_kind": "authorization_response_validation",
+          "minimum_observations": 1
+        },
+        "oid4vp-1final-verifier-present-credential-without-status": {
+          "decision": "accepted",
+          "observation_kind": "authorization_response_validation",
+          "minimum_observations": 1
+        }
+      }
+    },
+    {
+      "profile_id": "verifier-iso-mdl-direct-post-jwt",
+      "group_variants": {
+        "vp_profile": "haip",
+        "credential_format": "iso_mdl",
+        "response_mode": "direct_post.jwt",
+        "client_id_prefix": "x509_hash",
+        "request_method": "request_uri_signed"
+      },
+      "modules": [
+        "oid4vp-1final-verifier-present-revoked-credential",
+        "oid4vp-1final-verifier-present-credential-on-identifier-list",
+        "oid4vp-1final-verifier-present-credential-without-status"
+      ],
+      "evidence_expectations": {
+        "oid4vp-1final-verifier-present-revoked-credential": {
+          "decision": "rejected",
+          "observation_kind": "authorization_response_validation",
+          "minimum_observations": 1
+        },
+        "oid4vp-1final-verifier-present-credential-on-identifier-list": {
+          "decision": "rejected",
+          "observation_kind": "authorization_response_validation",
+          "minimum_observations": 1
+        },
+        "oid4vp-1final-verifier-present-credential-without-status": {
+          "decision": "accepted",
+          "observation_kind": "authorization_response_validation",
+          "minimum_observations": 1
+        }
+      }
+    }
+  ]
+}

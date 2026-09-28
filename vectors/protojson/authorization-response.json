@@ -1,0 +1,11 @@
+{
+  "vpToken": [
+    {
+      "queryId": "pid",
+      "presentations": [
+        { "compact": "header.payload.signature" }
+      ]
+    }
+  ],
+  "state": "fixture-state"
+}

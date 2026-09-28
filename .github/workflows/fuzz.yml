@@ -1,0 +1,98 @@
+# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+name: Fuzz
+
+env:
+  CARGO_FUZZ_VERSION: 0.13.2
+  FUZZ_TOOLCHAIN: nightly-2026-09-15
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - trunk
+  schedule:
+    - cron: "29 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: fuzz smoke
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout OpenID4VP
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: openid4vp
+          persist-credentials: false
+
+      - name: Install pinned Rust nightly
+        uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
+        with:
+          toolchain: ${{ env.FUZZ_TOOLCHAIN }}
+
+      - name: Cache fuzz build
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          workspaces: openid4vp/fuzz
+          cache-bin: false
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --version "$CARGO_FUZZ_VERSION" --locked
+
+      - name: Run each fuzz target once without rebuilding the workspace
+        env:
+          OPENID4VP_FUZZ_RUNS: "8"
+        working-directory: openid4vp
+        run: scripts/run-fuzz-smoke.sh
+
+  scheduled:
+    name: scheduled fuzz corpus
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout OpenID4VP
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: openid4vp
+          persist-credentials: false
+
+      - name: Install pinned Rust nightly
+        uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
+        with:
+          toolchain: ${{ env.FUZZ_TOOLCHAIN }}
+
+      - name: Cache fuzz build
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          workspaces: openid4vp/fuzz
+          cache-bin: false
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --version "$CARGO_FUZZ_VERSION" --locked
+
+      - name: Run each time-boxed fuzz target without rebuilding the workspace
+        env:
+          OPENID4VP_FUZZ_MAX_TOTAL_TIME: "300"
+          OPENID4VP_FUZZ_RSS_LIMIT_MB: "4096"
+        working-directory: openid4vp
+        run: scripts/run-fuzz-smoke.sh
+
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: fuzz-artifacts-${{ github.run_id }}
+          path: openid4vp/fuzz/artifacts
+          if-no-files-found: ignore

@@ -1,0 +1,32 @@
+// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+//
+// SPDX-License-Identifier: MIT OR Apache-2.0
+
+syntax = "proto3";
+
+package reallyme.openid4vp.v1;
+
+import "reallyme/openid4vp/v1/openid4vp.proto";
+
+option java_multiple_files = true;
+option java_package = "me.really.openid4vp.v1";
+option swift_prefix = "ReallyMeOpenID4VP";
+
+// OpenId4VpVerifierService is the transport-neutral verifier RPC contract.
+service OpenId4VpVerifierService {
+  rpc BuildAuthorizationRequest(BuildAuthorizationRequestRequest) returns (BuildAuthorizationRequestResponse);
+  rpc ValidateAuthorizationResponse(ValidateAuthorizationResponseRequest) returns (ValidateAuthorizationResponseResponse);
+}
+
+// OpenId4VpWalletService is the transport-neutral wallet RPC contract.
+service OpenId4VpWalletService {
+  rpc ParseAuthorizationRequestTransport(ParseAuthorizationRequestTransportRequest) returns (ParseAuthorizationRequestTransportResponse);
+  rpc VerifyAuthorizationRequest(VerifyAuthorizationRequestRequest) returns (VerifyAuthorizationRequestResponse);
+}
+
+// OpenId4VpDcApiService is the transport-neutral RPC contract for W3C Digital
+// Credentials API binding helpers.
+service OpenId4VpDcApiService {
+  rpc BuildDigitalCredentialRequestOptions(BuildDigitalCredentialRequestOptionsRequest) returns (BuildDigitalCredentialRequestOptionsResponse);
+  rpc DecodeDcApiAuthorizationResponse(DecodeDcApiAuthorizationResponseRequest) returns (DecodeDcApiAuthorizationResponseResponse);
+}

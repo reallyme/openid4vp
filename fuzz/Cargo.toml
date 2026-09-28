@@ -1,0 +1,191 @@
+# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "openid4vp-fuzz"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[lints.cargo]
+# cargo-fuzz treats each binary name as a stable target identifier. Preserve
+# the existing corpus and artifact directory names instead of renaming every
+# target solely to satisfy Cargo's display-name convention.
+non_kebab_case_bins = "allow"
+
+[workspace]
+
+[dependencies]
+buffa = { version = "0.9.1", features = ["json"] }
+libfuzzer-sys = "0.4.13"
+reallyme-codec = { version = "=0.2.3", default-features = false, features = ["base64url"] }
+reallyme-crypto = { version = "=0.3.9", default-features = false, features = ["jwk", "native"] }
+reallyme-openid4vp-dcql = { path = "../crates/dcql", version = "0.1.0", default-features = false }
+reallyme-openid4vp-dc-api = { path = "../crates/dc-api", version = "0.1.0", default-features = false }
+reallyme-openid4vp-formats = { path = "../crates/formats", version = "0.1.0", default-features = false, features = ["native"] }
+reallyme-openid4vp-proto = { path = "../crates/proto", version = "0.1.0", default-features = false, features = ["generated"] }
+reallyme-openid4vp-proto-codec = { path = "../crates/proto-codec", version = "0.1.0", default-features = false }
+reallyme-jose = { version = "=0.4.0", default-features = false, features = ["native"] }
+reallyme-openid4vp-runtime = { path = "../crates/runtime", version = "0.1.0", default-features = false, features = ["jose"] }
+reallyme-openid4vp-types = { path = "../crates/types", version = "0.1.0", default-features = false }
+reallyme-openid4vp-verifier = { path = "../crates/verifier", version = "0.1.0", default-features = false }
+reallyme-openid4vp-wallet = { path = "../crates/wallet", version = "0.1.0", default-features = false }
+serde_json = "1.0.151"
+
+[[bin]]
+name = "dcql_json"
+path = "fuzz_targets/dcql_json.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "authorization_request_transport"
+path = "fuzz_targets/authorization_request_transport.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "request_object_jwt"
+path = "fuzz_targets/request_object_jwt.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "client_identifier"
+path = "fuzz_targets/client_identifier.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "authorization_response_json"
+path = "fuzz_targets/authorization_response_json.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "authorization_response_proto"
+path = "fuzz_targets/authorization_response_proto.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "authorization_request_proto"
+path = "fuzz_targets/authorization_request_proto.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "problem_details_proto_json"
+path = "fuzz_targets/problem_details_proto_json.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "service_envelope_proto_json"
+path = "fuzz_targets/service_envelope_proto_json.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "transaction_data_json"
+path = "fuzz_targets/transaction_data_json.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "dc_api_response_json"
+path = "fuzz_targets/dc_api_response_json.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "dcql_evaluation"
+path = "fuzz_targets/dcql_evaluation.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "direct_post_form"
+path = "fuzz_targets/direct_post_form.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "direct_post_jwt_form"
+path = "fuzz_targets/direct_post_jwt_form.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "dc_api_request_json"
+path = "fuzz_targets/dc_api_request_json.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "verifier_attestation_parameters"
+path = "fuzz_targets/verifier_attestation_parameters.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "sd_jwt_presentation"
+path = "fuzz_targets/sd_jwt_presentation.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "mdoc_presentation"
+path = "fuzz_targets/mdoc_presentation.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "zk_presentation_value"
+path = "fuzz_targets/zk_presentation_value.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "operation_contract"
+path = "fuzz_targets/operation_contract.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "session_record_proto"
+path = "fuzz_targets/session_record_proto.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "hosted_request_object_proto"
+path = "fuzz_targets/hosted_request_object_proto.rs"
+test = false
+doc = false
+bench = false

@@ -1,0 +1,94 @@
+{
+  "schema": "reallyme.openid4vp.x509_request_binding_vectors.v1",
+  "normative_basis": [
+    "OpenID4VP 1.0 Final Section 5.9.3",
+    "RFC 7515 Section 4.1.6",
+    "RFC 8399 Section 2.3",
+    "RFC 3986 Sections 3.2 and 6.2"
+  ],
+  "policy_version": 1,
+  "hash_cases": [
+    {
+      "id": "sha256-der-leaf-exact",
+      "leaf_der_base64": "dGVzdA==",
+      "client_identifier": "n4bQgYhMfWWaL-qgxVrQFaO_TxsrC4Is0V1sFbDwCgg",
+      "matches": true
+    },
+    {
+      "id": "sha256-der-leaf-one-byte-different",
+      "leaf_der_base64": "dGVzdA==",
+      "client_identifier": "n4bQgYhMfWWaL-qgxVrQFaO_TxsrC4Is0V1sFbDwCgh",
+      "matches": false
+    },
+    {
+      "id": "sha256-der-leaf-padding-rejected",
+      "leaf_der_base64": "dGVzdA==",
+      "client_identifier": "n4bQgYhMfWWaL-qgxVrQFaO_TxsrC4Is0V1sFbDwCgg=",
+      "matches": false
+    },
+    {
+      "id": "sha256-der-leaf-standard-base64-rejected",
+      "leaf_der_base64": "dGVzdA==",
+      "client_identifier": "n4bQgYhMfWWaL+qgxVrQFaO/TxsrC4Is0V1sFbDwCgg",
+      "matches": false
+    }
+  ],
+  "dns_cases": [
+    {
+      "id": "idna-u-label-to-a-label",
+      "client_identifier": "bücher.example",
+      "dns_san": "xn--bcher-kva.example",
+      "matches": true
+    },
+    {
+      "id": "ascii-case-insensitive-exact",
+      "client_identifier": "VERIFIER.example",
+      "dns_san": "verifier.EXAMPLE",
+      "matches": true
+    },
+    {
+      "id": "wildcard-is-not-exact-dns-name",
+      "client_identifier": "verifier.example",
+      "dns_san": "*.example",
+      "matches": false
+    },
+    {
+      "id": "trailing-root-dot-rejected-by-policy",
+      "client_identifier": "verifier.example",
+      "dns_san": "verifier.example.",
+      "matches": false
+    }
+  ],
+  "endpoint_cases": [
+    {
+      "id": "idna-endpoint-host",
+      "endpoint": "https://bücher.example/response",
+      "dns_name": "xn--bcher-kva.example",
+      "matches": true
+    },
+    {
+      "id": "percent-encoded-authority-rejected",
+      "endpoint": "https://verifier%2eexample/response",
+      "dns_name": "verifier.example",
+      "matches": false
+    },
+    {
+      "id": "userinfo-authority-rejected",
+      "endpoint": "https://trusted.example@attacker.example/response",
+      "dns_name": "attacker.example",
+      "matches": false
+    },
+    {
+      "id": "empty-userinfo-authority-rejected",
+      "endpoint": "https://@verifier.example/response",
+      "dns_name": "verifier.example",
+      "matches": false
+    },
+    {
+      "id": "whatwg-backslash-normalization-rejected",
+      "endpoint": "https://verifier.example\\\\@attacker.example/response",
+      "dns_name": "attacker.example",
+      "matches": false
+    }
+  ]
+}

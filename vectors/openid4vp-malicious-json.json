@@ -1,0 +1,72 @@
+[
+  {
+    "id": "dcql-accepts-minimal-final-query",
+    "spec_section": "OpenID4VP 1.0 Final 6.1",
+    "target": "dcql::DcqlQuery",
+    "input": "{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"meta\":{\"vct_values\":[\"https://credentials.example.com/identity_credential\"]},\"claims\":[{\"id\":\"given_name\",\"path\":[\"given_name\"]}]}]}",
+    "expected": "accept"
+  },
+  {
+    "id": "dcql-rejects-duplicate-query-ids",
+    "spec_section": "OpenID4VP 1.0 Final DCQL",
+    "target": "dcql::DcqlQuery",
+    "input": "{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"meta\":{}},{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"meta\":{}}]}",
+    "expected": "reject"
+  },
+  {
+    "id": "json-rejects-duplicate-security-field",
+    "spec_section": "Local malicious JSON policy",
+    "target": "security::StrictJson",
+    "input": "{\"client_id\":\"x509_san_dns:verifier.example\",\"client_id\":\"redirect_uri:https://evil.example/cb\"}",
+    "expected": "reject"
+  },
+  {
+    "id": "json-rejects-recursive-depth-bomb",
+    "spec_section": "Local malicious JSON policy",
+    "target": "security::StrictJson",
+    "input": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+    "expected": "reject"
+  },
+  {
+    "id": "request-rejects-unknown-outer-parameter",
+    "spec_section": "OpenID4VP 1.0 Final request-by-reference parameters",
+    "target": "wallet::AuthorizationRequestTransport",
+    "input": "client_id=x509_san_dns%3Averifier.example&unsupported=value&request_uri=https://verifier.example/request.jwt",
+    "expected": "reject"
+  },
+  {
+    "id": "request-rejects-presentation-exchange-shape",
+    "spec_section": "OpenID4VP 1.0 Final removes Presentation Exchange",
+    "target": "types::AuthorizationRequestObject",
+    "input": "{\"client_id\":\"x509_san_dns:verifier.example\",\"response_type\":\"vp_token\",\"nonce\":\"nonce\",\"presentation_definition\":{\"id\":\"legacy\"},\"iss\":\"x509_san_dns:verifier.example\",\"aud\":[\"wallet\"],\"iat\":1,\"exp\":20}",
+    "expected": "reject"
+  },
+  {
+    "id": "request-rejects-untrusted-client-metadata-uri",
+    "spec_section": "OpenID4VP 1.0 Final Verifier Metadata",
+    "target": "types::AuthorizationRequestObject",
+    "input": "{\"client_id\":\"x509_san_dns:verifier.example\",\"response_type\":\"vp_token\",\"nonce\":\"nonce\",\"dcql_query\":{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"meta\":{}}]},\"client_metadata_uri\":\"https://verifier.example/metadata.json\",\"expected_origins\":[\"https://rp.example\"],\"iss\":\"x509_san_dns:verifier.example\",\"aud\":[\"wallet\"],\"iat\":1,\"exp\":20}",
+    "expected": "reject"
+  },
+  {
+    "id": "response-rejects-legacy-array-vp-token",
+    "spec_section": "OpenID4VP 1.0 Final Authorization Response",
+    "target": "types::AuthorizationResponse",
+    "input": "{\"vp_token\":[\"legacy-presentation\"],\"state\":\"fedcba9876543210\"}",
+    "expected": "reject"
+  },
+  {
+    "id": "response-accepts-dcql-keyed-vp-token-object",
+    "spec_section": "OpenID4VP 1.0 Final Authorization Response",
+    "target": "types::AuthorizationResponse",
+    "input": "{\"vp_token\":{\"pid\":[\"presentation\"]},\"state\":\"fedcba9876543210\"}",
+    "expected": "accept"
+  },
+  {
+    "id": "response-rejects-empty-presentation-list",
+    "spec_section": "OpenID4VP 1.0 Final Authorization Response",
+    "target": "types::AuthorizationResponse",
+    "input": "{\"vp_token\":{\"pid\":[]},\"state\":\"fedcba9876543210\"}",
+    "expected": "reject"
+  }
+]

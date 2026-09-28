@@ -1,0 +1,81 @@
+{
+  "alias": "oidf-vp-test-verifier",
+  "description": "OID4VP RP against OP (wallet test - DCQL - mdoc mDL - HAIP)",
+  "server": {
+    "authorization_endpoint": "{BASEURL}test/a/oidf-vp-test-wallet/authorize"
+  },
+  "client": {
+    "jwks": {
+      "keys": [
+        {vp-signing-jwk.json}
+      ]
+    },
+    "dcql": {
+      "credentials": [
+        {
+          "id": "my_credential",
+          "format": "mso_mdoc",
+          "meta": {
+            "doctype_value": "org.iso.18013.5.1.mDL"
+          },
+          "claims": [
+            {
+              "path": [
+                "org.iso.18013.5.1",
+                "family_name"
+              ]
+            },
+            {
+              "path": [
+                "org.iso.18013.5.1",
+                "given_name"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "client2": {
+    "jwks": {
+      "keys": [
+        {vp-signing-jwk-2.json}
+      ]
+    }
+  },
+  "credential": {
+    "signing_jwk": {vp-signing-jwk.json},
+    "trust_anchor_pem": "{mdoc-iaca-root.crt}",
+    "status_list_trust_anchor_pem": "{mdoc-iaca-root.crt}"
+  },
+  "browser": [
+    {
+      "comment": "expect an immediate redirect back to the conformance suite",
+      "match": "https://*/test/a/*/authorize*",
+      "tasks": [
+        {
+          "task": "Verify Complete",
+          "match": "*/test/*/callback*",
+          "comment": "declaring both this and the next task as optional means this configuration works regardless of whether a url is returned in the direct post response",
+          "optional": true,
+          "commands": [
+            [
+              "wait",
+              "id",
+              "submission_complete",
+              10
+            ]
+          ]
+        },
+        {
+          "task": "Verify Complete",
+          "optional": true,
+          "match": "https://*/test/a/*/authorize*"
+        }
+      ]
+    }
+  ],
+  "options": {
+    "browsercontrol_css_enable": false
+  }
+}

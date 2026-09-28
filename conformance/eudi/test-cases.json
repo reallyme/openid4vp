@@ -1,0 +1,77 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 1,
+  "test_cases": [
+    {
+      "id": "eudi-openid4vp-request-object",
+      "role_under_test": "wallet",
+      "topic": "request_object",
+      "profile": "eudi",
+      "status": "covered-locally",
+      "local_fixture": "conformance/fixtures/eudi/reference-verifier-wallet.json",
+      "local_evidence": [
+        "reallyme_openid4vp_wallet::verify_nested_request_object_with_jose::tests::verifies_nested_signed_then_encrypted_request_object_with_jose"
+      ]
+    },
+    {
+      "id": "eudi-openid4vp-direct-post-jwt",
+      "role_under_test": "verifier",
+      "topic": "direct_post_jwt",
+      "profile": "eudi",
+      "status": "covered-locally",
+      "local_fixture": "conformance/fixtures/eudi/reference-verifier-wallet.json",
+      "local_evidence": [
+        "reallyme_openid4vp_runtime::verify_runtime::jose_decryptor_handles_valid_ecdh_es_direct_post_jwt"
+      ]
+    },
+    {
+      "id": "eudi-openid4vp-same-device-presentation",
+      "role_under_test": "wallet",
+      "topic": "dcql_claim_set_preference_order",
+      "profile": "eudi",
+      "status": "covered-locally",
+      "local_fixture": "conformance/fixtures/eudi/same-device-presentation.json",
+      "local_evidence": [
+        "reallyme_openid4vp_dcql::evaluate::tests::claim_sets_select_verifier_preferred_satisfied_option",
+        "reallyme_openid4vp_types::response::tests::serializes_vp_token_as_dcql_keyed_object"
+      ]
+    },
+    {
+      "id": "eudi-openid4vp-cross-device-presentation",
+      "role_under_test": "wallet",
+      "topic": "request_uri_post_direct_post_jwt",
+      "profile": "eudi",
+      "status": "covered-locally",
+      "local_fixture": "conformance/fixtures/eudi/cross-device-presentation.json",
+      "local_evidence": [
+        "reallyme_openid4vp_wallet::transport::tests::classifies_post_request_uri_with_wallet_nonce",
+        "reallyme_openid4vp_runtime::verify_runtime::jose_decryptor_handles_valid_ecdh_es_direct_post_jwt"
+      ]
+    },
+    {
+      "id": "eudi-openid4vp-negative-nonce-mismatch",
+      "role_under_test": "verifier",
+      "topic": "binding_mismatch",
+      "profile": "eudi",
+      "status": "covered-locally",
+      "local_fixture": "conformance/fixtures/eudi/negative-nonce-mismatch.json",
+      "local_evidence": [
+        "reallyme_openid4vp_formats::zk_presentation::tests::rejects_binding_mismatch_before_format_verification",
+        "reallyme_openid4vp_verifier::holder_binding::tests::rejects_holder_binding_with_wrong_nonce"
+      ]
+    },
+    {
+      "id": "ewc-openid4vp-dc-api-wallet-flow",
+      "role_under_test": "wallet",
+      "topic": "dc_api_jwt",
+      "profile": "ewc-eudi",
+      "status": "covered-locally",
+      "local_fixture": "conformance/fixtures/ewc/dc-api-wallet-flow.json",
+      "local_evidence": [
+        "reallyme_openid4vp_dc_api::request::tests::accepts_signed_dc_api_jwt_request_with_origin_binding",
+        "reallyme_openid4vp_runtime::verify_runtime::decodes_encrypted_dc_api_authorization_response_with_ecdh_es_jose"
+      ]
+    }
+  ]
+}

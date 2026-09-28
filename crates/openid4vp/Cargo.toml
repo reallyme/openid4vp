@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "reallyme-openid4vp"
+version = "0.1.0"
+description = "ReallyMe OpenID4VP protocol facade."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+include = ["/src/**/*.rs", "/Cargo.toml", "/README.md"]
+
+[features]
+default = ["native"]
+native = [
+    "reallyme-openid4vp-dc-api?/native",
+    "reallyme-openid4vp-formats?/native",
+    "reallyme-openid4vp-types/native",
+    "reallyme-openid4vp-verifier/native",
+    "reallyme-openid4vp-wallet/native",
+    "reallyme-openid4vp-runtime?/native",
+]
+wasm = [
+    "reallyme-openid4vp-dc-api?/wasm",
+    "reallyme-openid4vp-formats?/wasm",
+    "reallyme-openid4vp-types/wasm",
+    "reallyme-openid4vp-verifier/wasm",
+    "reallyme-openid4vp-wallet/wasm",
+    "reallyme-openid4vp-runtime?/wasm",
+]
+dc-api = ["dep:reallyme-openid4vp-dc-api"]
+formats = ["dep:reallyme-openid4vp-formats"]
+http = ["dep:reallyme-openid4vp-http"]
+profiles = ["dep:reallyme-openid4vp-profiles"]
+runtime = ["dep:reallyme-openid4vp-runtime"]
+jose = [
+    "runtime",
+    "reallyme-openid4vp-runtime/jose",
+    "reallyme-openid4vp-wallet/jose",
+]
+codec = [
+    "dep:reallyme-openid4vp-proto",
+    "dep:reallyme-openid4vp-proto-codec",
+    "reallyme-openid4vp-proto/generated",
+    "dep:reallyme-ssi-proto",
+    "reallyme-ssi-proto/generated",
+]
+
+[dependencies]
+reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.0" }
+reallyme-openid4vp-dc-api = { path = "../dc-api", version = "0.1.0", default-features = false, optional = true }
+reallyme-openid4vp-formats = { path = "../formats", version = "0.1.0", default-features = false, optional = true }
+reallyme-openid4vp-http = { path = "../http", version = "0.1.0", default-features = false, optional = true }
+reallyme-openid4vp-profiles = { path = "../profiles", version = "0.1.0", default-features = false, optional = true }
+reallyme-openid4vp-proto = { path = "../proto", version = "0.1.0", default-features = false, optional = true }
+reallyme-openid4vp-proto-codec = { path = "../proto-codec", version = "0.1.0", default-features = false, optional = true }
+reallyme-openid4vp-runtime = { path = "../runtime", version = "0.1.0", default-features = false, optional = true }
+reallyme-openid4vp-types = { path = "../types", version = "0.1.0", default-features = false }
+reallyme-openid4vp-verifier = { path = "../verifier", version = "0.1.0", default-features = false }
+reallyme-openid4vp-wallet = { path = "../wallet", version = "0.1.0", default-features = false }
+reallyme-ssi-proto = { workspace = true, optional = true }
+
+[lints]
+workspace = true

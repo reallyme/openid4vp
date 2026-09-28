@@ -1,0 +1,93 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 2,
+  "profile": "OpenID4VC High Assurance Interoperability Profile 1.0 Final",
+  "profile_dependencies_complete": true,
+  "specifications": [
+    {
+      "id": "haip-1.0-final",
+      "revision": "Final, 24 December 2025",
+      "url": "https://openid.net/specs/openid4vc-high-assurance-interoperability-profile-1_0-final.html",
+      "sha256": "3996e0479d06b72d6d68668b8ae3cd39fddfc29ae9220c0c3fead7dc060ec4fb",
+      "role": "profile"
+    },
+    {
+      "id": "openid4vp-1.0-final",
+      "revision": "Final, 9 July 2025",
+      "url": "https://openid.net/specs/openid-4-verifiable-presentations-1_0-final.html",
+      "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e",
+      "role": "profile_dependency"
+    },
+    {
+      "id": "openid4vci-1.0-final",
+      "revision": "Final, 16 September 2025",
+      "url": "https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-final.html",
+      "sha256": "f123c3178cacd27688b15b762098a045e9eb35eccfe2f5f18a357c3815e06ba7",
+      "role": "profile_dependency"
+    },
+    {
+      "id": "w3c-digital-credentials-2025-12-08",
+      "revision": "W3C Working Draft, 8 December 2025",
+      "url": "https://www.w3.org/TR/2025/WD-digital-credentials-20251208/",
+      "sha256": "bd0e2b26a5480cbd1ddc5683c44df97e1c0aa2b7d7e0a303a39a0b05d3a39607",
+      "role": "profile_dependency"
+    },
+    {
+      "id": "sd-jwt-vc-draft-13",
+      "revision": "draft-ietf-oauth-sd-jwt-vc-13, 6 November 2025",
+      "url": "https://www.ietf.org/archive/id/draft-ietf-oauth-sd-jwt-vc-13.txt",
+      "sha256": "c1cb38fde3c41f32a7915bebbff2c76b121da9712a07ecb2a25a9802e428b38d",
+      "role": "profile_dependency"
+    },
+    {
+      "id": "oauth-status-list-draft-14",
+      "revision": "draft-ietf-oauth-status-list-14, 10 December 2025",
+      "url": "https://www.ietf.org/archive/id/draft-ietf-oauth-status-list-14.txt",
+      "sha256": "7f47502ad2f076879a06880a4e1f864991ae1bfc21f86f6ffa1d73cd4a930352",
+      "role": "profile_dependency"
+    },
+    {
+      "id": "iso-iec-18013-5-2021",
+      "revision": "ISO/IEC 18013-5:2021",
+      "url": "https://www.iso.org/standard/69084.html",
+      "content_access": "licensed_standard",
+      "role": "profile_dependency"
+    },
+    {
+      "id": "fapi-security-profile-2.0-final",
+      "revision": "Final, 22 February 2025",
+      "url": "https://openid.net/specs/fapi-security-profile-2_0-final.html",
+      "sha256": "26a49ad19b1f2b19ecc1cd9b825b4d5012f5e03a5dc8cb0dbd26462d39da465c",
+      "role": "profile_dependency"
+    },
+    {
+      "id": "rfc9101",
+      "revision": "RFC 9101, August 2021",
+      "url": "https://www.rfc-editor.org/rfc/rfc9101.html",
+      "sha256": "14a98eb7f65063f0eaa37b0d48ed0e956cb5fd8e38e799a28a119c56554ccb94",
+      "role": "normative_dependency"
+    },
+    {
+      "id": "rfc9901",
+      "revision": "RFC 9901, November 2025",
+      "url": "https://www.rfc-editor.org/rfc/rfc9901.html",
+      "sha256": "cabbdc4048c1d6dd06ebb2a64e287b55d252c5c2e1b1b9fe680441df7a35eafd",
+      "role": "normative_dependency"
+    },
+    {
+      "id": "rfc9457",
+      "revision": "RFC 9457, July 2023",
+      "url": "https://www.rfc-editor.org/rfc/rfc9457.html",
+      "sha256": "f705945670a08239544e8ce53ba8a8c41d4b67ccfcd1a36c0eb4ee851a35bbab",
+      "role": "repository_dependency"
+    }
+  ],
+  "update_monitors": [
+    {
+      "id": "openid4vp-1.0-errata",
+      "url": "https://openid.net/specs/openid-4-verifiable-presentations-1_0.html",
+      "role": "non_normative_update_monitor"
+    }
+  ]
+}

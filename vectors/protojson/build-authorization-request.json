@@ -1,0 +1,10 @@
+{
+  "request": {
+    "responseType": "RESPONSE_TYPE_VP_TOKEN",
+    "responseMode": "RESPONSE_MODE_DIRECT_POST",
+    "responseUri": "https://verifier.example/response",
+    "nonce": "fixture-nonce",
+    "dcqlQueryJson": "eyJjcmVkZW50aWFscyI6W119"
+  },
+  "signRequestObject": true
+}

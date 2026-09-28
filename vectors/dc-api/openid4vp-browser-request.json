@@ -1,0 +1,38 @@
+{
+  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_license_identifier": "MIT OR Apache-2.0",
+  "schema_version": 1,
+  "fixture_id": "openid4vp-dc-api-browser-request",
+  "draft_source": "https://w3c-fedid.github.io/digital-credentials/",
+  "draft_volatility": "Digital Credentials API integration is draft-bound; field names and browser mediation behavior may change.",
+  "synthetic": true,
+  "requests": [
+    {
+      "protocol": "openid4vp",
+      "protocol_version": "1.0",
+      "request_kind": "signed",
+      "origin": "https://rp.example",
+      "authorization_request": {
+        "client_id": "origin:https://rp.example",
+        "response_type": "vp_token",
+        "response_mode": "dc_api.jwt",
+        "nonce": "dc-api-nonce-1",
+        "expected_origins": ["https://rp.example"],
+        "dcql_query": {
+          "credentials": [
+            {
+              "id": "pid",
+              "format": "dc+sd-jwt",
+              "meta": {
+                "vct_values": ["urn:eudi:pid:1"]
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "response": {
+    "encrypted_response": "synthetic.compact-jwe"
+  }
+}
