@@ -1,0 +1,3 @@
+# Public, non-bearer registration_certificate_jwt interoperability fixture.
+# The exception is bound to the introducing commit, path, rule, and line.
+dacf7fbb55e538a2b06edb8a965e0fa2c2b1dc6f:conformance/oidf/configs/vp-wallet-test-config-dcql-sdjwt-haip.json:jwt:41

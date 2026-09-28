@@ -250,6 +250,10 @@ shared.assertContains(
   "crates/proto-codec/tests/verify_codec.rs",
   "generated_proto_decode_rejects_unknown_fields",
 );
+shared.assertContains(
+  ".gitleaksignore",
+  "dacf7fbb55e538a2b06edb8a965e0fa2c2b1dc6f:conformance/oidf/configs/vp-wallet-test-config-dcql-sdjwt-haip.json:jwt:41",
+);
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const failures = [];
 
