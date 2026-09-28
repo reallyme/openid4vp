@@ -2,44 +2,20 @@
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
-name: OIDF Conformance
+name: OIDF Protocol Compatibility
+run-name: OIDF protocol compatibility @ ${{ github.sha }}
+
+on:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-on:
-  workflow_dispatch:
-    inputs:
-      profile_id:
-        description: "Public OpenID4VP protocol profile to execute"
-        required: true
-        default: "verifier-sd-jwt-vc-direct-post-jwt"
-        type: choice
-        options:
-          - "verifier-sd-jwt-vc-direct-post-jwt"
-          - "verifier-iso-mdl-direct-post-jwt"
-          - "wallet-sd-jwt-vc-direct-post-jwt"
-          - "wallet-iso-mdl-direct-post-jwt"
-          - "wallet-sd-jwt-vc-dc-api-jwt"
-          - "wallet-iso-mdl-dc-api-jwt"
-      runner_mode:
-        description: "Execute modules, or only validate harness readiness without conformance evidence"
-        required: true
-        default: "execute"
-        type: choice
-        options:
-          - "execute"
-          - "pending"
-      example_verifier_base_url:
-        description: "Verifier public HTTPS base URL; overrides OIDF_EXAMPLE_VERIFIER_BASE_URL"
-        required: false
-        default: ""
-        type: string
 jobs:
-  oid4vp:
-    name: OID4VP selected protocol profile
+  oid4vp-protocol-compatibility:
+    name: Pinned OID4VP suite compatibility
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 75
     defaults:
       run:
         working-directory: openid4vp
@@ -50,29 +26,24 @@ jobs:
           path: openid4vp
           persist-credentials: false
 
-      - name: Resolve selected protocol role
-        id: selected-profile
-        env:
-          OIDF_PROFILE_ID: ${{ inputs.profile_id }}
+      - name: Validate the complete protocol profile inventory
         run: |
-          role="$(jq -er --arg profile_id "${OIDF_PROFILE_ID}" \
-            '[.profiles[] | select(.id == $profile_id) | .role] \
-             | if length == 1 then .[0] else error("profile must be unique") end' \
-            conformance/oidf/profile-matrix.json)"
-          echo "role=${role}" >> "${GITHUB_OUTPUT}"
-
-      - name: Preflight OIDF verifier conformance prerequisites
-        run: conformance/scripts/preflight_oidf_verifier.sh
+          jq -e '
+            (.profiles | length) == 6
+            and ([.profiles[] | select(.role == "verifier")] | length) == 2
+            and ([.profiles[] | select(.role == "wallet")] | length) == 4
+            and ([.profiles[].id] | unique | length) == 6
+          ' conformance/oidf/profile-matrix.json >/dev/null
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
         with:
           toolchain: 1.98.1
 
-      - name: Build runtime verifier boundary
-        run: cargo build --locked -p reallyme-openid4vp-runtime --all-features
+      - name: Test repository-owned conformance boundaries
+        run: cargo test --locked -p reallyme-openid4vp-conformance --all-features
 
-      - name: Checkout OIDF conformance suite
+      - name: Checkout pinned OIDF conformance suite
         run: |
           oidf_suite_commit="$(python3 conformance/scripts/read_oidf_certification_matrix.py \
             commit conformance/oidf/profile-matrix.json)"
@@ -82,7 +53,7 @@ jobs:
           git -C target/oidf/conformance-suite checkout --detach FETCH_HEAD
           test "$(git -C target/oidf/conformance-suite rev-parse HEAD)" = "${oidf_suite_commit}"
 
-      - name: Build OIDF conformance suite
+      - name: Build pinned OIDF conformance suite
         working-directory: openid4vp/target/oidf/conformance-suite
         run: |
           maven_home="${RUNNER_TEMP}/openid4vp-oidf-maven"
@@ -98,7 +69,7 @@ jobs:
             mvn -B -Dmaven.repo.local=/maven-home/repository \
               -Dmaven.test.skip -Dpmd.skip clean package
 
-      - name: Test OIDF OpenID4VP target behavior
+      - name: Test pinned OID4VP plan implementation
         working-directory: openid4vp/target/oidf/conformance-suite
         run: |
           maven_home="${RUNNER_TEMP}/openid4vp-oidf-maven"
@@ -115,7 +86,7 @@ jobs:
               -Dpmd.skip test \
               -Dtest='VariantCondition_UnitTest,LoadBuiltInDcqlQuery_UnitTest,*VP1Final*'
 
-      - name: Install OIDF runner dependencies
+      - name: Install hash-locked OIDF tooling
         run: |
           runner_venv="${RUNNER_TEMP}/openid4vp-oidf-python"
           python3 -m venv "${runner_venv}"
@@ -134,20 +105,21 @@ jobs:
           conformance/scripts/test_collect_oidf_verifier_evidence.py
           conformance/scripts/test_drive_oidf_verifier_flow.py
           conformance/scripts/test_drive_oidf_wallet_flow.py
+          conformance/scripts/test_oidf_wallet_error_evidence.py
           conformance/scripts/test_prepare_oidf_runtime_config.py
           conformance/scripts/test_read_oidf_certification_matrix.py
           conformance/scripts/test_validate_oidf_runtime_endpoints.py
           conformance/scripts/test_verify_oidf_certification_target.py
           conformance/scripts/test_verify_oidf_wallet_config.py
 
-      - name: Discover OIDF OpenID4VP plans and modules
-        run: conformance/scripts/discover_oidf_openid4vp.py target/oidf/conformance-suite target/conformance-results/oidf-discovery
-
-      - name: Verify OIDF protocol profiles and coverage matrix
-        run: conformance/scripts/verify_oidf_certification_target.py target/oidf/conformance-suite conformance/oidf/profile-matrix.json
-
-      - name: Verify OIDF wallet configuration and suite key material
+      - name: Discover and verify the pinned OID4VP target
         run: |
+          conformance/scripts/discover_oidf_openid4vp.py \
+            target/oidf/conformance-suite \
+            target/oidf-protocol-compatibility/discovery
+          conformance/scripts/verify_oidf_certification_target.py \
+            target/oidf/conformance-suite \
+            conformance/oidf/profile-matrix.json
           conformance/scripts/verify_oidf_wallet_config.py \
             target/oidf/conformance-suite \
             conformance/oidf/configs/vp-wallet-test-config-dcql-sdjwt-haip.json \
@@ -157,63 +129,27 @@ jobs:
             conformance/oidf/configs/vp-wallet-test-config-dcql-mdoc-haip.json \
             --credential-format iso_mdl
 
-      - name: Run OID4VP verifier plan harness
-        if: steps.selected-profile.outputs.role == 'verifier'
-        env:
-          CONFORMANCE_SUITE_DIR: target/oidf/conformance-suite
-          CONFORMANCE_SERVER: ${{ secrets.OIDF_CONFORMANCE_SERVER || '' }}
-          CONFORMANCE_SERVER_MTLS: ${{ secrets.OIDF_CONFORMANCE_SERVER_MTLS || '' }}
-          CONFORMANCE_TOKEN: ${{ secrets.OIDF_CONFORMANCE_TOKEN || '' }}
-          CONFORMANCE_API_TOKEN: ${{ secrets.OIDF_CONFORMANCE_TOKEN || '' }}
-          EXAMPLE_VERIFIER_BASE_URL: ${{ inputs.example_verifier_base_url || secrets.OIDF_EXAMPLE_VERIFIER_BASE_URL || '' }}
-          OIDF_PROFILE_ID: ${{ inputs.profile_id }}
-          OIDF_RUNNER_MODE: ${{ inputs.runner_mode }}
-          OIDF_VERIFIER_FLOW_DRIVER_MODE: ${{ inputs.runner_mode }}
-          OIDF_VERIFIER_LAUNCH_ENDPOINT: ${{ secrets.OIDF_VERIFIER_LAUNCH_ENDPOINT || '' }}
-          OIDF_VERIFIER_LAUNCH_TOKEN: ${{ secrets.OIDF_VERIFIER_LAUNCH_TOKEN || '' }}
-          OIDF_VERIFIER_EVIDENCE_ENDPOINT: ${{ secrets.OIDF_VERIFIER_EVIDENCE_ENDPOINT || '' }}
-          OIDF_VERIFIER_EVIDENCE_TOKEN: ${{ secrets.OIDF_VERIFIER_EVIDENCE_TOKEN || '' }}
-          OIDF_VERIFIER_HEALTH_ENDPOINT: ${{ secrets.OIDF_VERIFIER_HEALTH_ENDPOINT || '' }}
-        run: conformance/scripts/run_oidf_verifier_plan.sh
-
-      - name: Resolve wallet evidence browser
-        if: steps.selected-profile.outputs.role == 'wallet' && inputs.runner_mode == 'execute'
+      - name: Record compatibility scope
         run: |
-          browser="$(command -v google-chrome || true)"
-          if [[ -z "${browser}" || ! -x "${browser}" ]]; then
-            echo 'The audited wallet evidence browser is unavailable.' >&2
-            exit 69
-          fi
-          echo "OIDF_WALLET_SCREENSHOT_BROWSER=${browser}" >> "${GITHUB_ENV}"
+          mkdir -p target/oidf-protocol-compatibility
+          jq -n \
+            --arg repository_revision "${GITHUB_SHA}" \
+            --arg suite_revision "$(git -C target/oidf/conformance-suite rev-parse HEAD)" \
+            '{
+              schema_version: 1,
+              scope: "protocol_compatibility",
+              status: "validated",
+              repository_revision: $repository_revision,
+              suite_revision: $suite_revision,
+              profile_inventory_count: 6,
+              oidf_plan_execution: false,
+              certification_evidence: false
+            }' > target/oidf-protocol-compatibility/result.json
 
-      - name: Run OID4VP wallet plan harness
-        if: steps.selected-profile.outputs.role == 'wallet'
-        env:
-          CONFORMANCE_SUITE_DIR: target/oidf/conformance-suite
-          CONFORMANCE_SERVER: ${{ secrets.OIDF_CONFORMANCE_SERVER || '' }}
-          CONFORMANCE_SERVER_MTLS: ${{ secrets.OIDF_CONFORMANCE_SERVER_MTLS || '' }}
-          CONFORMANCE_TOKEN: ${{ secrets.OIDF_CONFORMANCE_TOKEN || '' }}
-          CONFORMANCE_API_TOKEN: ${{ secrets.OIDF_CONFORMANCE_TOKEN || '' }}
-          OIDF_PROFILE_ID: ${{ inputs.profile_id }}
-          OIDF_WALLET_RUNNER_MODE: ${{ inputs.runner_mode }}
-          OIDF_WALLET_FLOW_DRIVER_MODE: ${{ inputs.runner_mode }}
-          OIDF_WALLET_HARNESS_ENDPOINT: ${{ secrets.OIDF_WALLET_HARNESS_ENDPOINT || '' }}
-          OIDF_WALLET_HARNESS_HEALTH_ENDPOINT: ${{ secrets.OIDF_WALLET_HARNESS_HEALTH_ENDPOINT || '' }}
-          OIDF_WALLET_ERROR_SCREEN_ENDPOINT: ${{ secrets.OIDF_WALLET_ERROR_SCREEN_ENDPOINT || '' }}
-          OIDF_WALLET_HARNESS_TOKEN: ${{ secrets.OIDF_WALLET_HARNESS_TOKEN || '' }}
-          OIDF_WALLET_HARNESS_METHOD: POST
-        run: conformance/scripts/run_oidf_wallet_plan.sh
-
-      - name: Summarize conformance results
-        if: always()
-        run: python3 conformance/scripts/summarize_conformance_result.py target/conformance-results/*.json
-
-      - name: Upload conformance result artifact
+      - name: Upload protocol compatibility evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: always()
         with:
-          name: oidf-conformance-${{ inputs.profile_id }}
-          path: |
-            openid4vp/target/conformance-results
-            !openid4vp/target/conformance-results/oidf-runtime-configs/**
+          name: oidf-protocol-compatibility-${{ github.sha }}
+          path: openid4vp/target/oidf-protocol-compatibility
           if-no-files-found: error
+          retention-days: 7

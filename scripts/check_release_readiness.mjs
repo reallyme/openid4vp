@@ -970,13 +970,38 @@ function checkRepositoryPolicy() {
   );
   requireText(
     ".github/workflows/conformance.yml",
-    "default: \"execute\"",
-    "fail-closed OIDF workflow default",
+    "name: OIDF Protocol Compatibility",
+    "secret-free OIDF protocol compatibility workflow",
   );
   requireText(
     ".github/workflows/conformance.yml",
-    "OIDF_WALLET_SCREENSHOT_BROWSER=${browser}",
-    "wallet evidence browser binding",
+    "oidf_plan_execution: false",
+    "truthful OIDF protocol compatibility scope",
+  );
+  requireText(
+    ".github/workflows/conformance.yml",
+    "certification_evidence: false",
+    "truthful OIDF certification evidence scope",
+  );
+  requireText(
+    ".github/workflows/conformance.yml",
+    "cargo test --locked -p reallyme-openid4vp-conformance --all-features",
+    "repository-owned conformance boundary tests",
+  );
+  rejectText(
+    ".github/workflows/conformance.yml",
+    "secrets.",
+    "product secret in public protocol compatibility workflow",
+  );
+  rejectText(
+    ".github/workflows/conformance.yml",
+    "runner_mode:",
+    "non-executing compatibility workflow runner-mode selector",
+  );
+  rejectText(
+    ".github/workflows/conformance.yml",
+    "profile_id:",
+    "partial-profile selector in complete compatibility inventory workflow",
   );
   rejectText(
     ".github/workflows/conformance.yml",

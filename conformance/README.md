@@ -27,27 +27,33 @@ cross-repository provenance, release-readiness conclusions, and retained
 interoperability evidence belong to downstream `identity-conformance`, not to
 this protocol implementation repository.
 
-The independently dispatched **OIDF Conformance** GitHub Actions workflow checks out
-`https://gitlab.com/openid/conformance-suite` and prepares both OID4VP verifier
-and wallet test-plan execution. Transport-neutral generated operations are
-available through `crates/runtime`; browser-facing request-object and
-`direct_post` endpoints are exposed by the framework-neutral HTTP facade so
-service hosts can mount them without duplicating protocol checks.
+The independently dispatched **OIDF Protocol Compatibility** GitHub Actions
+workflow checks out `https://gitlab.com/openid/conformance-suite` at the exact
+commit in `oidf/profile-matrix.json`. It builds the suite in the same
+digest-pinned Maven image used by OpenID4VCI, runs the upstream OID4VP plan
+tests, verifies the complete two-verifier/four-wallet inventory, and exercises
+the repository-owned Rust and Python conformance boundaries. It requires no
+product endpoint or secret. Its output explicitly records
+`oidf_plan_execution: false` and `certification_evidence: false`; a successful
+compatibility run must never be represented as an executed OIDF plan.
 
-The harness writes one machine-readable JSON result for the selected protocol profile
-under `target/conformance-results/`. The reviewed matrix covers both verifier formats
-with `direct_post.jwt` and both wallet formats with `direct_post.jwt` and
-`dc_api.jwt` (six supported profiles total). Set `OIDF_PROFILE_ID` to exactly
-one profile from `oidf/profile-matrix.json`. By default local execution records
-a pending result for that profile. Set
-`OIDF_RUNNER_MODE=execute` only when both the OIDF conformance-suite server and
-the ReallyMe verifier flow driver are running; configuration failures are
-emitted as `failed` results with stable non-PII reason codes.
+Actual plan execution requires a composed verifier or wallet product, because
+this public protocol repository deliberately does not own credential storage,
+consent, deployment identity, or a certification endpoint. The manual
+OpenID4VP certification workflow in downstream `identity-conformance` runs all
+six profiles and owns those secrets, endpoints, deployment bindings, exports,
+and evidence gates. The scripts below remain the fail-closed protocol runner
+interface used by that downstream orchestration.
 
-The independently dispatched GitHub workflow defaults to `execute` and fails
-closed when its suite or composed-product endpoints are not configured. Its
-explicit `pending` option validates harness readiness only: a green pending run
-does not execute OIDF modules and is not conformance or certification evidence.
+The runners write one machine-readable JSON result per selected protocol
+profile under `target/conformance-results/`. The reviewed matrix covers both
+verifier formats with `direct_post.jwt` and both wallet formats with
+`direct_post.jwt` and `dc_api.jwt` (six supported profiles total). Set
+`OIDF_PROFILE_ID` to exactly one profile from `oidf/profile-matrix.json`.
+`OIDF_RUNNER_MODE=execute` is valid only when the OIDF suite and composed
+product driver are running; configuration failures are emitted as `failed`
+results with stable non-PII reason codes. Pending mode is a local runner
+preflight only and is neither conformance nor certification evidence.
 
 Execute mode is a certification evidence boundary. Unless
 `CONFORMANCE_DEV_MODE=true` is explicitly selected for a local rehearsal, both
@@ -254,10 +260,11 @@ bound to those artifacts; a different endpoint is a different certification
 deployment.
 The complete two-verifier/four-wallet self-assessment, immutable deployment
 binding, evidence index, and final pre-submission gate are run by
-`identity-conformance`. The public workflow intentionally runs only one selected
-protocol profile and does not claim product certification evidence.
-It remains a separately dispatched protocol-evidence workflow and is not a
-prerequisite of crates.io package publication.
+`identity-conformance`. The public workflow validates the complete profile
+inventory and exact upstream implementation without contacting a product
+deployment or claiming that any plan was executed. Both workflows are
+separately dispatched and neither is a prerequisite of crates.io package
+publication.
 
 OIDF's available formal route is called self-certification and culminates in a
 legally binding Declaration of Conformance. It is distinct from a local
