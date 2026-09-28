@@ -29,6 +29,12 @@ const APPROVED_PUBLISH_SEQUENCE = [
   { name: "reallyme-openid4vp-dc-api", version: "0.1.1" },
   { name: "reallyme-openid4vp-formats", version: "0.1.1" },
   { name: "reallyme-openid4vp-wallet", version: "0.1.1" },
+  { name: "reallyme-openid4vp-profiles", version: "0.1.1" },
+  { name: "reallyme-openid4vp-verifier", version: "0.1.1" },
+  { name: "reallyme-openid4vp-http", version: "0.1.1" },
+  { name: "reallyme-openid4vp-proto-codec", version: "0.1.1" },
+  { name: "reallyme-openid4vp-runtime", version: "0.1.1" },
+  { name: "reallyme-openid4vp", version: "0.1.1" },
 ];
 const APPROVED_MSRV = "1.96";
 const REQUIRED_PUBLISH_ORDER_EDGES = [
@@ -37,6 +43,14 @@ const REQUIRED_PUBLISH_ORDER_EDGES = [
   ["reallyme-openid4vp-types", "reallyme-openid4vp-formats"],
   ["reallyme-openid4vp-dc-api", "reallyme-openid4vp-wallet"],
   ["reallyme-openid4vp-formats", "reallyme-openid4vp-wallet"],
+  ["reallyme-openid4vp-types", "reallyme-openid4vp-profiles"],
+  ["reallyme-openid4vp-formats", "reallyme-openid4vp-verifier"],
+  ["reallyme-openid4vp-wallet", "reallyme-openid4vp-http"],
+  ["reallyme-openid4vp-verifier", "reallyme-openid4vp-proto-codec"],
+  ["reallyme-openid4vp-proto-codec", "reallyme-openid4vp-runtime"],
+  ["reallyme-openid4vp-profiles", "reallyme-openid4vp"],
+  ["reallyme-openid4vp-http", "reallyme-openid4vp"],
+  ["reallyme-openid4vp-runtime", "reallyme-openid4vp"],
 ];
 const args = process.argv.slice(2);
 const mode = args[0] ?? MODE_INSPECT;

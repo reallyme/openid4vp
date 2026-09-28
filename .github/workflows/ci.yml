@@ -245,7 +245,13 @@ jobs:
             -p reallyme-openid4vp-types \
             -p reallyme-openid4vp-dc-api \
             -p reallyme-openid4vp-formats \
-            -p reallyme-openid4vp-wallet
+            -p reallyme-openid4vp-wallet \
+            -p reallyme-openid4vp-profiles \
+            -p reallyme-openid4vp-verifier \
+            -p reallyme-openid4vp-http \
+            -p reallyme-openid4vp-proto-codec \
+            -p reallyme-openid4vp-runtime \
+            -p reallyme-openid4vp
 
   wasm-composition:
     name: Identity Wasm composition inputs

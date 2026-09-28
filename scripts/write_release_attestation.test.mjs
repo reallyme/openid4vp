@@ -28,6 +28,12 @@ const packageNames = Object.freeze([
   "reallyme-openid4vp-dc-api",
   "reallyme-openid4vp-formats",
   "reallyme-openid4vp-wallet",
+  "reallyme-openid4vp-profiles",
+  "reallyme-openid4vp-verifier",
+  "reallyme-openid4vp-http",
+  "reallyme-openid4vp-proto-codec",
+  "reallyme-openid4vp-runtime",
+  "reallyme-openid4vp",
 ]);
 
 const runFixture = ({ missingPackage, runAttempt = "1", symlinkPackage } = {}) => {
@@ -71,10 +77,10 @@ const runFixture = ({ missingPackage, runAttempt = "1", symlinkPackage } = {}) =
   }
 };
 
-test("writes exact v3 evidence for the fixed public crate set and prerequisite runs", () => {
+test("writes exact v4 evidence for the fixed public crate set and prerequisite runs", () => {
   const { document, result } = runFixture();
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(document.schema, "reallyme.openid4vp.crates_preflight.v3");
+  assert.equal(document.schema, "reallyme.openid4vp.crates_preflight.v4");
   assert.deepEqual(document.prerequisites, {
     ci: 1001,
     fuzz: 1002,

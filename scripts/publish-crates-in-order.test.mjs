@@ -19,6 +19,20 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
 
 const script = fileURLToPath(new URL("./publish-crates-in-order.mjs", import.meta.url));
+const packageNames = Object.freeze([
+  "reallyme-openid4vp-proto",
+  "reallyme-openid4vp-dcql",
+  "reallyme-openid4vp-types",
+  "reallyme-openid4vp-dc-api",
+  "reallyme-openid4vp-formats",
+  "reallyme-openid4vp-wallet",
+  "reallyme-openid4vp-profiles",
+  "reallyme-openid4vp-verifier",
+  "reallyme-openid4vp-http",
+  "reallyme-openid4vp-proto-codec",
+  "reallyme-openid4vp-runtime",
+  "reallyme-openid4vp",
+]);
 
 function runFixture({
   corruptChecksum = false,
@@ -33,14 +47,13 @@ function runFixture({
 } = {}) {
   const directory = mkdtempSync(join(tmpdir(), "openid4vp-publish-test-"));
   try {
-    const packageNames = [
-      "reallyme-openid4vp-proto",
-      "reallyme-openid4vp-dcql",
-      "reallyme-openid4vp-types",
-      "reallyme-openid4vp-dc-api",
-      "reallyme-openid4vp-formats",
-      "reallyme-openid4vp-wallet",
-    ];
+    const workspaceDependency = (name, path) => ({
+      name,
+      source: null,
+      path,
+      kind: null,
+      req: requirement,
+    });
     const metadataPackages = [
       {
         name: "reallyme-openid4vp-proto",
@@ -149,13 +162,82 @@ function runFixture({
           },
         ],
       },
+      {
+        name: "reallyme-openid4vp-profiles",
+        version,
+        rust_version: rustVersion,
+        publish: null,
+        dependencies: [
+          workspaceDependency("reallyme-openid4vp-dcql", "crates/dcql"),
+          workspaceDependency("reallyme-openid4vp-types", "crates/types"),
+        ],
+      },
+      {
+        name: "reallyme-openid4vp-verifier",
+        version,
+        rust_version: rustVersion,
+        publish: null,
+        dependencies: [
+          workspaceDependency("reallyme-openid4vp-dc-api", "crates/dc-api"),
+          workspaceDependency("reallyme-openid4vp-dcql", "crates/dcql"),
+          workspaceDependency("reallyme-openid4vp-formats", "crates/formats"),
+          workspaceDependency("reallyme-openid4vp-types", "crates/types"),
+        ],
+      },
+      {
+        name: "reallyme-openid4vp-http",
+        version,
+        rust_version: rustVersion,
+        publish: null,
+        dependencies: [
+          workspaceDependency("reallyme-openid4vp-types", "crates/types"),
+          workspaceDependency("reallyme-openid4vp-wallet", "crates/wallet"),
+        ],
+      },
+      {
+        name: "reallyme-openid4vp-proto-codec",
+        version,
+        rust_version: rustVersion,
+        publish: null,
+        dependencies: [
+          workspaceDependency("reallyme-openid4vp-dcql", "crates/dcql"),
+          workspaceDependency("reallyme-openid4vp-dc-api", "crates/dc-api"),
+          workspaceDependency("reallyme-openid4vp-formats", "crates/formats"),
+          workspaceDependency("reallyme-openid4vp-proto", "crates/proto"),
+          workspaceDependency("reallyme-openid4vp-types", "crates/types"),
+          workspaceDependency("reallyme-openid4vp-verifier", "crates/verifier"),
+          workspaceDependency("reallyme-openid4vp-wallet", "crates/wallet"),
+        ],
+      },
+      {
+        name: "reallyme-openid4vp-runtime",
+        version,
+        rust_version: rustVersion,
+        publish: null,
+        dependencies: [
+          workspaceDependency("reallyme-openid4vp-dc-api", "crates/dc-api"),
+          workspaceDependency("reallyme-openid4vp-proto", "crates/proto"),
+          workspaceDependency("reallyme-openid4vp-proto-codec", "crates/proto-codec"),
+          workspaceDependency("reallyme-openid4vp-types", "crates/types"),
+          workspaceDependency("reallyme-openid4vp-verifier", "crates/verifier"),
+        ],
+      },
+      {
+        name: "reallyme-openid4vp",
+        version,
+        rust_version: rustVersion,
+        publish: null,
+        dependencies: packageNames.slice(0, -1).map((name) =>
+          workspaceDependency(name, `crates/${name.replace("reallyme-openid4vp-", "")}`)
+        ),
+      },
     ];
     if (reorderIndependent) {
       metadataPackages.push(metadataPackages.shift());
     }
     if (extraPublishable) {
       metadataPackages.push({
-        name: "reallyme-openid4vp-runtime",
+        name: "reallyme-openid4vp-conformance",
         version,
         rust_version: rustVersion,
         publish: null,
@@ -173,7 +255,7 @@ function runFixture({
       writeFileSync(join(reviewedDirectory, `${name}-${version}.crate`), `archive-${name}`);
     }
     writeFileSync(attestationPath, JSON.stringify({
-      schema: "reallyme.openid4vp.crates_preflight.v3",
+      schema: "reallyme.openid4vp.crates_preflight.v4",
       crates: packageNames.map((name) => ({
         file: `${name}-${version}.crate`,
         sha256: corruptChecksum
@@ -327,44 +409,24 @@ test("successful publication respects dependency order", () => {
   const result = runFixture();
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(result.calls.filter((call) => call[1] === "publish").map((call) => call[3]),
-    [
-      "reallyme-openid4vp-proto",
-      "reallyme-openid4vp-dcql",
-      "reallyme-openid4vp-types",
-      "reallyme-openid4vp-dc-api",
-      "reallyme-openid4vp-formats",
-      "reallyme-openid4vp-wallet",
-    ]);
+    packageNames);
   assert.ok(
     result.calls
       .filter((call) => call[1] === "publish")
       .every((call) => call.includes("--no-verify")),
   );
-  assert.equal(result.calls.filter((call) => call[0] === "curl").length, 6);
+  assert.equal(result.calls.filter((call) => call[0] === "curl").length, packageNames.length);
   assert.deepEqual(
     result.calls
       .filter((call) => call[0] === "cargo" && ["package", "publish"].includes(call[1]))
       .map((call) => [call[1], call[3]]),
-    [
-      ["package", "reallyme-openid4vp-proto"],
-      ["publish", "reallyme-openid4vp-proto"],
-      ["package", "reallyme-openid4vp-dcql"],
-      ["publish", "reallyme-openid4vp-dcql"],
-      ["package", "reallyme-openid4vp-types"],
-      ["publish", "reallyme-openid4vp-types"],
-      ["package", "reallyme-openid4vp-dc-api"],
-      ["publish", "reallyme-openid4vp-dc-api"],
-      ["package", "reallyme-openid4vp-formats"],
-      ["publish", "reallyme-openid4vp-formats"],
-      ["package", "reallyme-openid4vp-wallet"],
-      ["publish", "reallyme-openid4vp-wallet"],
-    ],
+    packageNames.flatMap((name) => [["package", name], ["publish", name]]),
   );
   assert.equal(result.ledger.schema, "reallyme.openid4vp.crates-publication-ledger.v1");
   assert.equal(result.ledger.state, "completed");
   assert.deepEqual(
     result.ledger.crates.map((entry) => entry.state),
-    ["published", "published", "published", "published", "published", "published"],
+    packageNames.map(() => "published"),
   );
   assert.ok(result.ledger.crates.every((entry) => /^[0-9a-f]{64}$/u.test(entry.archive_sha256)));
 });
@@ -416,28 +478,14 @@ test("publication retries when crates.io dependency resolution is briefly stale"
 test("partial publication recovery verifies existing bytes before continuing", () => {
   const result = runFixture({ scenario: "partial" });
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.calls.filter((call) => call[0] === "curl").length, 6);
+  assert.equal(result.calls.filter((call) => call[0] === "curl").length, packageNames.length);
   assert.deepEqual(
     result.calls.filter((call) => call[1] === "publish").map((call) => call[3]),
-    [
-      "reallyme-openid4vp-proto",
-      "reallyme-openid4vp-dcql",
-      "reallyme-openid4vp-types",
-      "reallyme-openid4vp-dc-api",
-      "reallyme-openid4vp-formats",
-      "reallyme-openid4vp-wallet",
-    ],
+    packageNames,
   );
   assert.deepEqual(
     result.ledger.crates.map((entry) => entry.state),
-    [
-      "verified_existing",
-      "verified_existing",
-      "published",
-      "published",
-      "published",
-      "published",
-    ],
+    packageNames.map((_name, index) => index < 2 ? "verified_existing" : "published"),
   );
 });
 
@@ -490,14 +538,7 @@ test("metadata enumeration cannot change the approved publish sequence", () => {
   const result = runFixture({ reorderIndependent: true });
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(result.calls.filter((call) => call[1] === "publish").map((call) => call[3]),
-    [
-      "reallyme-openid4vp-proto",
-      "reallyme-openid4vp-dcql",
-      "reallyme-openid4vp-types",
-      "reallyme-openid4vp-dc-api",
-      "reallyme-openid4vp-formats",
-      "reallyme-openid4vp-wallet",
-    ]);
+    packageNames);
 });
 
 test("zero-major caret requirements match Cargo compatibility boundaries", () => {

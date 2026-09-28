@@ -491,6 +491,12 @@ function checkRepositoryPolicy() {
     "reallyme-openid4vp-dc-api",
     "reallyme-openid4vp-formats",
     "reallyme-openid4vp-wallet",
+    "reallyme-openid4vp-profiles",
+    "reallyme-openid4vp-verifier",
+    "reallyme-openid4vp-http",
+    "reallyme-openid4vp-proto-codec",
+    "reallyme-openid4vp-runtime",
+    "reallyme-openid4vp",
   ]) {
     requireText(
       ".github/workflows/ci.yml",
@@ -567,8 +573,8 @@ function checkRepositoryPolicy() {
   requireText("Cargo.toml", '"crates/openid4vp"', "facade workspace member");
   requireText(
     "crates/openid4vp/Cargo.toml",
-    "publish = false",
-    "facade publish=false",
+    "publish = true",
+    "facade publish=true",
   );
   requireText(
     "crates/openid4vp/Cargo.toml",
@@ -1239,7 +1245,7 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "scripts/write_release_attestation.mjs",
-    "reallyme.openid4vp.crates_preflight.v3",
+    "reallyme.openid4vp.crates_preflight.v4",
     "OpenID4VP release attestation schema",
   );
   requireText(

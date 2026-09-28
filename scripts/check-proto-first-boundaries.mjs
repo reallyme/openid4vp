@@ -81,7 +81,7 @@ rejectText("Cargo.toml", "connectrpc");
 rejectText("Cargo.toml", "\n[package]\n");
 requireText("Cargo.toml", '"crates/openid4vp"');
 requireText("crates/openid4vp/Cargo.toml", 'name = "reallyme-openid4vp"');
-requireText("crates/openid4vp/Cargo.toml", "publish = false");
+requireText("crates/openid4vp/Cargo.toml", "publish = true");
 rejectText("crates/proto/Cargo.toml", "connectrpc");
 rejectText("crates/runtime/Cargo.toml", "connectrpc");
 rejectText("crates/runtime/src/report_runtime_error.rs", "ConnectServer");
@@ -379,18 +379,14 @@ for (const publishableCrate of [
   "crates/dc-api/Cargo.toml",
   "crates/formats/Cargo.toml",
   "crates/wallet/Cargo.toml",
-]) {
-  requireText(publishableCrate, "publish = true");
-}
-for (const privateUntilRelease of [
-  "crates/openid4vp/Cargo.toml",
-  "crates/http/Cargo.toml",
   "crates/profiles/Cargo.toml",
+  "crates/verifier/Cargo.toml",
+  "crates/http/Cargo.toml",
   "crates/proto-codec/Cargo.toml",
   "crates/runtime/Cargo.toml",
-  "crates/verifier/Cargo.toml",
+  "crates/openid4vp/Cargo.toml",
 ]) {
-  requireText(privateUntilRelease, "publish = false");
+  requireText(publishableCrate, "publish = true");
 }
 requireText("conformance/Cargo.toml", "publish = false");
 requireText("fuzz/Cargo.toml", "publish = false");

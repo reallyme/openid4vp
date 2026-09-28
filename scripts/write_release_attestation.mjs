@@ -22,6 +22,12 @@ const PUBLIC_PACKAGES = Object.freeze([
   "reallyme-openid4vp-dc-api",
   "reallyme-openid4vp-formats",
   "reallyme-openid4vp-wallet",
+  "reallyme-openid4vp-profiles",
+  "reallyme-openid4vp-verifier",
+  "reallyme-openid4vp-http",
+  "reallyme-openid4vp-proto-codec",
+  "reallyme-openid4vp-runtime",
+  "reallyme-openid4vp",
 ]);
 const PREREQUISITE_RUNS = Object.freeze({
   ci: "CI_RUN_ID",
@@ -91,7 +97,7 @@ const crates = PUBLIC_PACKAGES.map((name) => {
 });
 
 const attestation = {
-  schema: "reallyme.openid4vp.crates_preflight.v3",
+  schema: "reallyme.openid4vp.crates_preflight.v4",
   crates,
   prerequisites: Object.fromEntries(
     Object.entries(PREREQUISITE_RUNS).map(([name, environmentName]) => [

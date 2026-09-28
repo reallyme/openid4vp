@@ -27,7 +27,7 @@ const expected = Object.freeze({
   releaseVersion: "0.2.1",
 });
 const attestation = (overrides = {}) => ({
-  schema: "reallyme.openid4vp.crates_preflight.v3",
+  schema: "reallyme.openid4vp.crates_preflight.v4",
   crates: [
     "reallyme-openid4vp-proto",
     "reallyme-openid4vp-dcql",
@@ -35,9 +35,15 @@ const attestation = (overrides = {}) => ({
     "reallyme-openid4vp-dc-api",
     "reallyme-openid4vp-formats",
     "reallyme-openid4vp-wallet",
+    "reallyme-openid4vp-profiles",
+    "reallyme-openid4vp-verifier",
+    "reallyme-openid4vp-http",
+    "reallyme-openid4vp-proto-codec",
+    "reallyme-openid4vp-runtime",
+    "reallyme-openid4vp",
   ].map((name, index) => ({
     file: `${name}-${expected.releaseVersion}.crate`,
-    sha256: "bcdef0"[index].repeat(64),
+    sha256: "bcdef0123456"[index].repeat(64),
     size: index + 1,
   })),
   prerequisites: {
@@ -109,7 +115,7 @@ test("attestation rejects malformed, reordered, and mismatched crate evidence", 
   const validCrates = attestation().crates;
   for (const crates of [
     [],
-    validCrates.slice(0, 5),
+    validCrates.slice(0, validCrates.length - 1),
     [{ ...validCrates[0], sha256: "bad" }, ...validCrates.slice(1)],
     [validCrates[1], validCrates[0], ...validCrates.slice(2)],
     [{ ...validCrates[0], file: "other.crate" }, ...validCrates.slice(1)],

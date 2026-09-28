@@ -18,6 +18,12 @@ const PUBLISHABLE_MANIFESTS = Object.freeze([
   "crates/dc-api/Cargo.toml",
   "crates/formats/Cargo.toml",
   "crates/wallet/Cargo.toml",
+  "crates/profiles/Cargo.toml",
+  "crates/verifier/Cargo.toml",
+  "crates/http/Cargo.toml",
+  "crates/proto-codec/Cargo.toml",
+  "crates/runtime/Cargo.toml",
+  "crates/openid4vp/Cargo.toml",
 ]);
 
 export class ReleaseSourceError extends Error {

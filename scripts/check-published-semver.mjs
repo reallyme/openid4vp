@@ -14,6 +14,12 @@ export const PUBLIC_CRATES = Object.freeze([
   "reallyme-openid4vp-dc-api",
   "reallyme-openid4vp-formats",
   "reallyme-openid4vp-wallet",
+  "reallyme-openid4vp-profiles",
+  "reallyme-openid4vp-verifier",
+  "reallyme-openid4vp-http",
+  "reallyme-openid4vp-proto-codec",
+  "reallyme-openid4vp-runtime",
+  "reallyme-openid4vp",
 ]);
 
 const REGISTRY_LOOKUP_FAILURE =

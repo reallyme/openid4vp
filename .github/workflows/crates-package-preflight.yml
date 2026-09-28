@@ -171,6 +171,12 @@ jobs:
             openid4vp/target/package/reallyme-openid4vp-dc-api-${{ inputs.version }}.crate
             openid4vp/target/package/reallyme-openid4vp-formats-${{ inputs.version }}.crate
             openid4vp/target/package/reallyme-openid4vp-wallet-${{ inputs.version }}.crate
+            openid4vp/target/package/reallyme-openid4vp-profiles-${{ inputs.version }}.crate
+            openid4vp/target/package/reallyme-openid4vp-verifier-${{ inputs.version }}.crate
+            openid4vp/target/package/reallyme-openid4vp-http-${{ inputs.version }}.crate
+            openid4vp/target/package/reallyme-openid4vp-proto-codec-${{ inputs.version }}.crate
+            openid4vp/target/package/reallyme-openid4vp-runtime-${{ inputs.version }}.crate
+            openid4vp/target/package/reallyme-openid4vp-${{ inputs.version }}.crate
           if-no-files-found: error
           retention-days: 30
 
@@ -217,6 +223,6 @@ jobs:
             echo
             echo "- Version: \`${RELEASE_VERSION}\`"
             echo "- Commit: \`${RELEASE_SHA}\`"
-            echo "- Publish set: \`reallyme-openid4vp-proto\`, \`reallyme-openid4vp-dcql\`, \`reallyme-openid4vp-types\`, \`reallyme-openid4vp-dc-api\`, \`reallyme-openid4vp-formats\`, and \`reallyme-openid4vp-wallet\`"
+            echo "- Publish set: all 12 OpenID4VP library crates, from \`reallyme-openid4vp-proto\` through the \`reallyme-openid4vp\` facade"
             echo "- Attestation run ID: \`${GITHUB_RUN_ID}\`"
           } >> "$GITHUB_STEP_SUMMARY"

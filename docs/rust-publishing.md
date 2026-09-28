@@ -19,9 +19,14 @@ the current release:
 | `reallyme-openid4vp-dc-api` | `reallyme/openid4vp` | Digital Credentials API and ISO/IEC 18013-7 handover types. |
 | `reallyme-openid4vp-formats` | `reallyme/openid4vp` | Wallet presentation-format adapters. |
 | `reallyme-openid4vp-wallet` | `reallyme/openid4vp` | Wallet request verification and response construction boundary. |
+| `reallyme-openid4vp-profiles` | `reallyme/openid4vp` | Shared OpenID4VP presentation-profile adapter. |
+| `reallyme-openid4vp-verifier` | `reallyme/openid4vp` | Verifier request and response validation boundary. |
+| `reallyme-openid4vp-http` | `reallyme/openid4vp` | Framework-neutral HTTP transport adapter traits. |
+| `reallyme-openid4vp-proto-codec` | `reallyme/openid4vp` | Strict protobuf/domain conversion boundary. |
+| `reallyme-openid4vp-runtime` | `reallyme/openid4vp` | Runtime protobuf operations and transport adapters. |
+| `reallyme-openid4vp` | `reallyme/openid4vp` | Public feature-gated protocol facade. |
 
-Every other workspace crate remains `publish = false`, including the facade,
-profiles, verifier, HTTP, codec, runtime, conformance, and fuzz crates. Swift,
+The conformance and fuzz packages remain `publish = false`. Swift,
 Kotlin/Android, FFI/JNI, and
 application-facing SDK facades—including the `@reallyme/identity`
 TypeScript/Wasm package—belong to `reallyme/identity`; they consume this
@@ -44,21 +49,24 @@ The exact release order is enforced by release tooling:
 4. `reallyme-openid4vp-dc-api` 0.1.1
 5. `reallyme-openid4vp-formats` 0.1.1
 6. `reallyme-openid4vp-wallet` 0.1.1
+7. `reallyme-openid4vp-profiles` 0.1.1
+8. `reallyme-openid4vp-verifier` 0.1.1
+9. `reallyme-openid4vp-http` 0.1.1
+10. `reallyme-openid4vp-proto-codec` 0.1.1
+11. `reallyme-openid4vp-runtime` 0.1.1
+12. `reallyme-openid4vp` 0.1.1
 
 Adding or publishing any other crate requires a separately reviewed policy and
 release-tooling change. Cargo metadata alone cannot expand the publish set.
 
 ## Current Gate
 
-The approved release set is `reallyme-openid4vp-proto`,
-`reallyme-openid4vp-dcql`, `reallyme-openid4vp-types`,
-`reallyme-openid4vp-dc-api`, `reallyme-openid4vp-formats`, and
-`reallyme-openid4vp-wallet`. They must pass package-local
+The approved release set is the 12 packages listed above. They must pass package-local
 inspection, generated-source freshness where applicable, and locked dry-run
 verification. Open sourcing the repository does not itself upload or release a
 crate.
 
-All remaining packages retain `publish = false`. The release inspector rejects
+The conformance and fuzz packages retain `publish = false`. The release inspector rejects
 an unexpected publishable package, an unapproved version, a public crate whose
 `rust-version` is not `1.96`, or a different publication order.
 
@@ -86,7 +94,7 @@ OpenID4VP uses the same reviewed two-workflow release process as
 
 1. Commit the release version to every workspace package manifest, all internal
    dependency requirements, both lockfiles, and the default version displayed
-   by **Crates Package Preflight**. Only the six approved public crates are
+   by **Crates Package Preflight**. Only the 12 approved public crates are
    packaged and uploaded.
 2. Push that exact commit to `main`.
 3. Dispatch **Crates Package Preflight** with the release version.
@@ -149,6 +157,29 @@ Cargo cannot satisfy the query from the local package; do not attempt the wallet
 upload until both dependency versions resolve from crates.io. If crates.io
 rate-limits an upload, wait for the registry's reported retry interval and rerun
 only the same command. The general
-`reallyme-openid4vp` facade is not part of this supplement. Starting with
-0.1.1, use the reviewed main release workflow for the complete six-crate
+`reallyme-openid4vp` facade is not part of this supplement. The subsequent
+0.1.1 cohort expansion is documented below; beginning with 0.1.2, use the
+reviewed main release workflow for the complete 12-crate cohort.
+
+## One-time 0.1.1 public-cohort supplement
+
+The first 0.1.1 release published the original six-crate cohort. To make every
+library required by ReallyMe Identity registry-resolvable, publish the remaining
+six crates from one clean, reviewed commit in this order:
+
+```sh
+cargo publish --locked -p reallyme-openid4vp-profiles
+cargo publish --locked -p reallyme-openid4vp-verifier
+cargo publish --locked -p reallyme-openid4vp-http
+cargo publish --locked -p reallyme-openid4vp-proto-codec
+cargo publish --locked -p reallyme-openid4vp-runtime
+cargo publish --locked -p reallyme-openid4vp
+```
+
+Do not use `--allow-dirty` or `--no-verify`. Wait for each uploaded version to
+become registry-resolvable before publishing a crate that depends on it. In
+particular, proto-codec requires verifier, runtime requires proto-codec, and the
+facade requires the complete cohort. If crates.io rate-limits an upload, obey
+the reported retry time and rerun only that same command. Beginning with 0.1.2,
+the two-workflow release process publishes and attests the complete 12-crate
 cohort.
