@@ -23,17 +23,17 @@ on:
           - "wallet-sd-jwt-vc-dc-api-jwt"
           - "wallet-iso-mdl-dc-api-jwt"
       runner_mode:
-        description: "OIDF runner mode"
+        description: "Execute modules, or only validate harness readiness without conformance evidence"
         required: true
-        default: "pending"
+        default: "execute"
         type: choice
         options:
-          - "pending"
           - "execute"
+          - "pending"
       example_verifier_base_url:
-        description: "Verifier public base URL"
+        description: "Verifier public HTTPS base URL; overrides OIDF_EXAMPLE_VERIFIER_BASE_URL"
         required: false
-        default: "http://127.0.0.1:8787"
+        default: ""
         type: string
 jobs:
   oid4vp:
@@ -80,6 +80,7 @@ jobs:
           git -C target/oidf/conformance-suite remote add origin https://gitlab.com/openid/conformance-suite.git
           git -C target/oidf/conformance-suite fetch --depth 1 origin "${oidf_suite_commit}"
           git -C target/oidf/conformance-suite checkout --detach FETCH_HEAD
+          test "$(git -C target/oidf/conformance-suite rev-parse HEAD)" = "${oidf_suite_commit}"
 
       - name: Build OIDF conformance suite
         working-directory: openid4vp/target/oidf/conformance-suite
@@ -113,6 +114,18 @@ jobs:
             mvn -B -Dmaven.repo.local=/maven-home/repository \
               -Dpmd.skip test \
               -Dtest='VariantCondition_UnitTest,LoadBuiltInDcqlQuery_UnitTest,*VP1Final*'
+
+      - name: Install OIDF runner dependencies
+        run: |
+          runner_venv="${RUNNER_TEMP}/openid4vp-oidf-python"
+          python3 -m venv "${runner_venv}"
+          "${runner_venv}/bin/python" -m pip install \
+            --disable-pip-version-check \
+            --no-input \
+            --only-binary=:all: \
+            --require-hashes \
+            -r conformance/scripts/oidf-runner-requirements.lock
+          echo "${runner_venv}/bin" >> "${GITHUB_PATH}"
 
       - name: Test conformance control-plane validation
         run: >-
@@ -160,7 +173,18 @@ jobs:
           OIDF_VERIFIER_LAUNCH_TOKEN: ${{ secrets.OIDF_VERIFIER_LAUNCH_TOKEN || '' }}
           OIDF_VERIFIER_EVIDENCE_ENDPOINT: ${{ secrets.OIDF_VERIFIER_EVIDENCE_ENDPOINT || '' }}
           OIDF_VERIFIER_EVIDENCE_TOKEN: ${{ secrets.OIDF_VERIFIER_EVIDENCE_TOKEN || '' }}
+          OIDF_VERIFIER_HEALTH_ENDPOINT: ${{ secrets.OIDF_VERIFIER_HEALTH_ENDPOINT || '' }}
         run: conformance/scripts/run_oidf_verifier_plan.sh
+
+      - name: Resolve wallet evidence browser
+        if: steps.selected-profile.outputs.role == 'wallet' && inputs.runner_mode == 'execute'
+        run: |
+          browser="$(command -v google-chrome || true)"
+          if [[ -z "${browser}" || ! -x "${browser}" ]]; then
+            echo 'The audited wallet evidence browser is unavailable.' >&2
+            exit 69
+          fi
+          echo "OIDF_WALLET_SCREENSHOT_BROWSER=${browser}" >> "${GITHUB_ENV}"
 
       - name: Run OID4VP wallet plan harness
         if: steps.selected-profile.outputs.role == 'wallet'
@@ -174,7 +198,10 @@ jobs:
           OIDF_WALLET_RUNNER_MODE: ${{ inputs.runner_mode }}
           OIDF_WALLET_FLOW_DRIVER_MODE: ${{ inputs.runner_mode }}
           OIDF_WALLET_HARNESS_ENDPOINT: ${{ secrets.OIDF_WALLET_HARNESS_ENDPOINT || '' }}
+          OIDF_WALLET_HARNESS_HEALTH_ENDPOINT: ${{ secrets.OIDF_WALLET_HARNESS_HEALTH_ENDPOINT || '' }}
+          OIDF_WALLET_ERROR_SCREEN_ENDPOINT: ${{ secrets.OIDF_WALLET_ERROR_SCREEN_ENDPOINT || '' }}
           OIDF_WALLET_HARNESS_TOKEN: ${{ secrets.OIDF_WALLET_HARNESS_TOKEN || '' }}
+          OIDF_WALLET_HARNESS_METHOD: POST
         run: conformance/scripts/run_oidf_wallet_plan.sh
 
       - name: Summarize conformance results

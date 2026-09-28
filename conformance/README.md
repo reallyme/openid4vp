@@ -44,6 +44,11 @@ a pending result for that profile. Set
 the ReallyMe verifier flow driver are running; configuration failures are
 emitted as `failed` results with stable non-PII reason codes.
 
+The independently dispatched GitHub workflow defaults to `execute` and fails
+closed when its suite or composed-product endpoints are not configured. Its
+explicit `pending` option validates harness readiness only: a green pending run
+does not execute OIDF modules and is not conformance or certification evidence.
+
 Execute mode is a certification evidence boundary. Unless
 `CONFORMANCE_DEV_MODE=true` is explicitly selected for a local rehearsal, both
 OIDF bearer tokens are required, TLS verification must remain enabled, and the

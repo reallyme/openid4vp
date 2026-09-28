@@ -948,6 +948,36 @@ function checkRepositoryPolicy() {
     "-Dmaven.repo.local=/maven-home/repository",
     "runner-writable Maven repository",
   );
+  requireText(
+    ".github/workflows/conformance.yml",
+    'python3 -m venv "${runner_venv}"',
+    "isolated OIDF Python runner environment",
+  );
+  requireText(
+    ".github/workflows/conformance.yml",
+    '"${runner_venv}/bin/python" -m pip install',
+    "OIDF Python runner dependency installation",
+  );
+  requireText(
+    ".github/workflows/conformance.yml",
+    "--require-hashes",
+    "hash-locked OIDF Python runner dependencies",
+  );
+  requireText(
+    ".github/workflows/conformance.yml",
+    "--only-binary=:all:",
+    "binary-only OIDF Python dependency installation",
+  );
+  requireText(
+    ".github/workflows/conformance.yml",
+    "default: \"execute\"",
+    "fail-closed OIDF workflow default",
+  );
+  requireText(
+    ".github/workflows/conformance.yml",
+    "OIDF_WALLET_SCREENSHOT_BROWSER=${browser}",
+    "wallet evidence browser binding",
+  );
   rejectText(
     ".github/workflows/conformance.yml",
     "conformance-suite-demo",

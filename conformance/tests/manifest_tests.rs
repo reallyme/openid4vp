@@ -286,6 +286,14 @@ fn oidf_runner_requires_exported_result_artifacts() {
     assert!(workflow.contains("-Dmaven.repo.local=/maven-home/repository"));
     assert!(workflow.contains("-Dmaven.test.skip -Dpmd.skip clean package"));
     assert!(workflow.contains("VariantCondition_UnitTest,LoadBuiltInDcqlQuery_UnitTest,*VP1Final*"));
+    assert!(workflow.contains("default: \"execute\""));
+    assert!(workflow.contains("python3 -m venv \"${runner_venv}\""));
+    assert!(workflow.contains("\"${runner_venv}/bin/python\" -m pip install"));
+    assert!(workflow.contains("--only-binary=:all:"));
+    assert!(workflow.contains("--require-hashes"));
+    assert!(workflow.contains("conformance/scripts/oidf-runner-requirements.lock"));
+    assert!(workflow.contains("OIDF_WALLET_SCREENSHOT_BROWSER=${browser}"));
+    assert!(workflow.contains("rev-parse HEAD)\" = \"${oidf_suite_commit}"));
     assert!(workflow.contains("path: |\n            openid4vp/target/conformance-results"));
     assert!(workflow.contains("!openid4vp/target/conformance-results/oidf-runtime-configs/**"));
     assert!(workflow.contains("if-no-files-found: error"));
