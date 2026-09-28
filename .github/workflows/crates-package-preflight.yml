@@ -6,7 +6,6 @@ name: Crates Package Preflight
 
 env:
   CARGO_AUDIT_VERSION: 0.22.2
-  CARGO_SEMVER_CHECKS_VERSION: 0.49.0
 
 run-name: Crates package preflight ${{ inputs.version }} @ ${{ github.sha }}
 
@@ -110,9 +109,9 @@ jobs:
           cache-bin: false
 
       - name: Install release audit tools
-        uses: taiki-e/install-action@43aecc8d72668fbcfe75c31400bc4f890f1c5853 # v2
+        uses: taiki-e/install-action@41049aa56687c35e0afa74eed4f09cec4f9afabf # v2.85.2
         with:
-          tool: cargo-audit@${{ env.CARGO_AUDIT_VERSION }},cargo-semver-checks@${{ env.CARGO_SEMVER_CHECKS_VERSION }}
+          tool: cargo-audit@${{ env.CARGO_AUDIT_VERSION }}
 
       - name: Rescan complete Git history
         working-directory: openid4vp
@@ -133,38 +132,6 @@ jobs:
           RELEASE_VERSION: ${{ needs.verify-source-sha.outputs.release_version }}
         working-directory: openid4vp
         run: node scripts/publish-crates-in-order.mjs order
-
-      - name: Reject public API breaks against each published baseline
-        env:
-          RELEASE_VERSION: ${{ needs.verify-source-sha.outputs.release_version }}
-        working-directory: openid4vp
-        run: |
-          set -euo pipefail
-          for crate in \
-            reallyme-openid4vp-proto \
-            reallyme-openid4vp-dcql \
-            reallyme-openid4vp-types; do
-            response_file="${RUNNER_TEMP}/${crate}-registry-metadata.json"
-            status="$(curl --silent --show-error --location \
-              --output "$response_file" \
-              --write-out '%{http_code}' \
-              "https://crates.io/api/v1/crates/${crate}")"
-            if [[ "$status" == '404' ]]; then
-              baseline=''
-            elif [[ "$status" == '200' ]]; then
-              baseline="$(jq -er --arg release "$RELEASE_VERSION" \
-                '[.versions[] | select(.yanked == false and .num != $release)][0].num // ""' \
-                "$response_file")"
-            else
-              echo "crates.io metadata request for ${crate} returned HTTP ${status}" >&2
-              exit 1
-            fi
-            if [[ -n "$baseline" ]]; then
-              cargo semver-checks --package "$crate" --baseline-version "$baseline"
-            else
-              echo "${crate}: no published baseline; initial release check is not applicable"
-            fi
-          done
 
       - name: Inspect normalized crate tarballs and dry-run publication
         env:

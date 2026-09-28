@@ -7,6 +7,9 @@ name: CI
 permissions:
   contents: read
 
+env:
+  CARGO_SEMVER_CHECKS_VERSION: 0.50.0
+
 on:
   workflow_dispatch:
   pull_request:
@@ -20,6 +23,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  semver:
+    name: Public API semver
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout OpenID4VP
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: openid4vp
+          persist-credentials: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
+      # cargo-semver-checks consumes rustdoc JSON, whose schema follows the
+      # compiler. Pin both so an upstream release cannot silently change this
+      # release gate.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
+        with:
+          toolchain: 1.98.1
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          workspaces: openid4vp
+          cache-bin: false
+
+      - name: Install cargo-semver-checks
+        uses: taiki-e/install-action@41049aa56687c35e0afa74eed4f09cec4f9afabf # v2.85.2
+        with:
+          tool: cargo-semver-checks@${{ env.CARGO_SEMVER_CHECKS_VERSION }}
+
+      - name: Check public crate versions against crates.io
+        working-directory: openid4vp
+        run: node scripts/check-published-semver.mjs
+
   formal:
     name: Formal protocol models
     runs-on: ubuntu-24.04
@@ -52,9 +93,9 @@ jobs:
           echo "${formal_tools_dir}" >> "${GITHUB_PATH}"
 
       - name: Install ripgrep
-        uses: taiki-e/install-action@43aecc8d72668fbcfe75c31400bc4f890f1c5853 # v2
+        uses: taiki-e/install-action@41049aa56687c35e0afa74eed4f09cec4f9afabf # v2.85.2
         with:
-          tool: ripgrep@14.1.1
+          tool: ripgrep@15.2.0
 
       - name: Prove OpenID4VP composition lemmas
         run: scripts/check-formal-models.sh
@@ -84,9 +125,9 @@ jobs:
           components: rustfmt, clippy
 
       - name: Install ripgrep
-        uses: taiki-e/install-action@43aecc8d72668fbcfe75c31400bc4f890f1c5853 # v2
+        uses: taiki-e/install-action@41049aa56687c35e0afa74eed4f09cec4f9afabf # v2.85.2
         with:
-          tool: ripgrep@14.1.1
+          tool: ripgrep@15.2.0
 
       - name: Cache cargo
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
@@ -150,12 +191,12 @@ jobs:
         run: node --test scripts/*.test.mjs
 
       - name: Install cargo-deny
-        uses: taiki-e/install-action@43aecc8d72668fbcfe75c31400bc4f890f1c5853 # v2
+        uses: taiki-e/install-action@41049aa56687c35e0afa74eed4f09cec4f9afabf # v2.85.2
         with:
           tool: cargo-deny@0.20.2
 
       - name: Install cargo-audit
-        uses: taiki-e/install-action@43aecc8d72668fbcfe75c31400bc4f890f1c5853 # v2
+        uses: taiki-e/install-action@41049aa56687c35e0afa74eed4f09cec4f9afabf # v2.85.2
         with:
           tool: cargo-audit@0.22.2
 

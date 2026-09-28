@@ -555,6 +555,11 @@ function checkRepositoryPolicy() {
     "scripts/check-formal-models.sh",
     "formal model CI gate",
   );
+  requireText(
+    ".github/workflows/ci.yml",
+    "tool: ripgrep@15.2.0",
+    "pinned ripgrep version",
+  );
   rejectText("Cargo.toml", "\n[package]\n", "non-virtual root package declaration");
   requireText("Cargo.toml", '"crates/openid4vp"', "facade workspace member");
   requireText(
@@ -904,6 +909,36 @@ function checkRepositoryPolicy() {
     ".github/workflows/crates-package-preflight.yml",
     "node scripts/verify_required_ci.mjs",
     "exact-commit required CI evidence",
+  );
+  requireText(
+    ".github/workflows/ci.yml",
+    "CARGO_SEMVER_CHECKS_VERSION: 0.50.0",
+    "pinned public API compatibility tool",
+  );
+  requireText(
+    ".github/workflows/ci.yml",
+    "node scripts/check-published-semver.mjs",
+    "registry-index-backed public API baseline resolution",
+  );
+  requireText(
+    ".github/workflows/ci.yml",
+    "cargo-semver-checks@${{ env.CARGO_SEMVER_CHECKS_VERSION }}",
+    "pinned public API compatibility tool installation",
+  );
+  rejectText(
+    ".github/workflows/crates-package-preflight.yml",
+    "https://crates.io/api/v1/crates/",
+    "unauthenticated crates.io HTTP metadata probe",
+  );
+  rejectText(
+    ".github/workflows/crates-package-preflight.yml",
+    "cargo-semver-checks",
+    "public API review duplicated after exact-commit CI",
+  );
+  rejectText(
+    ".github/workflows/crates-package-preflight.yml",
+    "semver-checks",
+    "public API review duplicated after exact-commit CI",
   );
   for (const duplicateGate of [
     "cargo clippy --locked --workspace",
