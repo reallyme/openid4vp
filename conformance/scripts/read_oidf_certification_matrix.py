@@ -14,9 +14,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import verify_oidf_certification_target
-
-
 MAX_MATRIX_BYTES = 2_000_000
 SAFE_IDENTIFIER = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?")
 SAFE_COMMIT = re.compile(r"[0-9a-f]{40}")
@@ -33,20 +30,16 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
     commit_parser = subparsers.add_parser("commit")
     commit_parser.add_argument("matrix")
-    commit_parser.add_argument("--overlay")
     profiles_parser = subparsers.add_parser("profiles")
     profiles_parser.add_argument("matrix")
     profiles_parser.add_argument("--role", required=True, choices=("verifier", "wallet"))
     profiles_parser.add_argument("--profile")
-    profiles_parser.add_argument("--overlay")
     profiles_parser.add_argument("--include-credential-format", action="store_true")
     profiles_parser.add_argument("--include-response-mode", action="store_true")
     args = parser.parse_args()
 
     try:
         matrix = read_matrix(Path(args.matrix))
-        if args.overlay is not None:
-            matrix = apply_overlay(matrix, Path(args.overlay))
         if args.command == "commit":
             print(read_commit(matrix))
         elif args.command == "profiles":
@@ -63,14 +56,6 @@ def main() -> int:
     except MatrixFailure as error:
         print(error.reason, file=sys.stderr)
         return 2
-
-
-def apply_overlay(matrix: dict[str, Any], overlay_path: Path) -> dict[str, Any]:
-    try:
-        overlay = verify_oidf_certification_target.read_json_object(overlay_path)
-        return verify_oidf_certification_target.apply_rehearsal_overlay(matrix, overlay)
-    except verify_oidf_certification_target.TargetFailure as error:
-        raise MatrixFailure("matrix_overlay_invalid") from error
 
 
 def read_matrix(path: Path) -> dict[str, Any]:

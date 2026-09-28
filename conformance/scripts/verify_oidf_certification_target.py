@@ -13,7 +13,6 @@ therefore update the reviewed matrix before conformance execution can proceed.
 from __future__ import annotations
 
 import argparse
-import copy
 import json
 import re
 import subprocess
@@ -52,99 +51,18 @@ def main() -> int:
     )
     parser.add_argument("suite_dir", help="Checked-out OIDF conformance-suite directory")
     parser.add_argument("matrix", help="Protocol-profile matrix JSON")
-    parser.add_argument(
-        "--overlay",
-        help="Optional reviewed module overlay for a stricter rehearsal deployment",
-    )
     args = parser.parse_args()
 
     try:
         suite_dir = Path(args.suite_dir).resolve()
         matrix_path = Path(args.matrix).resolve()
         matrix = read_json_object(matrix_path)
-        if args.overlay is not None:
-            matrix = apply_rehearsal_overlay(
-                matrix, read_json_object(Path(args.overlay).resolve())
-            )
         verify_matrix(suite_dir, matrix)
         print("OIDF protocol profiles match the reviewed suite contract")
         return 0
     except TargetFailure as error:
         print(error.reason, file=sys.stderr)
         return 2
-
-
-def apply_rehearsal_overlay(
-    matrix: dict[str, Any], overlay: dict[str, Any]
-) -> dict[str, Any]:
-    """Apply an explicit deployment overlay without weakening the base matrix.
-
-    The OIDF demo deployment may intentionally carry tests ahead of the
-    production certification deployment. Keeping those additions in a small,
-    reviewed overlay makes that stricter rehearsal target visible while the
-    formal production matrix remains an exact certification target.
-    """
-
-    if overlay.get("schema_version") != 1:
-        raise TargetFailure("overlay_schema_version_unsupported")
-    if required_string(overlay, "purpose") != "oidf-demo-pre-submission":
-        raise TargetFailure("overlay_purpose_invalid")
-
-    result = copy.deepcopy(matrix)
-    base_suite = required_object(result, "suite")
-    overlay_suite = required_object(overlay, "suite")
-    if required_string(overlay_suite, "repository") != required_string(
-        base_suite, "repository"
-    ):
-        raise TargetFailure("overlay_repository_mismatch")
-    commit = required_string(overlay_suite, "commit")
-    if re.fullmatch(r"[0-9a-f]{40}", commit) is None:
-        raise TargetFailure("overlay_commit_invalid")
-    base_suite["commit"] = commit
-    base_suite["describe"] = required_string(overlay_suite, "describe")
-    base_suite["version"] = required_string(overlay_suite, "version")
-
-    profiles = {
-        required_string(profile, "id"): profile
-        for profile in required_object_array(result, "profiles")
-    }
-    seen_profiles: set[str] = set()
-    additions = required_object_array(overlay, "profile_additions")
-    for addition in additions:
-        profile_id = required_string(addition, "profile_id")
-        if profile_id in seen_profiles:
-            raise TargetFailure("overlay_duplicate_profile")
-        seen_profiles.add(profile_id)
-        profile = profiles.get(profile_id)
-        if profile is None:
-            raise TargetFailure("overlay_profile_unknown")
-
-        expected_variants = required_string_map(addition, "group_variants")
-        matching_groups = [
-            group
-            for group in required_object_array(profile, "expected_groups")
-            if required_string_map(group, "variants") == expected_variants
-        ]
-        if len(matching_groups) != 1:
-            raise TargetFailure("overlay_group_not_unique")
-
-        modules = required_string_array(addition, "modules")
-        if len(modules) != len(set(modules)):
-            raise TargetFailure("overlay_duplicate_module")
-        target_modules = required_string_array(matching_groups[0], "modules")
-        if set(modules).intersection(target_modules):
-            raise TargetFailure("overlay_module_already_present")
-        target_modules.extend(modules)
-        profile_expectations = profile.get("evidence_expectations")
-        if isinstance(profile_expectations, dict):
-            addition_expectations = required_object(addition, "evidence_expectations")
-            if set(addition_expectations) != set(modules):
-                raise TargetFailure("overlay_evidence_coverage_mismatch")
-            if set(addition_expectations).intersection(profile_expectations):
-                raise TargetFailure("overlay_evidence_already_present")
-            profile_expectations.update(copy.deepcopy(addition_expectations))
-
-    return result
 
 
 def verify_matrix(suite_dir: Path, matrix: dict[str, Any]) -> None:

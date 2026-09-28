@@ -82,37 +82,6 @@ class AssertOidfResultsTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-    def test_overlay_adds_rehearsal_module_to_expected_export(self) -> None:
-        overlay = self.root / "overlay.json"
-        overlay.write_text(
-            json.dumps(
-                {
-                    "schema_version": 1,
-                    "purpose": "oidf-demo-pre-submission",
-                    "suite": {
-                        "repository": "https://gitlab.com/openid/conformance-suite",
-                        "commit": "1" * 40,
-                        "describe": "demo",
-                        "version": "5.2.4",
-                    },
-                    "profile_additions": [
-                        {
-                            "profile_id": PROFILE_ID,
-                            "group_variants": MODULE_VARIANTS,
-                            "modules": ["rehearsal-module"],
-                        }
-                    ],
-                }
-            ),
-            encoding="utf-8",
-        )
-
-        expected = assert_oidf_results.load_expected_profile(
-            self.matrix, PROFILE_ID, overlay
-        )
-
-        self.assertEqual(sum(expected.cases.values()), 2)
-
     def test_accepts_complete_passing_export(self) -> None:
         self.write_result("PASSED")
 

@@ -14,32 +14,14 @@ require_command() {
 }
 
 require_command curl
+require_command docker
 require_command git
-require_command java
-require_command mvn
+require_command jq
 require_command openssl
 require_command python3
+require_command shasum
 
-java_version="$(java -version 2>&1)" || {
-  echo "unable to determine java version" >&2
+if ! docker ps >/dev/null 2>&1; then
+  echo "docker daemon is not reachable" >&2
   exit 69
-}
-case "${java_version}" in
-  *'version "21"'* | *'version "21.'*) ;;
-  *)
-    echo "java 21 is required" >&2
-    exit 69
-    ;;
-esac
-
-maven_version="$(mvn -version 2>&1)" || {
-  echo "unable to determine maven java version" >&2
-  exit 69
-}
-case "${maven_version}" in
-  *'Java version: 21'*) ;;
-  *)
-    echo "maven must run with java 21" >&2
-    exit 69
-    ;;
-esac
+fi

@@ -32,9 +32,12 @@ const attestation = (overrides = {}) => ({
     "reallyme-openid4vp-proto",
     "reallyme-openid4vp-dcql",
     "reallyme-openid4vp-types",
+    "reallyme-openid4vp-dc-api",
+    "reallyme-openid4vp-formats",
+    "reallyme-openid4vp-wallet",
   ].map((name, index) => ({
     file: `${name}-${expected.releaseVersion}.crate`,
-    sha256: String.fromCharCode(98 + index).repeat(64),
+    sha256: "bcdef0"[index].repeat(64),
     size: index + 1,
   })),
   prerequisites: {
@@ -106,9 +109,9 @@ test("attestation rejects malformed, reordered, and mismatched crate evidence", 
   const validCrates = attestation().crates;
   for (const crates of [
     [],
-    validCrates.slice(0, 2),
+    validCrates.slice(0, 5),
     [{ ...validCrates[0], sha256: "bad" }, ...validCrates.slice(1)],
-    [validCrates[1], validCrates[0], validCrates[2]],
+    [validCrates[1], validCrates[0], ...validCrates.slice(2)],
     [{ ...validCrates[0], file: "other.crate" }, ...validCrates.slice(1)],
     [{ ...validCrates[0], size: 0 }, ...validCrates.slice(1)],
   ]) {

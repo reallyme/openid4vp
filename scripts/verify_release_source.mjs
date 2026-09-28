@@ -15,6 +15,9 @@ const PUBLISHABLE_MANIFESTS = Object.freeze([
   "crates/dcql/Cargo.toml",
   "crates/types/Cargo.toml",
   "crates/proto/Cargo.toml",
+  "crates/dc-api/Cargo.toml",
+  "crates/formats/Cargo.toml",
+  "crates/wallet/Cargo.toml",
 ]);
 
 export class ReleaseSourceError extends Error {

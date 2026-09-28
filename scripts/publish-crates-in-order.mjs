@@ -26,10 +26,17 @@ const APPROVED_PUBLISH_SEQUENCE = [
   { name: "reallyme-openid4vp-proto", version: "0.1.0" },
   { name: "reallyme-openid4vp-dcql", version: "0.1.0" },
   { name: "reallyme-openid4vp-types", version: "0.1.0" },
+  { name: "reallyme-openid4vp-dc-api", version: "0.1.0" },
+  { name: "reallyme-openid4vp-formats", version: "0.1.0" },
+  { name: "reallyme-openid4vp-wallet", version: "0.1.0" },
 ];
 const APPROVED_MSRV = "1.96";
 const REQUIRED_PUBLISH_ORDER_EDGES = [
   ["reallyme-openid4vp-dcql", "reallyme-openid4vp-types"],
+  ["reallyme-openid4vp-types", "reallyme-openid4vp-dc-api"],
+  ["reallyme-openid4vp-types", "reallyme-openid4vp-formats"],
+  ["reallyme-openid4vp-dc-api", "reallyme-openid4vp-wallet"],
+  ["reallyme-openid4vp-formats", "reallyme-openid4vp-wallet"],
 ];
 const args = process.argv.slice(2);
 const mode = args[0] ?? MODE_INSPECT;

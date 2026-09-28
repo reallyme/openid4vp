@@ -167,7 +167,7 @@ pub(super) fn test_source_for_module(module: &str) -> Option<&'static str> {
     }
 }
 
-pub(super) fn manifests() -> [(&'static str, &'static str); 21] {
+pub(super) fn manifests() -> [(&'static str, &'static str); 20] {
     [
         (
             "specifications.lock",
@@ -192,10 +192,6 @@ pub(super) fn manifests() -> [(&'static str, &'static str); 21] {
         (
             "oidf/profile-matrix.json",
             include_str!("../../oidf/profile-matrix.json"),
-        ),
-        (
-            "oidf/demo-rehearsal-overlay.json",
-            include_str!("../../oidf/demo-rehearsal-overlay.json"),
         ),
         ("eudi/sources.lock", include_str!("../../eudi/sources.lock")),
         (

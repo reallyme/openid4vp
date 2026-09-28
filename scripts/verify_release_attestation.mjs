@@ -47,6 +47,9 @@ const PUBLIC_CRATE_FILES = Object.freeze([
   "reallyme-openid4vp-proto-{version}.crate",
   "reallyme-openid4vp-dcql-{version}.crate",
   "reallyme-openid4vp-types-{version}.crate",
+  "reallyme-openid4vp-dc-api-{version}.crate",
+  "reallyme-openid4vp-formats-{version}.crate",
+  "reallyme-openid4vp-wallet-{version}.crate",
 ]);
 
 export class ReleaseAttestationError extends Error {

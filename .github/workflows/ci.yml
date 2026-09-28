@@ -242,7 +242,10 @@ jobs:
           cargo check --locked --all-features \
             -p reallyme-openid4vp-proto \
             -p reallyme-openid4vp-dcql \
-            -p reallyme-openid4vp-types
+            -p reallyme-openid4vp-types \
+            -p reallyme-openid4vp-dc-api \
+            -p reallyme-openid4vp-formats \
+            -p reallyme-openid4vp-wallet
 
   wasm-composition:
     name: Identity Wasm composition inputs

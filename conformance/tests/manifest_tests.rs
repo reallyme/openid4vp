@@ -158,7 +158,7 @@ fn oidf_runner_requires_exported_result_artifacts() {
     assert!(runner.contains("profile-matrix.json"));
     assert!(runner.contains("missing_oidf_profile_id"));
     assert!(runner.contains("--profile \"${selected_profile_id}\""));
-    assert!(runner.contains("OIDF_MATRIX_OVERLAY"));
+    assert!(!runner.contains("OIDF_MATRIX_OVERLAY"));
     assert!(runner.contains("oidf_suite_export_incomplete"));
     assert!(runner.contains("missing_conformance_token"));
     assert!(runner.contains("OIDF_VERIFIER_HEALTH_ENDPOINT"));
@@ -188,7 +188,7 @@ fn oidf_runner_requires_exported_result_artifacts() {
     assert!(wallet_runner.contains("--profile \"${selected_profile_id}\""));
     assert!(wallet_runner.contains("OIDF_WALLET_HARNESS_HEALTH_ENDPOINT"));
     assert!(wallet_runner.contains("missing_wallet_harness_token"));
-    assert!(wallet_runner.contains("OIDF_MATRIX_OVERLAY"));
+    assert!(!wallet_runner.contains("OIDF_MATRIX_OVERLAY"));
     assert!(wallet_runner.contains("OIDF_WALLET_FLOW_DRIVER_MODE"));
     assert!(wallet_runner.contains("conformance/scripts/drive_oidf_wallet_flow.py"));
     assert!(wallet_runner.contains("oidf_wallet_suite_runner_completed"));
@@ -229,7 +229,7 @@ fn oidf_runner_requires_exported_result_artifacts() {
     assert!(workflow.contains("profile_id:"));
     assert!(workflow.contains("OIDF_PROFILE_ID: ${{ inputs.profile_id }}"));
     assert!(workflow.contains("fetch --depth 1 origin \"${oidf_suite_commit}\""));
-    assert!(workflow.contains("fetch --depth 1 origin \"${oidf_demo_commit}\""));
+    assert!(!workflow.contains("oidf_demo_commit"));
     assert!(workflow.contains("OIDF_WALLET_HARNESS_ENDPOINT"));
     assert!(workflow.contains("OIDF_WALLET_HARNESS_TOKEN"));
     assert!(workflow.contains("OIDF_CONFORMANCE_TOKEN"));
@@ -256,7 +256,7 @@ fn oidf_runner_requires_exported_result_artifacts() {
     assert!(target_verifier.contains("matrix_module_coverage_drift"));
     assert!(target_verifier.contains("suite_commit_mismatch"));
     assert!(target_verifier.contains("suite_worktree_dirty"));
-    assert!(target_verifier.contains("oidf-demo-pre-submission"));
+    assert!(!target_verifier.contains("--overlay"));
     assert!(wallet_config_verifier.contains("wallet_config_signers_not_distinct"));
     assert!(wallet_config_verifier.contains("wallet_config_duplicate_json_key"));
     assert!(wallet_config_verifier.contains("wallet_config_trust_anchor_material_mismatch"));
@@ -278,13 +278,21 @@ fn oidf_runner_requires_exported_result_artifacts() {
     assert!(workflow.contains("conformance/scripts/test_validate_oidf_runtime_endpoints.py"));
     assert!(workflow.contains("conformance/scripts/test_verify_oidf_certification_target.py"));
     assert!(workflow.contains("conformance/scripts/test_verify_oidf_wallet_config.py"));
-    assert!(workflow.contains("mvn -q -DskipTests package"));
+    assert!(!workflow.contains("workflow_call:"));
+    assert!(workflow
+        .contains("maven@sha256:c2a2c58516d160f43b50f12baa427ca86989e0bc942609e04aff61da5d9a7d74"));
+    assert!(workflow.contains("-e HOME=/maven-home"));
+    assert!(workflow.contains("-e MAVEN_CONFIG=/maven-home"));
+    assert!(workflow.contains("-Dmaven.repo.local=/maven-home/repository"));
+    assert!(workflow.contains("-Dmaven.test.skip -Dpmd.skip clean package"));
+    assert!(workflow.contains("VariantCondition_UnitTest,LoadBuiltInDcqlQuery_UnitTest,*VP1Final*"));
     assert!(workflow.contains("path: |\n            openid4vp/target/conformance-results"));
     assert!(workflow.contains("!openid4vp/target/conformance-results/oidf-runtime-configs/**"));
     assert!(workflow.contains("if-no-files-found: error"));
-    assert!(preflight.contains("java 21 is required"));
-    assert!(preflight.contains("maven must run with java 21"));
-    assert!(!preflight.contains("docker"));
+    assert!(preflight.contains("require_command docker"));
+    assert!(preflight.contains("docker daemon is not reachable"));
+    assert!(!preflight.contains("require_command java"));
+    assert!(!preflight.contains("require_command mvn"));
     assert!(preflight.contains("missing required command"));
     assert!(discovery.contains("Discover OpenID4VP"));
     assert!(endpoint_validator.contains("oidf_runtime_endpoint_invalid"));
@@ -396,31 +404,6 @@ fn oidf_profile_matrix_covers_all_supported_haip_profiles() {
         total_expected_module_executions, 119,
         "the reviewed suite revision has exactly 119 HAIP module executions"
     );
-}
-
-#[test]
-fn oidf_demo_rehearsal_overlay_covers_status_tests() {
-    let overlay = parse_json_or_null(include_str!("../oidf/demo-rehearsal-overlay.json"));
-    assert_eq!(
-        overlay.get("purpose").and_then(Value::as_str),
-        Some("oidf-demo-pre-submission")
-    );
-    let additions = overlay
-        .get("profile_additions")
-        .and_then(Value::as_array)
-        .cloned()
-        .unwrap_or_default();
-    assert_eq!(additions.len(), 2);
-    let module_count = additions
-        .iter()
-        .filter_map(|addition| addition.get("modules").and_then(Value::as_array))
-        .map(Vec::len)
-        .sum::<usize>();
-    assert_eq!(module_count, 5);
-    let serialized = serde_json::to_string(&overlay).unwrap_or_default();
-    assert!(serialized.contains("present-revoked-credential"));
-    assert!(serialized.contains("present-credential-on-identifier-list"));
-    assert!(serialized.contains("present-credential-without-status"));
 }
 
 #[test]

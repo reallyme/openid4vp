@@ -27,7 +27,7 @@ cross-repository provenance, release-readiness conclusions, and retained
 interoperability evidence belong to downstream `identity-conformance`, not to
 this protocol implementation repository.
 
-The scheduled GitHub Actions job checks out
+The independently dispatched **OIDF Conformance** GitHub Actions workflow checks out
 `https://gitlab.com/openid/conformance-suite` and prepares both OID4VP verifier
 and wallet test-plan execution. Transport-neutral generated operations are
 available through `crates/runtime`; browser-facing request-object and
@@ -224,17 +224,14 @@ export is accepted.
 The authoritative composed-product OIDF selection and certification evidence
 live in downstream `identity-conformance` orchestration. This repository retains
 its generic adapter configuration, a reviewed public profile matrix for suite commit
-`440eec8bac7b12b7389d7ca9cbc459b53507a443` (`release-v5.3.1`), and transient
-execute-mode outputs.
+`440eec8bac7b12b7389d7ca9cbc459b53507a443` (the official
+`release-v5.3.1` tag), and transient execute-mode outputs.
 CI builds the exact pinned checkout, discovers its OpenID4VP sources, and runs
 `verify_oidf_certification_target.py`; any module drift blocks execution. The
-separate `conformance/oidf/demo-rehearsal-overlay.json` locks the stricter OIDF
-demo inventory and adds five verifier credential-status executions. Set
-`OIDF_MATRIX_OVERLAY` to that file while using the demo checkout/server; the
-source gate, profile reader, and result validator all apply the same overlay.
-The base public matrix remains the protocol-profile contract. The result
-validator requires the complete expected module multiset, exact matrix variant
-binding, and `FINISHED` status for every profile. It accepts `REVIEW` only for
+official release tag and the public profile matrix are the protocol-profile
+contract. CI does not mix unreleased demo-branch modules into release evidence.
+The result validator requires the complete expected module multiset, exact
+matrix variant binding, and `FINISHED` status for every profile. It accepts `REVIEW` only for
 modules explicitly classified by the matrix from the pinned suite source:
 positive verifier flows that require a verification screenshot, and wallet
 negative flows whose specification-defined outcome may require an error-screen
@@ -254,6 +251,8 @@ The complete two-verifier/four-wallet self-assessment, immutable deployment
 binding, evidence index, and final pre-submission gate are run by
 `identity-conformance`. The public workflow intentionally runs only one selected
 protocol profile and does not claim product certification evidence.
+It remains a separately dispatched protocol-evidence workflow and is not a
+prerequisite of crates.io package publication.
 
 OIDF's available formal route is called self-certification and culminates in a
 legally binding Declaration of Conformance. It is distinct from a local
@@ -264,11 +263,13 @@ and are never performed by CI. Follow the OpenID Foundation's published
 certification instructions for the current submission process.
 
 The composed pre-submission sequence, including exact profile selection and
-production versus rehearsal execution counts, is owned by
+execution counts, is owned by
 `identity-conformance`. Local exports are deliberately not interchangeable with
 the ZIP files issued by **Publish for certification**.
-The suite build and source tests run under Java 21; a local Docker daemon is not
-required when `CONFORMANCE_SERVER` points to an already-running suite.
+The suite build and source tests run in the same digest-pinned Maven container
+used by OpenID4VCI CI. A reachable local Docker daemon is required for that
+reproducible build even when `CONFORMANCE_SERVER` points to an already-running
+suite.
 
 Downstream orchestration owns the composed OpenID4VCI and OpenID4VP
 certification plans. Results from one protocol or role must never be counted as

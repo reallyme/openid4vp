@@ -10,8 +10,9 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-publish = false
-include = ["/src/**/*.rs", "/Cargo.toml", "/README.md"]
+documentation = "https://docs.rs/reallyme-openid4vp-dc-api"
+publish = true
+include = ["/src/**/*.rs", "/examples/**/*.rs", "/Cargo.toml", "/README.md"]
 
 [features]
 default = ["native"]

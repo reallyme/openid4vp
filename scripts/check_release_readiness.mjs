@@ -488,6 +488,9 @@ function checkRepositoryPolicy() {
     "reallyme-openid4vp-proto",
     "reallyme-openid4vp-dcql",
     "reallyme-openid4vp-types",
+    "reallyme-openid4vp-dc-api",
+    "reallyme-openid4vp-formats",
+    "reallyme-openid4vp-wallet",
   ]) {
     requireText(
       ".github/workflows/ci.yml",
@@ -919,6 +922,36 @@ function checkRepositoryPolicy() {
     ".github/workflows/crates-package-preflight.yml",
     "REQUIRED_CI_POLL_SECONDS: '20'",
     "rate-limited polling for exact-commit CI evidence",
+  );
+  rejectText(
+    ".github/workflows/crates-package-preflight.yml",
+    "uses: ./.github/workflows/conformance.yml",
+    "OIDF protocol evidence coupled to crate publication",
+  );
+  requireText(
+    ".github/workflows/conformance.yml",
+    "https://gitlab.com/openid/conformance-suite.git",
+    "authoritative OIDF GitLab source",
+  );
+  requireText(
+    "conformance/oidf/profile-matrix.json",
+    "440eec8bac7b12b7389d7ca9cbc459b53507a443",
+    "official OIDF release-v5.3.1 commit",
+  );
+  requireText(
+    ".github/workflows/conformance.yml",
+    "maven@sha256:c2a2c58516d160f43b50f12baa427ca86989e0bc942609e04aff61da5d9a7d74",
+    "digest-pinned OIDF Maven runtime",
+  );
+  requireText(
+    ".github/workflows/conformance.yml",
+    "-Dmaven.repo.local=/maven-home/repository",
+    "runner-writable Maven repository",
+  );
+  rejectText(
+    ".github/workflows/conformance.yml",
+    "conformance-suite-demo",
+    "unreleased OIDF demo source in release evidence",
   );
   requireText(
     ".github/workflows/ci.yml",

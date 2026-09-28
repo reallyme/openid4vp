@@ -12,7 +12,6 @@ runner_mode="${OIDF_RUNNER_MODE:-pending}"
 flow_driver_mode="${OIDF_VERIFIER_FLOW_DRIVER_MODE:-pending}"
 results_dir="${CONFORMANCE_RESULTS_DIR:-target/conformance-results}"
 matrix="${OIDF_PROFILE_MATRIX:-conformance/oidf/profile-matrix.json}"
-matrix_overlay="${OIDF_MATRIX_OVERLAY:-}"
 result_assertion="${OIDF_RESULT_ASSERTION:-conformance/scripts/assert_oidf_results.sh}"
 target_verifier="${OIDF_TARGET_VERIFIER:-conformance/scripts/verify_oidf_certification_target.py}"
 matrix_reader="${OIDF_MATRIX_READER:-conformance/scripts/read_oidf_certification_matrix.py}"
@@ -32,9 +31,6 @@ runtime_config_dir=""
 active_profile_id="verifier-harness"
 active_plan_id="oid4vp-1final-verifier-haip-test-plan"
 selected_profile_id="${OIDF_PROFILE_ID:-}"
-target_overlay_args=()
-reader_overlay_args=()
-assert_overlay_args=()
 alias_args=()
 endpoint_validator_args=()
 runtime_endpoints=()
@@ -138,14 +134,6 @@ fi
 if [[ -z "${selected_profile_id}" ]]; then
   fail_with_result "missing_oidf_profile_id"
 fi
-if [[ -n "${matrix_overlay}" ]]; then
-  if [[ ! -f "${matrix_overlay}" ]]; then
-    fail_with_result "missing_certification_matrix_overlay"
-  fi
-  target_overlay_args=(--overlay "${matrix_overlay}")
-  reader_overlay_args=(--overlay "${matrix_overlay}")
-  assert_overlay_args=(--overlay "${matrix_overlay}")
-fi
 if [[ ! -f "${target_verifier}" ]]; then
   fail_with_result "missing_certification_target_verifier"
 fi
@@ -155,11 +143,11 @@ fi
 if [[ ! -f "${endpoint_validator}" ]]; then
   fail_with_result "missing_oidf_endpoint_validator"
 fi
-if ! "${python_bin}" "${target_verifier}" "${suite_dir}" "${matrix}" "${target_overlay_args[@]}"; then
+if ! "${python_bin}" "${target_verifier}" "${suite_dir}" "${matrix}"; then
   fail_with_result "certification_target_verification_failed"
 fi
 
-expected_commit="$("${python_bin}" "${matrix_reader}" commit "${matrix}" "${reader_overlay_args[@]}")" \
+expected_commit="$("${python_bin}" "${matrix_reader}" commit "${matrix}")" \
   || fail_with_result "invalid_certification_matrix"
 configured_commit="${OIDF_SUITE_COMMIT:-${expected_commit}}"
 if [[ "${configured_commit}" != "${expected_commit}" ]]; then
@@ -199,9 +187,6 @@ config_file="${OIDF_CONFIG_FILE:-${suite_dir}/scripts/test-configs-rp-against-op
 echo "OIDF suite: ${suite_dir}"
 echo "OIDF suite commit: ${expected_commit}"
 echo "Certification matrix: ${matrix}"
-if [[ -n "${matrix_overlay}" ]]; then
-  echo "Certification matrix overlay: ${matrix_overlay}"
-fi
 echo "Verifier endpoint: configured"
 
 if [[ "${runner_mode}" != "execute" && "${runner_mode}" != "pending" ]]; then
@@ -215,7 +200,7 @@ if [[ "${runner_mode}" == "pending" ]]; then
     write_result "${profile_id}" "${plan_id}" "pending_runner" \
       "oidf_suite_runner_not_yet_enabled" "${module_count}"
   done < <("${python_bin}" "${matrix_reader}" profiles "${matrix}" --role verifier \
-    --profile "${selected_profile_id}" "${reader_overlay_args[@]}")
+    --profile "${selected_profile_id}")
   if [[ "${processed_profiles}" -eq 0 ]]; then
     fail_with_result "certification_profiles_missing"
   fi
@@ -375,14 +360,14 @@ while IFS=$'\t' read -r profile_id plan_id expression module_count; do
     fail_with_result "oidf_verifier_flow_driver_plan_binding_mismatch"
   fi
   if ! "${result_assertion}" "${profile_export_dir}" --matrix "${matrix}" \
-    "${assert_overlay_args[@]}" --profile "${profile_id}" \
+    --profile "${profile_id}" \
     --expected-plan-instance-id "${plan_instance_id}"; then
     fail_with_result "oidf_suite_export_incomplete"
   fi
   write_result "${profile_id}" "${plan_id}" "validated" \
     "oidf_suite_runner_completed" "${module_count}"
 done < <("${python_bin}" "${matrix_reader}" profiles "${matrix}" --role verifier \
-  --profile "${selected_profile_id}" "${reader_overlay_args[@]}")
+  --profile "${selected_profile_id}")
 if [[ "${processed_profiles}" -eq 0 ]]; then
   fail_with_result "certification_profiles_missing"
 fi

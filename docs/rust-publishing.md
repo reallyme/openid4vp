@@ -16,10 +16,13 @@ the current release:
 | `reallyme-openid4vp-proto` | `reallyme/openid4vp` | Canonical generated message and ProtoJSON contract. |
 | `reallyme-openid4vp-dcql` | `reallyme/openid4vp` | Standalone DCQL validation and evaluation. |
 | `reallyme-openid4vp-types` | `reallyme/openid4vp` | Rust-native validated OpenID4VP domain types. |
+| `reallyme-openid4vp-dc-api` | `reallyme/openid4vp` | Digital Credentials API and ISO/IEC 18013-7 handover types. |
+| `reallyme-openid4vp-formats` | `reallyme/openid4vp` | Wallet presentation-format adapters. |
+| `reallyme-openid4vp-wallet` | `reallyme/openid4vp` | Wallet request verification and response construction boundary. |
 
 Every other workspace crate remains `publish = false`, including the facade,
-format, Digital Credentials API, profiles, verifier, wallet, HTTP, codec,
-runtime, conformance, and fuzz crates. Swift, Kotlin/Android, FFI/JNI, and
+profiles, verifier, HTTP, codec, runtime, conformance, and fuzz crates. Swift,
+Kotlin/Android, FFI/JNI, and
 application-facing SDK facades—including the `@reallyme/identity`
 TypeScript/Wasm package—belong to `reallyme/identity`; they consume this
 repository's generated contract and must not redefine its DTOs.
@@ -38,15 +41,19 @@ The exact release order is enforced by release tooling:
 1. `reallyme-openid4vp-proto` 0.1.0
 2. `reallyme-openid4vp-dcql` 0.1.0
 3. `reallyme-openid4vp-types` 0.1.0
+4. `reallyme-openid4vp-dc-api` 0.1.0
+5. `reallyme-openid4vp-formats` 0.1.0
+6. `reallyme-openid4vp-wallet` 0.1.0
 
 Adding or publishing any other crate requires a separately reviewed policy and
 release-tooling change. Cargo metadata alone cannot expand the publish set.
 
 ## Current Gate
 
-The registry-independent release set is:
-`reallyme-openid4vp-proto`, `reallyme-openid4vp-dcql`, and
-`reallyme-openid4vp-types`. They must pass package-local
+The approved release set is `reallyme-openid4vp-proto`,
+`reallyme-openid4vp-dcql`, `reallyme-openid4vp-types`,
+`reallyme-openid4vp-dc-api`, `reallyme-openid4vp-formats`, and
+`reallyme-openid4vp-wallet`. They must pass package-local
 inspection, generated-source freshness where applicable, and locked dry-run
 verification. Open sourcing the repository does not itself upload or release a
 crate.
@@ -62,7 +69,8 @@ scripts/check-openid4vp-format.sh
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace --all-features
 node scripts/check-proto-first-boundaries.mjs
-node scripts/check_release_readiness.mjs
+npm exec --yes --package=github:reallyme/release-readiness#bdedc88f3f25fcc14242730d4dec6ce6a0c75531 -- \
+  reallyme-release-readiness
 node scripts/publish-crates-in-order.mjs inspect --allow-dirty
 ```
 
@@ -76,7 +84,7 @@ uploading. CI runs the same command without `--allow-dirty`.
 OpenID4VP uses the same reviewed two-workflow release process as
 `reallyme/cose`:
 
-1. Commit the release version to all three approved public crate manifests, their
+1. Commit the release version to all six approved public crate manifests, their
    internal dependency requirements, `Cargo.lock`, and the default version
    displayed by **Crates Package Preflight**.
 2. Push that exact commit to `main`.
@@ -120,3 +128,26 @@ attestation, regenerates each crate, and rejects any size or SHA-256 mismatch
 before every upload attempt. Its atomic publication ledger records pending,
 attempting, newly published, and verified-existing states so a partial registry
 release can be recovered without accepting different source bytes.
+
+## One-time 0.1.0 wallet supplement
+
+The first 0.1.0 release published only the proto, DCQL, and domain-type crates.
+To complete the immutable 0.1.0 dependency graph required by ReallyMe Wallet,
+publish the remaining crates from one clean, reviewed commit in this order:
+
+```sh
+cargo publish --locked -p reallyme-openid4vp-dc-api
+cargo publish --locked -p reallyme-openid4vp-formats
+cargo publish --locked -p reallyme-openid4vp-wallet
+```
+
+Do not use `--allow-dirty` or `--no-verify` for this local supplement. After
+each upload, wait until crates.io exposes the new version before advancing. Run
+`cargo info <package>@0.1.0 --registry crates-io` outside this workspace so
+Cargo cannot satisfy the query from the local package; do not attempt the wallet
+upload until both dependency versions resolve from crates.io. If crates.io
+rate-limits an upload, wait for the registry's reported retry interval and rerun
+only the same command. The general
+`reallyme-openid4vp` facade is not part of this supplement. Starting with the
+next version, use the reviewed main release workflow for the complete six-crate
+cohort.

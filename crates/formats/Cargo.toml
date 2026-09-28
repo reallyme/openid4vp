@@ -10,7 +10,8 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-publish = false
+documentation = "https://docs.rs/reallyme-openid4vp-formats"
+publish = true
 include = ["/src/**/*.rs", "/Cargo.toml", "/README.md"]
 
 [features]

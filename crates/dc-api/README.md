@@ -17,3 +17,8 @@ typed request is built, even when `client_id` contains an unknown prefix.
 Protocol identifiers are checked against the data representation at JSON and
 protobuf boundaries so signed, multi-signed, and unsigned shapes cannot be
 substituted for one another.
+
+The `generate_iso_transport_evidence` example is compiled from the public
+handover types and emits a non-sensitive JSON inventory of their field-level
+transport semantics. It exists to detect documentation drift in downstream ISO
+conformance evidence; it does not emit credentials, keys, or runtime values.

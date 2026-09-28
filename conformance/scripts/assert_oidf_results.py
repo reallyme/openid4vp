@@ -16,9 +16,6 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
-import verify_oidf_certification_target
-
-
 MAX_JSON_BYTES = 16 * 1024 * 1024
 MAX_ZIP_BYTES = 128 * 1024 * 1024
 MAX_ZIP_MEMBER_BYTES = 16 * 1024 * 1024
@@ -67,7 +64,6 @@ def main() -> int:
     )
     parser.add_argument("results_dir", help="OIDF export directory")
     parser.add_argument("--matrix", required=True, help="Certification matrix JSON")
-    parser.add_argument("--overlay", help="Optional reviewed rehearsal overlay JSON")
     parser.add_argument("--profile", required=True, help="Matrix profile id")
     parser.add_argument(
         "--expected-plan-instance-id",
@@ -76,8 +72,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        overlay_path = Path(args.overlay) if args.overlay is not None else None
-        expected = load_expected_profile(Path(args.matrix), args.profile, overlay_path)
+        expected = load_expected_profile(Path(args.matrix), args.profile)
         observed = collect_results(Path(args.results_dir), expected.variant_keys)
         assert_complete_results(expected, observed, args.expected_plan_instance_id)
         result_counts = Counter(result.result for result in observed)
@@ -93,20 +88,10 @@ def main() -> int:
         return 2
 
 
-def load_expected_profile(
-    matrix_path: Path, profile_id: str, overlay_path: Path | None = None
-) -> ExpectedProfile:
+def load_expected_profile(matrix_path: Path, profile_id: str) -> ExpectedProfile:
     matrix = read_json_file(matrix_path, MAX_JSON_BYTES, "matrix")
     if not isinstance(matrix, dict) or matrix.get("schema_version") != 1:
         raise ResultFailure("matrix_invalid_shape")
-    if overlay_path is not None:
-        try:
-            overlay = verify_oidf_certification_target.read_json_object(overlay_path)
-            matrix = verify_oidf_certification_target.apply_rehearsal_overlay(
-                matrix, overlay
-            )
-        except verify_oidf_certification_target.TargetFailure as error:
-            raise ResultFailure("matrix_overlay_invalid") from error
     suite = matrix.get("suite")
     if not isinstance(suite, dict):
         raise ResultFailure("matrix_invalid_shape")

@@ -175,7 +175,8 @@ Without that adapter, ZK presentations fail closed.
 | Evaluate DCQL in a Rust service | Use `reallyme-openid4vp-dcql`. |
 | Validate or generate OpenID4VP wire documents | Use `reallyme-openid4vp-types`. |
 | Integrate the canonical protobuf contract | Use `reallyme-openid4vp-proto`. |
-| Develop verifier, wallet, profile, or adapter behavior | Check out this repository; these components are source-available workspace crates rather than crates.io packages. |
+| Integrate wallet-side request verification and response construction | Use `reallyme-openid4vp-wallet`. |
+| Develop verifier, profile, or other unpublished adapter behavior | Check out this repository; these components remain source-available workspace crates rather than crates.io packages. |
 
 Released dependencies resolve from crates.io; a sibling checkout is not
 required. Released SSI dependencies are exact-version pinned by the workspace
@@ -211,9 +212,12 @@ The crates.io publication surface contains exactly these packages:
 | [`reallyme-openid4vp-dcql`](https://crates.io/crates/reallyme-openid4vp-dcql) | Bounded DCQL model, validation, and wallet-side evaluation. |
 | [`reallyme-openid4vp-types`](https://crates.io/crates/reallyme-openid4vp-types) | Validated OpenID4VP 1.0 wire types and protocol errors. |
 | [`reallyme-openid4vp-proto`](https://crates.io/crates/reallyme-openid4vp-proto) | Canonical generated protobuf and ProtoJSON contract. |
+| [`reallyme-openid4vp-dc-api`](https://crates.io/crates/reallyme-openid4vp-dc-api) | Digital Credentials API and ISO/IEC 18013-7 handover types. |
+| [`reallyme-openid4vp-formats`](https://crates.io/crates/reallyme-openid4vp-formats) | Wallet presentation-format adapters and validation boundaries. |
+| [`reallyme-openid4vp-wallet`](https://crates.io/crates/reallyme-openid4vp-wallet) | Wallet-side request verification and response construction. |
 
-The remaining protocol crates are source-only composition crates; the
-conformance crate is repository tooling. The
+The remaining protocol crates, including the general facade, are source-only
+composition crates; the conformance crate is repository tooling. The
 [publishing guide](docs/rust-publishing.md) documents the release process and
 package policy.
 
@@ -248,7 +252,7 @@ prevention, and repeatable Request Object retrieval.
 ## Development
 
 Development, release packaging, and primary CI use the pinned Rust 1.98.1
-toolchain in `rust-toolchain.toml`. The three public crates retain an MSRV of
+toolchain in `rust-toolchain.toml`. The six public crates retain an MSRV of
 Rust 1.96, which is checked separately and must not be raised merely to match
 the maintainer toolchain.
 

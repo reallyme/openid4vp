@@ -25,6 +25,9 @@ const packageNames = Object.freeze([
   "reallyme-openid4vp-proto",
   "reallyme-openid4vp-dcql",
   "reallyme-openid4vp-types",
+  "reallyme-openid4vp-dc-api",
+  "reallyme-openid4vp-formats",
+  "reallyme-openid4vp-wallet",
 ]);
 
 const runFixture = ({ missingPackage, runAttempt = "1", symlinkPackage } = {}) => {

@@ -2,10 +2,10 @@
 
 ## Supported Versions
 
-This repository has not published a supported release yet. Security fixes are
-developed against `main` during the pre-release period. After the first release,
-this section will identify the exact supported release line; older snapshots and
-unpublished development branches are not supported.
+The `0.1.x` release line is supported. Security fixes are developed against
+`main` and released as versioned crates after coordinated review. Older
+snapshots, unpublished development branches, and locally modified package
+archives are not supported releases.
 
 ## Reporting A Vulnerability
 

@@ -370,21 +370,17 @@ requireText("docs/rust-publishing.md", "reallyme-openid4vp-proto");
 requireText("docs/rust-publishing.md", "reallyme/identity");
 requireText("docs/rust-publishing.md", "@reallyme/identity");
 rejectText("docs/rust-publishing.md", "identity-sdk");
-requireText("docs/rust-publishing.md", "registry-independent release set is");
+requireText("docs/rust-publishing.md", "The approved release set is");
 requireText("docs/platform-binding-contract.md", "vectors/protobuf");
 for (const publishableCrate of [
   "crates/dcql/Cargo.toml",
   "crates/types/Cargo.toml",
   "crates/proto/Cargo.toml",
-]) {
-  requireText(publishableCrate, "publish = true");
-}
-for (const privateCrate of [
   "crates/dc-api/Cargo.toml",
   "crates/formats/Cargo.toml",
   "crates/wallet/Cargo.toml",
 ]) {
-  requireText(privateCrate, "publish = false");
+  requireText(publishableCrate, "publish = true");
 }
 for (const privateUntilRelease of [
   "crates/openid4vp/Cargo.toml",
