@@ -8,8 +8,12 @@ import { appendFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const FULL_SHA_PATTERN = /^[0-9a-f]{40}$/u;
+const NON_NEGATIVE_INTEGER_PATTERN = /^(?:0|[1-9][0-9]*)$/u;
 const REPOSITORY_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/u;
 const MAX_COMMAND_OUTPUT_BYTES = 1_048_576;
+const MAX_WAIT_SECONDS = 7_200;
+const MAX_POLL_SECONDS = 300;
+const DEFAULT_POLL_SECONDS = 20;
 const REQUIRED_WORKFLOWS = Object.freeze([
   "ci.yml",
   "protobuf-ci.yml",
@@ -39,6 +43,28 @@ const fail = (code, workflowFile) => {
 };
 
 const isRecord = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+
+const parseSeconds = (value, defaultValue, code, maximum) => {
+  if (value === undefined || value === "") {
+    return defaultValue;
+  }
+  if (typeof value !== "string" || !NON_NEGATIVE_INTEGER_PATTERN.test(value)) {
+    fail(code);
+  }
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed > maximum) {
+    fail(code);
+  }
+  return parsed;
+};
+
+const sleepSeconds = (seconds) => {
+  if (seconds === 0) {
+    return;
+  }
+  const waitBuffer = new SharedArrayBuffer(4);
+  Atomics.wait(new Int32Array(waitBuffer), 0, 0, seconds * 1_000);
+};
 
 const runJson = (arguments_, code) => {
   const result = spawnSync("gh", arguments_, {
@@ -139,22 +165,7 @@ export const selectRequiredCiRun = (value, expected) => {
   return latest;
 };
 
-export const verifyRequiredCi = ({ env = process.env } = {}) => {
-  const repository = env.GITHUB_REPOSITORY;
-  const releaseSha = env.RELEASE_SHA;
-  if (typeof repository !== "string" || !REPOSITORY_PATTERN.test(repository)) {
-    fail("invalid-repository");
-  }
-  if (typeof releaseSha !== "string" || !FULL_SHA_PATTERN.test(releaseSha)) {
-    fail("invalid-release-sha");
-  }
-  if (env.GITHUB_SHA !== releaseSha) {
-    fail("workflow-head-mismatch");
-  }
-  if (typeof env.GH_TOKEN !== "string" || env.GH_TOKEN.length === 0) {
-    fail("missing-github-token");
-  }
-
+const resolveRequiredCi = ({ repository, releaseSha }) => {
   return REQUIRED_WORKFLOWS.map((workflowFile) => {
     const workflow = runJson(
       ["api", `repos/${repository}/actions/workflows/${workflowFile}`],
@@ -175,6 +186,73 @@ export const verifyRequiredCi = ({ env = process.env } = {}) => {
       workflowFile,
       workflowId: workflow.id,
     });
+  });
+};
+
+const isWaitableRequiredCiError = (error) =>
+  error instanceof RequiredCiError &&
+  (error.code.startsWith("missing-required-ci-run:") ||
+    error.code.startsWith("required-ci-run-pending:"));
+
+export const resolveRequiredCiWithWait = ({
+  pollSeconds,
+  releaseSha,
+  repository,
+  waitSeconds,
+  now = Date.now,
+  resolve = resolveRequiredCi,
+  sleep = sleepSeconds,
+}) => {
+  const deadline = now() + waitSeconds * 1_000;
+  for (;;) {
+    try {
+      return resolve({ repository, releaseSha });
+    } catch (error) {
+      if (!isWaitableRequiredCiError(error) || now() >= deadline) {
+        throw error;
+      }
+      const remainingSeconds = Math.max(1, Math.ceil((deadline - now()) / 1_000));
+      sleep(Math.min(pollSeconds, remainingSeconds));
+    }
+  }
+};
+
+export const verifyRequiredCi = ({ env = process.env } = {}) => {
+  const repository = env.GITHUB_REPOSITORY;
+  const releaseSha = env.RELEASE_SHA;
+  if (typeof repository !== "string" || !REPOSITORY_PATTERN.test(repository)) {
+    fail("invalid-repository");
+  }
+  if (typeof releaseSha !== "string" || !FULL_SHA_PATTERN.test(releaseSha)) {
+    fail("invalid-release-sha");
+  }
+  if (env.GITHUB_SHA !== releaseSha) {
+    fail("workflow-head-mismatch");
+  }
+  if (typeof env.GH_TOKEN !== "string" || env.GH_TOKEN.length === 0) {
+    fail("missing-github-token");
+  }
+  const waitSeconds = parseSeconds(
+    env.REQUIRED_CI_WAIT_SECONDS,
+    0,
+    "invalid-required-ci-wait-seconds",
+    MAX_WAIT_SECONDS,
+  );
+  const pollSeconds = parseSeconds(
+    env.REQUIRED_CI_POLL_SECONDS,
+    DEFAULT_POLL_SECONDS,
+    "invalid-required-ci-poll-seconds",
+    MAX_POLL_SECONDS,
+  );
+  if (waitSeconds > 0 && pollSeconds === 0) {
+    fail("invalid-required-ci-poll-seconds");
+  }
+
+  return resolveRequiredCiWithWait({
+    pollSeconds,
+    releaseSha,
+    repository,
+    waitSeconds,
   });
 };
 

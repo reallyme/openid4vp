@@ -911,6 +911,16 @@ function checkRepositoryPolicy() {
     "exact-commit required CI evidence",
   );
   requireText(
+    ".github/workflows/crates-package-preflight.yml",
+    "REQUIRED_CI_WAIT_SECONDS: '3600'",
+    "bounded wait for exact-commit CI evidence",
+  );
+  requireText(
+    ".github/workflows/crates-package-preflight.yml",
+    "REQUIRED_CI_POLL_SECONDS: '20'",
+    "rate-limited polling for exact-commit CI evidence",
+  );
+  requireText(
     ".github/workflows/ci.yml",
     "CARGO_SEMVER_CHECKS_VERSION: 0.50.0",
     "pinned public API compatibility tool",

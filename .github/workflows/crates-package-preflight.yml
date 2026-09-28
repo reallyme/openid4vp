@@ -30,7 +30,7 @@ jobs:
   verify-source-sha:
     name: Verify release source
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 90
     outputs:
       ci_run_id: ${{ steps.required-ci.outputs.ci_run_id }}
       fuzz_run_id: ${{ steps.required-ci.outputs.fuzz_run_id }}
@@ -66,6 +66,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ steps.verify-source.outputs.release_sha }}
+          REQUIRED_CI_WAIT_SECONDS: '3600'
+          REQUIRED_CI_POLL_SECONDS: '20'
           REQUIRED_CI_WRITE_GITHUB_OUTPUT: '1'
         working-directory: openid4vp
         run: node scripts/verify_required_ci.mjs

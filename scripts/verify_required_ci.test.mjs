@@ -9,6 +9,7 @@ import test from "node:test";
 import {
   formatRequiredCiOutputs,
   RequiredCiError,
+  resolveRequiredCiWithWait,
   selectRequiredCiRun,
 } from "./verify_required_ci.mjs";
 
@@ -120,4 +121,83 @@ test("serializes prerequisite workflow run IDs in the fixed attestation mapping"
     (error) =>
       error instanceof RequiredCiError && error.code === "invalid-required-ci-output-set",
   );
+});
+
+test("bounded polling waits for pending exact-SHA workflow evidence", () => {
+  let currentTime = 1_000;
+  let attempts = 0;
+  const sleeps = [];
+  const expectedRuns = [{ id: 11 }, { id: 12 }, { id: 13 }, { id: 14 }];
+  const resolved = resolveRequiredCiWithWait({
+    pollSeconds: 20,
+    releaseSha: RELEASE_SHA,
+    repository: "reallyme/openid4vp",
+    waitSeconds: 60,
+    now: () => currentTime,
+    resolve: () => {
+      attempts += 1;
+      if (attempts === 1) {
+        throw new RequiredCiError("required-ci-run-pending:ci.yml");
+      }
+      if (attempts === 2) {
+        throw new RequiredCiError("missing-required-ci-run:fuzz.yml");
+      }
+      return expectedRuns;
+    },
+    sleep: (seconds) => {
+      sleeps.push(seconds);
+      currentTime += seconds * 1_000;
+    },
+  });
+
+  assert.equal(attempts, 3);
+  assert.deepEqual(sleeps, [20, 20]);
+  assert.equal(resolved, expectedRuns);
+});
+
+test("bounded polling fails immediately for terminal CI outcomes", () => {
+  let sleeps = 0;
+  assert.throws(
+    () =>
+      resolveRequiredCiWithWait({
+        pollSeconds: 20,
+        releaseSha: RELEASE_SHA,
+        repository: "reallyme/openid4vp",
+        waitSeconds: 60,
+        resolve: () => {
+          throw new RequiredCiError("required-ci-run-failed:ci.yml");
+        },
+        sleep: () => {
+          sleeps += 1;
+        },
+      }),
+    (error) =>
+      error instanceof RequiredCiError && error.code === "required-ci-run-failed:ci.yml",
+  );
+  assert.equal(sleeps, 0);
+});
+
+test("bounded polling reports pending evidence when its deadline expires", () => {
+  let currentTime = 1_000;
+  const sleeps = [];
+  assert.throws(
+    () =>
+      resolveRequiredCiWithWait({
+        pollSeconds: 20,
+        releaseSha: RELEASE_SHA,
+        repository: "reallyme/openid4vp",
+        waitSeconds: 30,
+        now: () => currentTime,
+        resolve: () => {
+          throw new RequiredCiError("required-ci-run-pending:fuzz.yml");
+        },
+        sleep: (seconds) => {
+          sleeps.push(seconds);
+          currentTime += seconds * 1_000;
+        },
+      }),
+    (error) =>
+      error instanceof RequiredCiError && error.code === "required-ci-run-pending:fuzz.yml",
+  );
+  assert.deepEqual(sleeps, [20, 10]);
 });
