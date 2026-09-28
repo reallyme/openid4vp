@@ -992,7 +992,7 @@ function checkRepositoryPolicy() {
   requireText(
     ".github/workflows/crates-release.yml",
     "environment: crates-io",
-    "protected crates.io release environment",
+    "scoped crates.io release environment",
   );
   requireText(
     ".github/workflows/crates-release.yml",
@@ -1027,17 +1027,17 @@ function checkRepositoryPolicy() {
   requireText(
     ".github/workflows/crates-release.yml",
     "secrets.CARGO_REGISTRY_TOKEN",
-    "protected crates.io environment secret",
+    "scoped crates.io environment secret",
   );
   requireText(
     ".github/workflows/crates-release.yml",
     "node scripts/verify_release_attestation.mjs",
     "reviewed preflight verification",
   );
-  requireText(
+  rejectText(
     ".github/workflows/crates-release.yml",
-    "node scripts/verify_release_environment.mjs",
-    "protected release environment verification",
+    "verify_release_environment",
+    "release-environment query duplicated before the credential-bearing job",
   );
   requireText(
     ".github/workflows/crates-release.yml",

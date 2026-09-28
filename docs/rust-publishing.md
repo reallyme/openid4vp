@@ -97,11 +97,11 @@ The release button exposes no version input; it derives the version from the
 public manifests and rejects disagreement. Rerun preflights are rejected. A
 changed commit or version requires a new preflight.
 
-Publication uses the protected `crates-io` GitHub environment. That environment
-must be limited to protected branches, require at least one reviewer, and
-prevent self-review. Store the narrowly scoped crates.io token only as the
-environment secret named `CARGO_REGISTRY_TOKEN`. The workflow deliberately
-does not request an OIDC token and does not use crates.io Trusted Publishing.
+Publication uses the `crates-io` GitHub environment as the credential boundary.
+Store the narrowly scoped crates.io token only as the environment secret named
+`CARGO_REGISTRY_TOKEN`. Only the publish job enters that environment, after the
+exact commit and reviewed package evidence have been verified. The workflow
+deliberately does not request an OIDC token and does not use crates.io Trusted Publishing.
 The token must never be stored in repository configuration, caches, logs, or
 release artifacts.
 

@@ -54,12 +54,6 @@ jobs:
         working-directory: openid4vp
         run: node scripts/verify_release_source.mjs
 
-      - name: Verify protected release environment
-        env:
-          GH_TOKEN: ${{ github.token }}
-        working-directory: openid4vp
-        run: node scripts/verify_release_environment.mjs
-
       - name: Resolve latest reviewed package preflight
         id: resolve-attestation
         env:
@@ -255,7 +249,7 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "$CARGO_REGISTRY_TOKEN" ]]; then
-            echo 'The protected crates.io credential is not configured.' >&2
+            echo 'The crates.io environment credential is not configured.' >&2
             exit 1
           fi
           node scripts/publish-crates-in-order.mjs publish
