@@ -6,6 +6,7 @@
 
 [![OpenID4VP 1.0 Final](https://img.shields.io/badge/OpenID4VP-1.0%20Final-0f766e)](https://openid.net/specs/openid-4-verifiable-presentations-1_0-final.html)
 [![HAIP 1.0 Final](https://img.shields.io/badge/HAIP-1.0%20Final-0f766e)](https://openid.net/specs/openid4vc-high-assurance-interoperability-profile-1_0-final.html)
+[![crates.io](https://img.shields.io/crates/v/reallyme-openid4vp.svg)](https://crates.io/crates/reallyme-openid4vp)
 [![MSRV](https://img.shields.io/badge/MSRV-1.96-475569)](https://github.com/reallyme/openid4vp/blob/main/Cargo.toml)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](https://github.com/reallyme/openid4vp#license)
 

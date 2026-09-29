@@ -431,23 +431,36 @@ function checkRepositoryPolicy() {
     );
   }
 
-  for (const evidenceWorkflow of [
+  requireText(
     ".github/workflows/ci.yml",
+    'pull_request:\n    paths-ignore:\n      - ".github/renovate.json"\n      - "**/*.md"',
+    "documentation-only pull-request exclusion",
+  );
+  requireText(
+    ".github/workflows/ci.yml",
+    'push:\n    branches:\n      - main\n      - trunk\n    # Release preflight still requires successful exact-commit evidence. Manually\n    # dispatch this workflow when a Markdown-only HEAD is a release candidate.\n    paths-ignore:\n      - "**/*.md"',
+    "documentation-only push exclusion",
+  );
+  requireText(
     ".github/workflows/fuzz.yml",
+    '      - "!**/*.md"',
+    "documentation-only pull-request exclusion",
+  );
+  requireText(
+    ".github/workflows/fuzz.yml",
+    'push:\n    branches:\n      - main\n      - trunk\n    # Release preflight still requires successful exact-commit evidence. Manually\n    # dispatch this workflow when a Markdown-only HEAD is a release candidate.\n    paths-ignore:\n      - "**/*.md"',
+    "documentation-only push exclusion",
+  );
+  requireText(
     ".github/workflows/protobuf-ci.yml",
+    'push:\n    branches:\n      - main\n      - trunk\n    # Release preflight still requires successful exact-commit evidence. Manually\n    # dispatch this workflow when a Markdown-only HEAD is a release candidate.\n    paths-ignore:\n      - "**/*.md"',
+    "documentation-only push exclusion",
+  );
+  rejectText(
     ".github/workflows/secret-scan.yml",
-  ]) {
-    rejectText(
-      evidenceWorkflow,
-      "paths:",
-      "path-filtered exact-SHA release evidence workflow",
-    );
-    rejectText(
-      evidenceWorkflow,
-      "paths-ignore:",
-      "path-filtered exact-SHA release evidence workflow",
-    );
-  }
+    "paths-ignore:",
+    "secret-scan path exclusion",
+  );
 
   requireText(
     "rust-toolchain.toml",

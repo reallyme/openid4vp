@@ -10,10 +10,23 @@ env:
 
 on:
   pull_request:
+    paths:
+      - ".github/workflows/fuzz.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/**"
+      - "fuzz/**"
+      - "scripts/run-fuzz-smoke.sh"
+      - "!**/*.md"
   push:
     branches:
       - main
       - trunk
+    # Release preflight still requires successful exact-commit evidence. Manually
+    # dispatch this workflow when a Markdown-only HEAD is a release candidate.
+    paths-ignore:
+      - "**/*.md"
   schedule:
     - cron: "29 3 * * 1"
   workflow_dispatch:

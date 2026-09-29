@@ -7,10 +7,26 @@ name: Protobuf Checks
 on:
   workflow_dispatch:
   pull_request:
+    paths:
+      - ".github/workflows/protobuf-ci.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "buf.yaml"
+      - "buf.gen.yaml"
+      - "crates/proto/**"
+      - "crates/proto-codec/**"
+      - "scripts/check_release_readiness.mjs"
+      - "scripts/harden-generated-openid4vp-proto.mjs"
+      - "scripts/proto-hardening/**"
+      - "scripts/regenerate-openid4vp-proto.sh"
   push:
     branches:
       - main
       - trunk
+    # Release preflight still requires successful exact-commit evidence. Manually
+    # dispatch this workflow when a Markdown-only HEAD is a release candidate.
+    paths-ignore:
+      - "**/*.md"
 
 permissions:
   contents: read
