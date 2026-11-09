@@ -39,6 +39,16 @@ fn accepts_https_response_uri_with_query() {
 }
 
 #[test]
+fn rejects_non_url_safe_retained_nonce() {
+    let mut binding = binding();
+    binding.nonce.push('+');
+    assert_eq!(
+        validate_request_binding(&binding, 10).map_err(|error| error.reason()),
+        Err(VerifierErrorReason::InvalidBinding)
+    );
+}
+
+#[test]
 fn rejects_binding_at_expiry_boundary() {
     let binding = binding();
 

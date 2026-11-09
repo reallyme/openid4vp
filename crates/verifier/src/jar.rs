@@ -185,6 +185,12 @@ fn validate_jar_claims_without_clock(
     request: &AuthorizationRequestObject,
     policy: JarPolicy,
 ) -> Result<JarTemporalClaims, VerifierError> {
+    if let Some(metadata) = request.client_metadata.as_ref() {
+        metadata
+            .validate_for_dcql(&request.dcql_query)
+            .map_err(|_| VerifierError::new(VerifierErrorReason::UnsupportedFormat))?;
+    }
+
     if policy.require_issuer && request.iss.as_deref().is_none_or(str::is_empty) {
         return Err(VerifierError::new(VerifierErrorReason::MissingIssuer));
     }
@@ -201,6 +207,12 @@ fn validate_jar_claims_without_clock(
 
     if request.nonce.len() < MIN_SESSION_BINDING_BYTES {
         return Err(VerifierError::new(VerifierErrorReason::MissingNonce));
+    }
+    reallyme_openid4vp_types::validate_oauth_binding_value(&request.nonce)
+        .map_err(|_| VerifierError::new(VerifierErrorReason::InvalidBinding))?;
+    if let Some(state) = request.state.as_deref() {
+        reallyme_openid4vp_types::validate_oauth_binding_value(state)
+            .map_err(|_| VerifierError::new(VerifierErrorReason::InvalidBinding))?;
     }
 
     if request

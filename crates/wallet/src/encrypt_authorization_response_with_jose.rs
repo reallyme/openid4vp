@@ -92,6 +92,24 @@ fn select_response_encryption_key(
     if keys.is_empty() || keys.len() > MAX_ENCRYPTION_KEYS {
         return Err(missing_metadata());
     }
+    // Validate identifiers across the entire set, including keys for other
+    // purposes. A repeated kid makes the protected response header ambiguous
+    // even when the wallet can select a usable encryption key deterministically.
+    for (index, candidate) in keys.iter().enumerate() {
+        let kid = candidate
+            .as_object()
+            .and_then(|key| string_member(key, "kid"))
+            .filter(|kid| valid_key_id(kid))
+            .ok_or_else(invalid_key)?;
+        if keys.iter().take(index).any(|previous| {
+            previous
+                .as_object()
+                .and_then(|key| string_member(key, "kid"))
+                == Some(kid)
+        }) {
+            return Err(invalid_key());
+        }
+    }
     keys.iter()
         .find_map(|candidate| UsableP256EncryptionKey::try_from(candidate).ok())
         .ok_or_else(invalid_key)
@@ -134,9 +152,7 @@ impl TryFrom<&Value> for UsableP256EncryptionKey {
         {
             return Err(invalid_key());
         }
-        let kid = string_member(value, "kid").filter(|kid| {
-            !kid.is_empty() && kid.len() <= MAX_KEY_ID_BYTES && !kid.chars().any(char::is_control)
-        });
+        let kid = string_member(value, "kid").filter(|kid| valid_key_id(kid));
         let Some(kid) = kid else {
             return Err(invalid_key());
         };
@@ -191,19 +207,28 @@ fn select_content_encryption_algorithm(
         return Err(unsupported_algorithm());
     }
     let mut supports_a128_gcm = false;
+    let mut supports_a256_gcm = false;
     for value in values {
         match value.as_str() {
-            Some("A256GCM") => return Ok(JweContentEncryptionAlgorithm::A256Gcm),
+            Some("A256GCM") => supports_a256_gcm = true,
             Some("A128GCM") => supports_a128_gcm = true,
             Some(_) => {}
             None => return Err(unsupported_algorithm()),
         }
     }
-    if supports_a128_gcm {
+    // Validate every member before applying local algorithm preference. An
+    // early preferred match must not hide a malformed trailing capability.
+    if supports_a256_gcm {
+        Ok(JweContentEncryptionAlgorithm::A256Gcm)
+    } else if supports_a128_gcm {
         Ok(JweContentEncryptionAlgorithm::A128Gcm)
     } else {
         Err(unsupported_algorithm())
     }
+}
+
+fn valid_key_id(kid: &str) -> bool {
+    !kid.is_empty() && kid.len() <= MAX_KEY_ID_BYTES && !kid.chars().any(char::is_control)
 }
 
 fn string_member<'a>(object: &'a Map<String, Value>, name: &str) -> Option<&'a str> {

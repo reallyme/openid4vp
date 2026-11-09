@@ -6,6 +6,35 @@
   "coverage_policy": "Every implemented atomic normative statement requires executable positive and negative evidence bound to an immutable specification section and digest.",
   "requirements": [
     {
+      "id": "openid4vp-url-safe-binding-values",
+      "level": "MUST",
+      "summary": "Nonce and applicable state values contain only ASCII URL-safe characters and remain opaque without normalization.",
+      "implementation_paths": [
+        "crates/types/src/validate_oauth_binding_value.rs",
+        "crates/wallet/src/jar_validation.rs",
+        "crates/wallet/src/unsigned_dc_api_request.rs",
+        "crates/verifier/src/jar.rs",
+        "crates/verifier/src/binding.rs",
+        "crates/verifier/src/response.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_conformance::binding_syntax_tests::accepts_every_url_safe_binding_character_without_normalization"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_conformance::binding_syntax_tests::rejects_non_url_safe_nonce_at_wallet_and_verifier_boundaries",
+        "reallyme_openid4vp_conformance::binding_syntax_tests::rejects_non_url_safe_signed_state_but_ignores_unsigned_dc_api_state"
+      ],
+      "oidf_modules": [],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Nonce and applicable state values contain only ASCII URL-safe characters and remain opaque without normalization.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Section 5.2 and Appendix A.3.1",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
       "id": "openid4vp-final-dcql-request",
       "level": "MUST",
       "summary": "Authorization Requests use final DCQL request structures rather than Presentation Exchange.",
@@ -130,12 +159,16 @@
       ],
       "negative_tests": [
         "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::rejects_signed_request_object_with_wrong_key",
+        "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::rejects_signed_request_object_without_typ",
+        "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::rejects_signed_request_object_with_generic_jwt_typ",
         "reallyme_openid4vp_wallet::verify_nested_request_object_with_jose::tests::rejects_nested_request_object_with_unsigned_plaintext",
         "reallyme_openid4vp_wallet::verify_nested_request_object_with_jose::tests::rejects_oversized_outer_jwe_with_typed_size_error",
         "reallyme_openid4vp_http::resolve_request_uri::tests::rejects_malformed_fetched_request_object"
       ],
       "oidf_modules": [
-        "oid4vp-1final-wallet-negative-test-invalid-request-object-signature"
+        "oid4vp-1final-wallet-negative-test-invalid-request-object-signature",
+        "oid4vp-1final-wallet-negative-test-invalid-request-object-typ",
+        "oid4vp-1final-wallet-negative-test-missing-request-object-typ"
       ],
       "eudi_tests": [],
       "status": "implemented",
@@ -200,6 +233,7 @@
         "reallyme_openid4vp_wallet::build_authorization_response::tests::requires_one_complete_option_from_each_required_credential_set"
       ],
       "negative_tests": [
+        "reallyme_openid4vp_dcql::evaluate::tests::rejects_required_claim_when_nested_claim_path_does_not_resolve",
         "reallyme_openid4vp_dcql::evaluate::tests::enforces_required_credential_sets",
         "reallyme_openid4vp_wallet::build_authorization_response::tests::requires_every_query_when_no_credential_sets_are_present"
       ],
@@ -208,7 +242,8 @@
         "oid4vp-1final-wallet-all-mandatory-claims",
         "oid4vp-1final-wallet-optional-credential-set",
         "oid4vp-1final-wallet-no-claims-in-dcql-query",
-        "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+        "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+        "oid4vp-1final-wallet-negative-test-claim-not-in-credential"
       ],
       "eudi_tests": [],
       "status": "implemented",
@@ -231,7 +266,9 @@
         "reallyme_openid4vp_wallet::encrypt_authorization_response_with_jose::tests::selects_a256gcm_and_rejects_missing_key_algorithm_or_unsupported_content_encryption"
       ],
       "negative_tests": [
-        "reallyme_openid4vp_wallet::encrypt_authorization_response_with_jose::tests::rejects_private_keys_unsupported_encryption_and_oversized_sets"
+        "reallyme_openid4vp_wallet::encrypt_authorization_response_with_jose::tests::rejects_private_keys_unsupported_encryption_and_oversized_sets",
+        "reallyme_openid4vp_wallet::encrypt_authorization_response_with_jose::tests::rejects_ambiguous_or_missing_key_ids_across_the_complete_set",
+        "reallyme_openid4vp_wallet::encrypt_authorization_response_with_jose::tests::rejects_malformed_algorithm_members_after_a_preferred_match"
       ],
       "oidf_modules": [
         "oid4vp-1final-wallet-ignores-unusable-encryption-key"
@@ -241,7 +278,7 @@
       "normative_statement": "Wallet response encryption skips unusable verifier keys, selects a supported ECDH-ES key and content-encryption algorithm, and rejects unsafe key sets.",
       "normative_reference": {
         "specification_id": "openid4vp-1.0-final",
-        "section": "Section 8.3",
+        "section": "Sections 5.1 and 8.3",
         "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
       }
     },
@@ -375,12 +412,15 @@
         "crates/wallet/src/multisigned_request_object.rs"
       ],
       "positive_tests": [
-        "reallyme_openid4vp_wallet::jar::tests::accepts_explicitly_supported_transaction_data_type"
+        "reallyme_openid4vp_wallet::jar::tests::accepts_explicitly_supported_transaction_data_type",
+        "reallyme_openid4vp_wallet::transaction_data_policy::tests::accepts_transaction_data_for_a_holder_bound_sd_jwt_query"
       ],
       "negative_tests": [
         "reallyme_openid4vp_wallet::jar::tests::rejects_unknown_transaction_data_type_without_explicit_policy",
         "reallyme_openid4vp_wallet::jar::tests::rejects_transaction_data_type_absent_from_explicit_policy",
-        "reallyme_openid4vp_wallet::jar::tests::rejects_ambiguous_transaction_data_policy_configuration"
+        "reallyme_openid4vp_wallet::jar::tests::rejects_ambiguous_transaction_data_policy_configuration",
+        "reallyme_openid4vp_wallet::transaction_data_policy::tests::rejects_unknown_transaction_credential_ids_even_after_a_valid_reference",
+        "reallyme_openid4vp_wallet::transaction_data_policy::tests::rejects_sd_jwt_transaction_data_without_cryptographic_holder_binding"
       ],
       "oidf_modules": [
         "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type"
@@ -390,34 +430,41 @@
       "normative_statement": "Wallets reject transaction_data with unknown application types unless every type is explicitly enabled by host policy.",
       "normative_reference": {
         "specification_id": "openid4vp-1.0-final",
-        "section": "Section 8.4",
+        "section": "Sections 5.1, 8.4, and Appendix B.3.3",
         "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
       }
     },
     {
       "id": "openid4vp-metadata-capabilities",
       "level": "MUST",
-      "summary": "Verifier and wallet metadata preserve the final protocol object shapes, including format-specific objects, while permitted extensions remain forward-compatible.",
+      "summary": "Verifier and wallet metadata preserve final protocol object shapes, bind every DCQL credential format to vp_formats_supported, and validate known algorithm-member shapes while permitted extensions remain forward-compatible.",
       "implementation_paths": [
         "crates/types/src/define_metadata.rs",
         "crates/types/src/request.rs",
-        "crates/http/src/resolve_request_uri.rs"
+        "crates/http/src/resolve_request_uri.rs",
+        "crates/wallet/src/jar_validation.rs",
+        "crates/verifier/src/jar.rs"
       ],
       "positive_tests": [
         "reallyme_openid4vp_types::define_metadata::tests::client_metadata_uses_the_final_protocol_object_shape",
+        "reallyme_openid4vp_types::define_metadata::tests::validates_dcql_format_and_known_algorithm_member_shapes",
         "reallyme_openid4vp_runtime::verify_runtime::serves_request_object_post_with_bounded_wallet_metadata"
       ],
       "negative_tests": [
+        "reallyme_openid4vp_types::define_metadata::tests::rejects_dcql_format_missing_from_verifier_metadata",
+        "reallyme_openid4vp_types::define_metadata::tests::rejects_empty_or_wrongly_typed_algorithm_capabilities",
+        "reallyme_openid4vp_wallet::jar::tests::rejects_dcql_format_missing_from_verifier_metadata",
+        "reallyme_openid4vp_verifier::jar::tests::rejects_request_whose_dcql_format_is_absent_from_verifier_metadata",
         "reallyme_openid4vp_runtime::verify_runtime::rejects_malformed_duplicate_and_non_object_wallet_metadata",
         "reallyme_openid4vp_runtime::verify_runtime::rejects_overdeep_and_oversized_wallet_metadata"
       ],
       "oidf_modules": [],
       "eudi_tests": [],
       "status": "implemented",
-      "normative_statement": "Verifier and wallet metadata preserve the final protocol object shapes, including format-specific objects, while permitted extensions remain forward-compatible.",
+      "normative_statement": "Verifier and wallet metadata preserve final protocol object shapes, bind every DCQL credential format to vp_formats_supported, and validate known algorithm-member shapes while permitted extensions remain forward-compatible.",
       "normative_reference": {
         "specification_id": "openid4vp-1.0-final",
-        "section": "Sections 10 and 11",
+        "section": "Sections 6.1, 9, 10, 11, B.2.2, and B.3.4",
         "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
       }
     },
@@ -493,7 +540,8 @@
         "reallyme_openid4vp_dcql::evaluate::tests::rejects_credential_when_no_claim_set_is_satisfiable"
       ],
       "oidf_modules": [
-        "oid4vp-1final-wallet-fewer-claims-than-available"
+        "oid4vp-1final-wallet-fewer-claims-than-available",
+        "oid4vp-1final-wallet-age-over-18"
       ],
       "eudi_tests": [],
       "status": "implemented",
@@ -530,6 +578,7 @@
         "reallyme_openid4vp_formats::sd_jwt::tests::rejects_malformed_issuer_temporal_claims",
         "reallyme_openid4vp_formats::sd_jwt::tests::rejects_issuer_credential_that_is_not_yet_valid",
         "reallyme_openid4vp_formats::sd_jwt::tests::rejects_expired_issuer_credential",
+        "reallyme_openid4vp_formats::sd_jwt::tests::rejects_verified_credential_that_does_not_match_query_vct",
         "reallyme_openid4vp_formats::parse_transaction_data_binding::tests::rejects_malformed_or_incomplete_transaction_data_binding"
       ],
       "oidf_modules": [
@@ -541,7 +590,8 @@
         "oid4vp-1final-verifier-invalid-kb-jwt-nonce",
         "oid4vp-1final-verifier-invalid-kb-jwt-aud",
         "oid4vp-1final-verifier-kb-jwt-iat-in-past",
-        "oid4vp-1final-verifier-kb-jwt-iat-in-future"
+        "oid4vp-1final-verifier-kb-jwt-iat-in-future",
+        "oid4vp-1final-verifier-wrong-vct"
       ],
       "eudi_tests": [],
       "status": "implemented",
@@ -549,6 +599,71 @@
       "normative_reference": {
         "specification_id": "openid4vp-1.0-final",
         "section": "Sections 8.6, 14.9, and Appendix B.3",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-dcql-claims-path-selection",
+      "level": "MUST",
+      "summary": "DCQL Claims Path evaluation supports nested object members, array indices, and all-elements selectors without coercing claim values.",
+      "implementation_paths": [
+        "crates/dcql/src/model.rs",
+        "crates/dcql/src/path.rs",
+        "crates/dcql/src/evaluate.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_dcql::evaluate::tests::evaluates_object_index_and_all_elements_claim_paths",
+        "reallyme_openid4vp_conformance::claims_path_tests::wildcard_prunes_missing_members_without_losing_other_claims",
+        "reallyme_openid4vp_conformance::claims_path_tests::wildcard_prunes_out_of_bounds_arrays_without_losing_other_claims"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_dcql::evaluate::tests::rejects_required_claim_when_nested_claim_path_does_not_resolve",
+        "reallyme_openid4vp_conformance::claims_path_tests::rejects_wildcard_incompatible_containers_even_when_another_branch_matches",
+        "reallyme_openid4vp_conformance::claims_path_tests::rejects_wildcard_with_an_empty_final_selection"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-wallet-pid-claims-path-array-index",
+        "oid4vp-1final-wallet-pid-claims-path-array-all-elements",
+        "oid4vp-1final-wallet-pid-claims-path-object-member"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "DCQL Claims Path evaluation supports nested object members, array indices, and all-elements selectors without coercing claim values.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Sections 6.4.1 and 7.1",
+        "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
+      }
+    },
+    {
+      "id": "openid4vp-credential-status-validation",
+      "level": "MUST",
+      "summary": "Verifier processing accepts credentials without an optional status reference and fails closed when an authenticated status reference reports revocation or another invalid state.",
+      "implementation_paths": [
+        "crates/formats/src/sd_jwt.rs",
+        "crates/formats/src/mdoc.rs",
+        "crates/verifier/src/sd_jwt_holder_binding.rs",
+        "crates/verifier/src/mdoc_holder_binding.rs"
+      ],
+      "positive_tests": [
+        "reallyme_openid4vp_formats::sd_jwt::tests::verifies_session_bound_sd_jwt_and_status",
+        "reallyme_openid4vp_verifier::mdoc_holder_binding::tests::accepts_mdoc_without_optional_status_reference",
+        "reallyme_openid4vp_verifier::mdoc_holder_binding::tests::enforces_every_authenticated_mdoc_status_reference"
+      ],
+      "negative_tests": [
+        "reallyme_openid4vp_formats::sd_jwt::tests::rejects_status_failure_after_cryptographic_verification"
+      ],
+      "oidf_modules": [
+        "oid4vp-1final-verifier-present-revoked-credential",
+        "oid4vp-1final-verifier-present-credential-on-identifier-list",
+        "oid4vp-1final-verifier-present-credential-without-status"
+      ],
+      "eudi_tests": [],
+      "status": "implemented",
+      "normative_statement": "Verifier processing accepts credentials without an optional status reference and fails closed when an authenticated status reference reports revocation or another invalid state.",
+      "normative_reference": {
+        "specification_id": "openid4vp-1.0-final",
+        "section": "Sections 8.6, 14.9, and Appendices B.2 and B.3",
         "sha256": "08e635ea3563b192309c627382c281c81de176e94cdb5ffb11b13ac624f7e12e"
       }
     },
@@ -566,8 +681,8 @@
         "reallyme_openid4vp_formats::mdoc::tests::verifies_x5chain_mdoc_at_authenticated_signing_time",
         "reallyme_openid4vp_verifier::mdoc_holder_binding::tests::retained_transcript_provider_rebuilds_the_exact_redirect_handover"
       ],
-    "negative_tests": [
-      "reallyme_openid4vp_formats::mdoc::tests::rejects_empty_session_transcript_before_identity_verify"
+      "negative_tests": [
+        "reallyme_openid4vp_formats::mdoc::tests::rejects_empty_session_transcript_before_identity_verify"
       ],
       "oidf_modules": [
         "oid4vp-1final-verifier-happy-flow",

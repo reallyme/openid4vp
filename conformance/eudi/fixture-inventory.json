@@ -3,7 +3,7 @@
   "spdx_license_identifier": "MIT OR Apache-2.0",
   "schema_version": 1,
   "inventory_status": "openid4vp_protocol_fixture_inventory",
-  "refreshed_at": "2026-07-12",
+  "refreshed_at": "2026-11-09",
   "upstream_sources": [
     "https://github.com/eu-digital-identity-wallet/eudi-lib-jvm-openid4vp-kt@f07f06834264313e53fa4852fc824fd2d7e5f5d4",
     "https://github.com/eu-digital-identity-wallet/eudi-srv-verifier-endpoint@de66a3e311ed413838de240affef4511072b8687",
@@ -30,7 +30,7 @@
       "status": "covered-locally",
       "path": "conformance/fixtures/eudi/cross-device-presentation.json",
       "local_evidence": [
-        "reallyme_openid4vp_wallet::transport::tests::classifies_post_request_uri_with_wallet_nonce",
+        "reallyme_openid4vp_wallet::transport::tests::classifies_post_request_uri_without_verifier_supplied_wallet_nonce",
         "reallyme_openid4vp_runtime::verify_runtime::jose_decryptor_handles_valid_ecdh_es_direct_post_jwt"
       ]
     },
@@ -62,7 +62,8 @@
       "status": "covered-locally",
       "path": "conformance/fixtures/ewc/dc-api-wallet-flow.json",
       "local_evidence": [
-        "reallyme_openid4vp_dc_api::request::tests::accepts_signed_dc_api_jwt_request_with_origin_binding",
+        "reallyme_openid4vp_dc_api::request::tests::accepts_signed_dc_api_request_object_data_shape",
+        "reallyme_openid4vp_wallet::jar::tests::rejects_unbound_origin",
         "reallyme_openid4vp_runtime::verify_runtime::decodes_encrypted_dc_api_authorization_response_with_ecdh_es_jose"
       ]
     },

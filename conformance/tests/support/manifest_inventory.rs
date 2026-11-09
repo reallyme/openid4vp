@@ -66,6 +66,15 @@ pub(super) fn executable_test_exists(identity: &str) -> bool {
 
 pub(super) fn test_source_for_module(module: &str) -> Option<&'static str> {
     match module {
+        "reallyme_openid4vp_conformance::binding_syntax_tests" => {
+            Some(include_str!("../binding_syntax_tests.rs"))
+        }
+        "reallyme_openid4vp_conformance::claims_path_tests" => {
+            Some(include_str!("../claims_path_tests.rs"))
+        }
+        "reallyme_openid4vp_conformance::manifest_tests" => {
+            Some(include_str!("../manifest_tests.rs"))
+        }
         "reallyme_openid4vp_conformance::vectors_tests" => {
             Some(include_str!("../vectors_tests.rs"))
         }
@@ -78,6 +87,9 @@ pub(super) fn test_source_for_module(module: &str) -> Option<&'static str> {
         "reallyme_openid4vp_formats::mdoc::tests" => {
             Some(include_str!("../../../crates/formats/src/mdoc_tests.rs"))
         }
+        "reallyme_openid4vp_formats::zk_presentation::tests" => Some(include_str!(
+            "../../../crates/formats/src/zk_presentation_tests.rs"
+        )),
         "reallyme_openid4vp_formats::parse_transaction_data_binding::tests" => Some(include_str!(
             "../../../crates/formats/src/parse_transaction_data_binding_tests.rs"
         )),
@@ -105,6 +117,7 @@ pub(super) fn test_source_for_module(module: &str) -> Option<&'static str> {
         ),
         "reallyme_openid4vp_runtime::verify_runtime" => Some(concat!(
             include_str!("../../../crates/runtime/src/verify_runtime_tests.rs"),
+            include_str!("../../../crates/runtime/src/verify_runtime_launch_tests.rs"),
             include_str!("../../../crates/runtime/src/verify_runtime_request_tests.rs"),
             include_str!("../../../crates/runtime/src/verify_runtime_jwt_tests.rs"),
             include_str!("../../../crates/runtime/src/verify_runtime_follow_back_tests.rs"),
@@ -119,9 +132,18 @@ pub(super) fn test_source_for_module(module: &str) -> Option<&'static str> {
         "reallyme_openid4vp_types::response::tests" => {
             Some(include_str!("../../../crates/types/src/response_tests.rs"))
         }
+        "reallyme_openid4vp_types::transaction_data::tests" => Some(include_str!(
+            "../../../crates/types/src/transaction_data_tests.rs"
+        )),
+        "reallyme_openid4vp_verifier::holder_binding::tests" => Some(include_str!(
+            "../../../crates/verifier/src/holder_binding_tests.rs"
+        )),
         "reallyme_openid4vp_verifier::binding::tests" => Some(include_str!(
             "../../../crates/verifier/src/binding_tests.rs"
         )),
+        "reallyme_openid4vp_verifier::jar::tests" => {
+            Some(include_str!("../../../crates/verifier/src/jar_tests.rs"))
+        }
         "reallyme_openid4vp_verifier::mdoc_holder_binding::tests" => Some(include_str!(
             "../../../crates/verifier/src/mdoc_holder_binding_tests.rs"
         )),
@@ -139,6 +161,9 @@ pub(super) fn test_source_for_module(module: &str) -> Option<&'static str> {
         "reallyme_openid4vp_wallet::jar::tests" => {
             Some(include_str!("../../../crates/wallet/src/jar_tests.rs"))
         }
+        "reallyme_openid4vp_wallet::transaction_data_policy::tests" => Some(include_str!(
+            "../../../crates/wallet/src/transaction_data_policy_tests.rs"
+        )),
         "reallyme_openid4vp_wallet::metadata_reference::tests" => Some(include_str!(
             "../../../crates/wallet/src/metadata_reference_tests.rs"
         )),

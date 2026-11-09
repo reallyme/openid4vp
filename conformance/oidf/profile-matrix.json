@@ -4,9 +4,9 @@
   "protocol_profile": "OID4VP-1.0-FINAL+HAIP-1.0-FINAL",
   "suite": {
     "repository": "https://gitlab.com/openid/conformance-suite",
-    "commit": "440eec8bac7b12b7389d7ca9cbc459b53507a443",
-    "describe": "release-v5.3.1",
-    "version": "5.3.1"
+    "commit": "23353b36957d6466010de767c812d2c91ed37638",
+    "describe": "release-v5.3.4",
+    "version": "5.3.4"
   },
   "result_policy_sources": {
     "oid4vp-1final-verifier-happy-flow": {
@@ -68,6 +68,41 @@
       "mode": "review_allowed",
       "module_source": "src/main/java/net/openid/conformance/vp1finalwallet/VP1FinalWalletRequiredNonMatchingCredential.java",
       "review_source": "src/main/java/net/openid/conformance/vp1finalwallet/VP1FinalWalletRequiredNonMatchingCredential.java"
+    },
+    "oid4vp-1final-verifier-present-revoked-credential": {
+      "mode": "review_required",
+      "module_source": "src/main/java/net/openid/conformance/vp1finalverifier/VP1FinalVerifierPresentRevokedCredential.java",
+      "review_source": "src/main/java/net/openid/conformance/vp1finalverifier/AbstractVP1FinalVerifierNegativeTest.java"
+    },
+    "oid4vp-1final-verifier-present-credential-on-identifier-list": {
+      "mode": "review_required",
+      "module_source": "src/main/java/net/openid/conformance/vp1finalverifier/VP1FinalVerifierPresentCredentialOnIdentifierList.java",
+      "review_source": "src/main/java/net/openid/conformance/vp1finalverifier/AbstractVP1FinalVerifierNegativeTest.java"
+    },
+    "oid4vp-1final-verifier-present-credential-without-status": {
+      "mode": "review_required",
+      "module_source": "src/main/java/net/openid/conformance/vp1finalverifier/VP1FinalVerifierPresentCredentialWithoutStatus.java",
+      "review_source": "src/main/java/net/openid/conformance/vp1finalverifier/AbstractVP1FinalVerifierTest.java"
+    },
+    "oid4vp-1final-verifier-wrong-vct": {
+      "mode": "review_required",
+      "module_source": "src/main/java/net/openid/conformance/vp1finalverifier/VP1FinalVerifierWrongVct.java",
+      "review_source": "src/main/java/net/openid/conformance/vp1finalverifier/AbstractVP1FinalVerifierNegativeTest.java"
+    },
+    "oid4vp-1final-wallet-negative-test-invalid-request-object-typ": {
+      "mode": "review_required",
+      "module_source": "src/main/java/net/openid/conformance/vp1finalwallet/VP1FinalWalletInvalidRequestObjectTyp.java",
+      "review_source": "src/main/java/net/openid/conformance/vp1finalwallet/AbstractVP1FinalWalletInvalidRequestObjectTyp.java"
+    },
+    "oid4vp-1final-wallet-negative-test-missing-request-object-typ": {
+      "mode": "review_required",
+      "module_source": "src/main/java/net/openid/conformance/vp1finalwallet/VP1FinalWalletMissingRequestObjectTyp.java",
+      "review_source": "src/main/java/net/openid/conformance/vp1finalwallet/AbstractVP1FinalWalletInvalidRequestObjectTyp.java"
+    },
+    "oid4vp-1final-wallet-negative-test-claim-not-in-credential": {
+      "mode": "review_allowed",
+      "module_source": "src/main/java/net/openid/conformance/vp1finalwallet/VP1FinalWalletClaimNotInCredential.java",
+      "review_source": "src/main/java/net/openid/conformance/vp1finalwallet/VP1FinalWalletClaimNotInCredential.java"
     }
   },
   "plans": [
@@ -103,7 +138,10 @@
         "oid4vp-1final-verifier-happy-flow",
         "oid4vp-1final-verifier-minimal-cnf-jwk",
         "oid4vp-1final-verifier-request-uri-method-post",
-        "oid4vp-1final-verifier-request-uri-fetched-twice"
+        "oid4vp-1final-verifier-request-uri-fetched-twice",
+        "oid4vp-1final-verifier-present-revoked-credential",
+        "oid4vp-1final-verifier-present-credential-without-status",
+        "oid4vp-1final-verifier-wrong-vct"
       ],
       "review_allowed_modules": [],
       "evidence_expectations": {
@@ -161,6 +199,21 @@
           "decision": "rejected",
           "observation_kind": "authorization_response_validation",
           "minimum_observations": 1
+        },
+        "oid4vp-1final-verifier-present-revoked-credential": {
+          "decision": "rejected",
+          "observation_kind": "authorization_response_validation",
+          "minimum_observations": 1
+        },
+        "oid4vp-1final-verifier-present-credential-without-status": {
+          "decision": "accepted",
+          "observation_kind": "authorization_response_validation",
+          "minimum_observations": 1
+        },
+        "oid4vp-1final-verifier-wrong-vct": {
+          "decision": "rejected",
+          "observation_kind": "authorization_response_validation",
+          "minimum_observations": 1
         }
       },
       "expected_groups": [
@@ -183,7 +236,10 @@
             "oid4vp-1final-verifier-invalid-kb-jwt-nonce",
             "oid4vp-1final-verifier-invalid-kb-jwt-aud",
             "oid4vp-1final-verifier-kb-jwt-iat-in-past",
-            "oid4vp-1final-verifier-kb-jwt-iat-in-future"
+            "oid4vp-1final-verifier-kb-jwt-iat-in-future",
+            "oid4vp-1final-verifier-present-revoked-credential",
+            "oid4vp-1final-verifier-present-credential-without-status",
+            "oid4vp-1final-verifier-wrong-vct"
           ]
         }
       ]
@@ -196,7 +252,10 @@
       "review_required_modules": [
         "oid4vp-1final-verifier-happy-flow",
         "oid4vp-1final-verifier-request-uri-method-post",
-        "oid4vp-1final-verifier-request-uri-fetched-twice"
+        "oid4vp-1final-verifier-request-uri-fetched-twice",
+        "oid4vp-1final-verifier-present-revoked-credential",
+        "oid4vp-1final-verifier-present-credential-on-identifier-list",
+        "oid4vp-1final-verifier-present-credential-without-status"
       ],
       "review_allowed_modules": [],
       "evidence_expectations": {
@@ -219,6 +278,21 @@
           "decision": "rejected",
           "observation_kind": "authorization_response_validation",
           "minimum_observations": 1
+        },
+        "oid4vp-1final-verifier-present-revoked-credential": {
+          "decision": "rejected",
+          "observation_kind": "authorization_response_validation",
+          "minimum_observations": 1
+        },
+        "oid4vp-1final-verifier-present-credential-on-identifier-list": {
+          "decision": "rejected",
+          "observation_kind": "authorization_response_validation",
+          "minimum_observations": 1
+        },
+        "oid4vp-1final-verifier-present-credential-without-status": {
+          "decision": "accepted",
+          "observation_kind": "authorization_response_validation",
+          "minimum_observations": 1
         }
       },
       "expected_groups": [
@@ -234,7 +308,10 @@
             "oid4vp-1final-verifier-happy-flow",
             "oid4vp-1final-verifier-request-uri-method-post",
             "oid4vp-1final-verifier-request-uri-fetched-twice",
-            "oid4vp-1final-verifier-invalid-session-transcript"
+            "oid4vp-1final-verifier-invalid-session-transcript",
+            "oid4vp-1final-verifier-present-revoked-credential",
+            "oid4vp-1final-verifier-present-credential-on-identifier-list",
+            "oid4vp-1final-verifier-present-credential-without-status"
           ]
         }
       ]
@@ -247,13 +324,16 @@
       "review_required_modules": [
         "oid4vp-1final-wallet-negative-test-invalid-request-object-signature",
         "oid4vp-1final-wallet-negative-test-mismatched-client-id",
-        "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix"
+        "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix",
+        "oid4vp-1final-wallet-negative-test-invalid-request-object-typ",
+        "oid4vp-1final-wallet-negative-test-missing-request-object-typ"
       ],
       "review_allowed_modules": [
         "oid4vp-1final-wallet-negative-test-redirect-uri-with-direct-post",
         "oid4vp-1final-wallet-negative-test-missing-nonce",
         "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type",
-        "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+        "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+        "oid4vp-1final-wallet-negative-test-claim-not-in-credential"
       ],
       "expected_groups": [
         {
@@ -280,7 +360,13 @@
             "oid4vp-1final-wallet-negative-test-missing-nonce",
             "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix",
             "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type",
-            "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+            "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+            "oid4vp-1final-wallet-negative-test-claim-not-in-credential",
+            "oid4vp-1final-wallet-pid-claims-path-array-index",
+            "oid4vp-1final-wallet-pid-claims-path-array-all-elements",
+            "oid4vp-1final-wallet-pid-claims-path-object-member",
+            "oid4vp-1final-wallet-negative-test-invalid-request-object-typ",
+            "oid4vp-1final-wallet-negative-test-missing-request-object-typ"
           ]
         }
       ]
@@ -293,13 +379,16 @@
       "review_required_modules": [
         "oid4vp-1final-wallet-negative-test-invalid-request-object-signature",
         "oid4vp-1final-wallet-negative-test-mismatched-client-id",
-        "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix"
+        "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix",
+        "oid4vp-1final-wallet-negative-test-invalid-request-object-typ",
+        "oid4vp-1final-wallet-negative-test-missing-request-object-typ"
       ],
       "review_allowed_modules": [
         "oid4vp-1final-wallet-negative-test-redirect-uri-with-direct-post",
         "oid4vp-1final-wallet-negative-test-missing-nonce",
         "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type",
-        "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+        "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+        "oid4vp-1final-wallet-negative-test-claim-not-in-credential"
       ],
       "expected_groups": [
         {
@@ -326,7 +415,11 @@
             "oid4vp-1final-wallet-negative-test-missing-nonce",
             "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix",
             "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type",
-            "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+            "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+            "oid4vp-1final-wallet-negative-test-claim-not-in-credential",
+            "oid4vp-1final-wallet-age-over-18",
+            "oid4vp-1final-wallet-negative-test-invalid-request-object-typ",
+            "oid4vp-1final-wallet-negative-test-missing-request-object-typ"
           ]
         }
       ]
@@ -339,12 +432,15 @@
       "review_required_modules": [
         "oid4vp-1final-wallet-negative-test-invalid-request-object-signature",
         "oid4vp-1final-wallet-negative-test-wrong-expected-origins",
-        "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix"
+        "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix",
+        "oid4vp-1final-wallet-negative-test-invalid-request-object-typ",
+        "oid4vp-1final-wallet-negative-test-missing-request-object-typ"
       ],
       "review_allowed_modules": [
         "oid4vp-1final-wallet-negative-test-missing-nonce",
         "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type",
-        "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+        "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+        "oid4vp-1final-wallet-negative-test-claim-not-in-credential"
       ],
       "expected_groups": [
         {
@@ -366,7 +462,11 @@
             "oid4vp-1final-wallet-no-claims-in-dcql-query",
             "oid4vp-1final-wallet-negative-test-missing-nonce",
             "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type",
-            "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+            "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+            "oid4vp-1final-wallet-negative-test-claim-not-in-credential",
+            "oid4vp-1final-wallet-pid-claims-path-array-index",
+            "oid4vp-1final-wallet-pid-claims-path-array-all-elements",
+            "oid4vp-1final-wallet-pid-claims-path-object-member"
           ]
         },
         {
@@ -391,7 +491,13 @@
             "oid4vp-1final-wallet-negative-test-wrong-expected-origins",
             "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix",
             "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type",
-            "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+            "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+            "oid4vp-1final-wallet-negative-test-claim-not-in-credential",
+            "oid4vp-1final-wallet-pid-claims-path-array-index",
+            "oid4vp-1final-wallet-pid-claims-path-array-all-elements",
+            "oid4vp-1final-wallet-pid-claims-path-object-member",
+            "oid4vp-1final-wallet-negative-test-invalid-request-object-typ",
+            "oid4vp-1final-wallet-negative-test-missing-request-object-typ"
           ]
         },
         {
@@ -417,7 +523,13 @@
             "oid4vp-1final-wallet-negative-test-wrong-expected-origins",
             "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix",
             "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type",
-            "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+            "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+            "oid4vp-1final-wallet-negative-test-claim-not-in-credential",
+            "oid4vp-1final-wallet-pid-claims-path-array-index",
+            "oid4vp-1final-wallet-pid-claims-path-array-all-elements",
+            "oid4vp-1final-wallet-pid-claims-path-object-member",
+            "oid4vp-1final-wallet-negative-test-invalid-request-object-typ",
+            "oid4vp-1final-wallet-negative-test-missing-request-object-typ"
           ]
         }
       ]
@@ -430,12 +542,15 @@
       "review_required_modules": [
         "oid4vp-1final-wallet-negative-test-invalid-request-object-signature",
         "oid4vp-1final-wallet-negative-test-wrong-expected-origins",
-        "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix"
+        "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix",
+        "oid4vp-1final-wallet-negative-test-invalid-request-object-typ",
+        "oid4vp-1final-wallet-negative-test-missing-request-object-typ"
       ],
       "review_allowed_modules": [
         "oid4vp-1final-wallet-negative-test-missing-nonce",
         "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type",
-        "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+        "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+        "oid4vp-1final-wallet-negative-test-claim-not-in-credential"
       ],
       "expected_groups": [
         {
@@ -457,7 +572,9 @@
             "oid4vp-1final-wallet-no-claims-in-dcql-query",
             "oid4vp-1final-wallet-negative-test-missing-nonce",
             "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type",
-            "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+            "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+            "oid4vp-1final-wallet-negative-test-claim-not-in-credential",
+            "oid4vp-1final-wallet-age-over-18"
           ]
         },
         {
@@ -482,7 +599,11 @@
             "oid4vp-1final-wallet-negative-test-wrong-expected-origins",
             "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix",
             "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type",
-            "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+            "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+            "oid4vp-1final-wallet-negative-test-claim-not-in-credential",
+            "oid4vp-1final-wallet-age-over-18",
+            "oid4vp-1final-wallet-negative-test-invalid-request-object-typ",
+            "oid4vp-1final-wallet-negative-test-missing-request-object-typ"
           ]
         },
         {
@@ -508,7 +629,11 @@
             "oid4vp-1final-wallet-negative-test-wrong-expected-origins",
             "oid4vp-1final-wallet-negative-test-invalid-client-id-prefix",
             "oid4vp-1final-wallet-negative-test-unknown-transaction-data-type",
-            "oid4vp-1final-wallet-negative-test-required-non-matching-credential"
+            "oid4vp-1final-wallet-negative-test-required-non-matching-credential",
+            "oid4vp-1final-wallet-negative-test-claim-not-in-credential",
+            "oid4vp-1final-wallet-age-over-18",
+            "oid4vp-1final-wallet-negative-test-invalid-request-object-typ",
+            "oid4vp-1final-wallet-negative-test-missing-request-object-typ"
           ]
         }
       ]

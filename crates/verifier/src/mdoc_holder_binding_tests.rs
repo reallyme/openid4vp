@@ -359,6 +359,20 @@ fn enforces_every_authenticated_mdoc_status_reference() {
     assert_eq!(error.reason(), VerifierErrorReason::InvalidCredentialStatus);
 }
 
+#[test]
+fn accepts_mdoc_without_optional_status_reference() {
+    let presentation = VerifiedMdocPresentation {
+        document_count: 1,
+        document_types: vec!["org.iso.18013.5.1.mDL".to_owned()],
+        disclosed_claims: Vec::new(),
+        status_references: Vec::new(),
+        has_unsupported_status_extension: false,
+    };
+
+    validate_mdoc_status(&presentation, &VALID_STATUS, 10)
+        .expect("the absence of an optional status reference is valid");
+}
+
 fn session(format: &str) -> SessionRecord {
     let mut meta = JsonMap::new();
     meta.insert(

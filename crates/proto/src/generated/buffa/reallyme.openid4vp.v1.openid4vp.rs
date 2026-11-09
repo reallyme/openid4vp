@@ -955,6 +955,7 @@ pub enum OpenId4VpErrorReason {
     OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_REQUEST_OBJECT_SIGNATURE = 529i32,
     OPEN_ID4_VP_ERROR_REASON_WALLET_UNSUPPORTED_REQUEST_OBJECT_ALGORITHM = 530i32,
     OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_TRANSACTION_DATA = 531i32,
+    OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_VERIFIER_METADATA = 532i32,
     OPEN_ID4_VP_ERROR_REASON_MDOC_INVALID_DEVICE_RESPONSE = 600i32,
     OPEN_ID4_VP_ERROR_REASON_MDOC_INVALID_ISSUER_AUTHENTICATION = 601i32,
     OPEN_ID4_VP_ERROR_REASON_MDOC_INVALID_DEVICE_AUTHENTICATION = 602i32,
@@ -1419,6 +1420,10 @@ impl OpenId4VpErrorReason {
     #[allow(non_upper_case_globals)]
     pub const WalletInvalidTransactionData: Self =
         Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_TRANSACTION_DATA;
+    ///Idiomatic alias for [`Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_VERIFIER_METADATA`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const WalletInvalidVerifierMetadata: Self =
+        Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_VERIFIER_METADATA;
     ///Idiomatic alias for [`Self::OPEN_ID4_VP_ERROR_REASON_MDOC_INVALID_DEVICE_RESPONSE`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const MdocInvalidDeviceResponse: Self =
@@ -2040,6 +2045,9 @@ impl ::buffa::Enumeration for OpenId4VpErrorReason {
             531i32 => ::core::option::Option::Some(
                 Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_TRANSACTION_DATA,
             ),
+            532i32 => ::core::option::Option::Some(
+                Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_VERIFIER_METADATA,
+            ),
             600i32 => ::core::option::Option::Some(
                 Self::OPEN_ID4_VP_ERROR_REASON_MDOC_INVALID_DEVICE_RESPONSE,
             ),
@@ -2550,6 +2558,9 @@ impl ::buffa::Enumeration for OpenId4VpErrorReason {
             }
             Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_TRANSACTION_DATA => {
                 "OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_TRANSACTION_DATA"
+            }
+            Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_VERIFIER_METADATA => {
+                "OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_VERIFIER_METADATA"
             }
             Self::OPEN_ID4_VP_ERROR_REASON_MDOC_INVALID_DEVICE_RESPONSE => {
                 "OPEN_ID4_VP_ERROR_REASON_MDOC_INVALID_DEVICE_RESPONSE"
@@ -3268,6 +3279,11 @@ impl ::buffa::Enumeration for OpenId4VpErrorReason {
                     Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_TRANSACTION_DATA,
                 )
             }
+            "OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_VERIFIER_METADATA" => {
+                ::core::option::Option::Some(
+                    Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_VERIFIER_METADATA,
+                )
+            }
             "OPEN_ID4_VP_ERROR_REASON_MDOC_INVALID_DEVICE_RESPONSE" => {
                 ::core::option::Option::Some(
                     Self::OPEN_ID4_VP_ERROR_REASON_MDOC_INVALID_DEVICE_RESPONSE,
@@ -3706,6 +3722,7 @@ impl ::buffa::Enumeration for OpenId4VpErrorReason {
             Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_REQUEST_OBJECT_SIGNATURE,
             Self::OPEN_ID4_VP_ERROR_REASON_WALLET_UNSUPPORTED_REQUEST_OBJECT_ALGORITHM,
             Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_TRANSACTION_DATA,
+            Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_VERIFIER_METADATA,
             Self::OPEN_ID4_VP_ERROR_REASON_MDOC_INVALID_DEVICE_RESPONSE,
             Self::OPEN_ID4_VP_ERROR_REASON_MDOC_INVALID_ISSUER_AUTHENTICATION,
             Self::OPEN_ID4_VP_ERROR_REASON_MDOC_INVALID_DEVICE_AUTHENTICATION,

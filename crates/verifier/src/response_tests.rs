@@ -222,6 +222,20 @@ fn rejects_state_mismatch() {
 }
 
 #[test]
+fn rejects_non_url_safe_retained_state_even_when_the_response_echoes_it() {
+    let mut session = session();
+    session.state = Some("0123456789abcdef+".to_owned());
+    let response = AuthorizationResponse {
+        vp_token: BTreeMap::new(),
+        state: session.state.clone(),
+    };
+    assert_eq!(
+        diagnose_authorization_response(&session, &response, 10).map_err(|error| error.reason()),
+        Err(VerifierErrorReason::SessionMismatch)
+    );
+}
+
+#[test]
 fn rejects_empty_vp_token_object() {
     let response = AuthorizationResponse {
         vp_token: BTreeMap::new(),

@@ -76,11 +76,11 @@ class VerifyOidfCertificationTargetTests(unittest.TestCase):
         properties = self.root / "src" / "main" / "resources"
         properties.mkdir(parents=True)
         (properties / "application.properties").write_text(
-            "fintechlabs.version=5.3.1\n", encoding="utf-8"
+            "fintechlabs.version=5.3.4\n", encoding="utf-8"
         )
 
         verify_oidf_certification_target.verify_suite_version(
-            self.root.resolve(), "5.3.1"
+            self.root.resolve(), "5.3.4"
         )
 
         with self.assertRaises(

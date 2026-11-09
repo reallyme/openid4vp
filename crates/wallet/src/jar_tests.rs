@@ -6,7 +6,8 @@
 
 use reallyme_openid4vp_dcql::{CredentialFormat, CredentialQuery, DcqlQuery, QueryId};
 use reallyme_openid4vp_types::{
-    AuthorizationRequestObject, ClientIdentifier, ResponseMode, ResponseType, TransactionData,
+    AuthorizationRequestObject, ClientIdentifier, ClientMetadata, ResponseMode, ResponseType,
+    TransactionData,
 };
 use serde_json::{json, Map as JsonMap};
 use sha2::{Digest, Sha256};
@@ -92,6 +93,23 @@ fn signed_dc_api_request() -> AuthorizationRequestObject {
         iat: Some(10),
         exp: Some(20),
     }
+}
+
+#[test]
+fn rejects_dcql_format_missing_from_verifier_metadata() {
+    let mut request = signed_dc_api_request();
+    request.client_metadata = Some(ClientMetadata {
+        raw: json!({
+            "vp_formats_supported": {
+                "dc+sd-jwt": {"sd-jwt_alg_values": ["ES256"]}
+            }
+        }),
+    });
+
+    let error = validate_wallet_request_object(&request, Some("https://rp.example"), 10)
+        .expect_err("the request format must be advertised by verifier metadata");
+
+    assert_eq!(error.reason(), WalletErrorReason::InvalidVerifierMetadata);
 }
 
 struct FixtureVerifier {
@@ -620,7 +638,11 @@ fn accepts_client_metadata_uri_with_fresh_verified_evidence() {
     let mut request = signed_dc_api_request();
     request.client_metadata_uri = Some("https://verifier.example/metadata.json".to_owned());
     let metadata = reallyme_openid4vp_types::ClientMetadata {
-        raw: serde_json::Value::Object(JsonMap::new()),
+        raw: json!({
+            "vp_formats_supported": {
+                "mso_mdoc": {"issuerauth_alg_values": [-7], "deviceauth_alg_values": [-7]}
+            }
+        }),
     };
     let evidence = WalletRequestTrustEvidence {
         client_identifier_binding: None,

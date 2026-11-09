@@ -485,6 +485,10 @@ fn wallet_error_reasons_round_trip_through_proto() -> Result<(), OpenId4VpProtoE
             WalletErrorReason::InvalidTransactionData,
             pb::OpenId4VpErrorReason::WalletInvalidTransactionData,
         ),
+        (
+            WalletErrorReason::InvalidVerifierMetadata,
+            pb::OpenId4VpErrorReason::WalletInvalidVerifierMetadata,
+        ),
     ];
     for (domain, proto) in cases {
         assert_eq!(wallet_error_reason_to_proto(domain), proto);

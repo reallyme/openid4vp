@@ -4,6 +4,7 @@
 
 use core::fmt;
 
+use reallyme_openid4vp_dcql::CredentialFormat;
 use reallyme_openid4vp_types::AuthorizationRequestObject;
 
 use crate::{WalletError, WalletErrorReason};
@@ -50,9 +51,31 @@ impl<'a> WalletTransactionDataPolicy<'a> {
         {
             return Err(WalletError::new(WalletErrorReason::InvalidTransactionData));
         }
+        for transaction in transaction_data {
+            for credential_id in transaction.credential_ids() {
+                let query = request
+                    .dcql_query
+                    .credentials
+                    .iter()
+                    .find(|query| query.id.as_str() == credential_id)
+                    .ok_or_else(|| WalletError::new(WalletErrorReason::InvalidTransactionData))?;
+                // Transaction authorization with SD-JWT requires the holder's
+                // signature. An allowlisted application type cannot override
+                // the format's mandatory cryptographic binding requirement.
+                if query.format.as_str() == CredentialFormat::DC_SD_JWT
+                    && !query.require_cryptographic_holder_binding
+                {
+                    return Err(WalletError::new(WalletErrorReason::InvalidTransactionData));
+                }
+            }
+        }
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "transaction_data_policy_tests.rs"]
+mod tests;
 
 impl Default for WalletTransactionDataPolicy<'_> {
     fn default() -> Self {

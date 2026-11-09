@@ -160,11 +160,10 @@ pub fn diagnose_authorization_response_with_options(
 ) -> Result<NonAuthorizingResponseDiagnostics, VerifierError> {
     validate_request_binding(&session.binding, now_unix)?;
 
-    if session
-        .state
-        .as_ref()
-        .is_some_and(|state| state.len() < MIN_SESSION_BINDING_BYTES)
-        || !optional_secret_eq(response.state.as_deref(), session.state.as_deref())
+    if session.state.as_ref().is_some_and(|state| {
+        state.len() < MIN_SESSION_BINDING_BYTES
+            || reallyme_openid4vp_types::validate_oauth_binding_value(state).is_err()
+    }) || !optional_secret_eq(response.state.as_deref(), session.state.as_deref())
     {
         return Err(VerifierError::new(VerifierErrorReason::SessionMismatch));
     }

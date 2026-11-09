@@ -147,7 +147,15 @@ fn validate_wallet_request_object_with_evidence_and_policies(
         return Err(WalletError::new(WalletErrorReason::RequestObjectExpired));
     }
 
-    if request.nonce.is_empty() {
+    if request.nonce.is_empty()
+        || reallyme_openid4vp_types::validate_oauth_binding_value(&request.nonce).is_err()
+        || (!matches!(
+            request.response_mode,
+            Some(reallyme_openid4vp_types::ResponseMode::DcApi | reallyme_openid4vp_types::ResponseMode::DcApiJwt)
+        ) && request.state.as_deref().is_some_and(|state| {
+            reallyme_openid4vp_types::validate_oauth_binding_value(state).is_err()
+        }))
+    {
         return Err(WalletError::new(WalletErrorReason::InvalidRequestObject));
     }
 
@@ -196,6 +204,18 @@ fn validate_wallet_request_object_with_evidence_and_policies(
         evidence.client_metadata_reference.as_ref(),
         now_unix,
     )?;
+    let effective_metadata = request.client_metadata.as_ref().or_else(|| {
+        request
+            .client_metadata_uri
+            .as_ref()
+            .and(evidence.client_metadata_reference.as_ref())
+            .map(|reference| &reference.metadata)
+    });
+    if let Some(metadata) = effective_metadata {
+        metadata
+            .validate_for_dcql(&request.dcql_query)
+            .map_err(|_| WalletError::new(WalletErrorReason::InvalidVerifierMetadata))?;
+    }
 
     let is_dc_api = matches!(
         request.response_mode,

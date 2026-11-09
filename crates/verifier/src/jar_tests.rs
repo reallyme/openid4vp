@@ -5,8 +5,10 @@
 #![allow(clippy::expect_used)]
 
 use reallyme_openid4vp_dcql::{CredentialFormat, CredentialQuery, DcqlQuery, QueryId};
-use reallyme_openid4vp_types::{AuthorizationRequestObject, ClientIdentifier, ResponseType};
-use serde_json::Map as JsonMap;
+use reallyme_openid4vp_types::{
+    AuthorizationRequestObject, ClientIdentifier, ClientMetadata, ResponseType,
+};
+use serde_json::{json, Map as JsonMap};
 use zeroize::Zeroize;
 
 use crate::jar::{
@@ -51,6 +53,23 @@ fn request(exp: u64, iat: u64) -> AuthorizationRequestObject {
         iat: Some(iat),
         exp: Some(exp),
     }
+}
+
+#[test]
+fn rejects_request_whose_dcql_format_is_absent_from_verifier_metadata() {
+    let mut request = request(20, 10);
+    request.client_metadata = Some(ClientMetadata {
+        raw: json!({
+            "vp_formats_supported": {
+                "mso_mdoc": {"issuerauth_alg_values": [-7]}
+            }
+        }),
+    });
+
+    let error = validate_jar_claims(&request, 11, JarPolicy::default())
+        .expect_err("verifier metadata must advertise the requested format");
+
+    assert_eq!(error.reason(), VerifierErrorReason::UnsupportedFormat);
 }
 
 #[test]

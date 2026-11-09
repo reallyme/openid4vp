@@ -210,6 +210,69 @@ fn requires_every_claim_when_claim_sets_are_absent() {
 }
 
 #[test]
+fn evaluates_object_index_and_all_elements_claim_paths() {
+    let query = DcqlQuery::from_json_slice(
+        br#"{
+          "credentials": [{
+            "id": "pid",
+            "format": "dc+sd-jwt",
+            "meta": {
+              "vct_values": ["https://credentials.example.com/identity_credential"]
+            },
+            "claims": [
+              {"id": "first_nationality", "path": ["nationalities", 0], "values": ["MT"]},
+              {"id": "any_nationality", "path": ["nationalities", null], "values": ["DE"]},
+              {"id": "birth_locality", "path": ["place_of_birth", "locality"], "values": ["Valletta"]}
+            ]
+          }]
+        }"#,
+    )
+    .expect("test query is valid");
+    let mut matching = candidate();
+    matching.claims = json!({
+        "nationalities": ["MT", "DE"],
+        "place_of_birth": {"locality": "Valletta"}
+    });
+
+    let evaluation = evaluate_query(&query, &[matching]).expect("all claim paths resolve");
+
+    assert_eq!(evaluation.matches.len(), 1);
+    assert_eq!(
+        evaluation.matches[0].credentials[0].claims,
+        SelectedClaims::AllRequired
+    );
+}
+
+#[test]
+fn rejects_required_claim_when_nested_claim_path_does_not_resolve() {
+    let query = DcqlQuery::from_json_slice(
+        br#"{
+          "credentials": [{
+            "id": "pid",
+            "format": "dc+sd-jwt",
+            "meta": {
+              "vct_values": ["https://credentials.example.com/identity_credential"]
+            },
+            "claims": [
+              {"id": "birth_locality", "path": ["place_of_birth", "locality"]}
+            ]
+          }]
+        }"#,
+    )
+    .expect("test query is valid");
+    let mut non_matching = candidate();
+    non_matching.claims = json!({"place_of_birth": {"country": "MT"}});
+
+    let error = evaluate_query(&query, &[non_matching])
+        .expect_err("a required unresolved nested claim must fail closed");
+
+    assert_eq!(
+        error.reason(),
+        DcqlErrorReason::UnsatisfiedRequiredCredential
+    );
+}
+
+#[test]
 fn claim_sets_select_verifier_preferred_satisfied_option() {
     let query = DcqlQuery::from_json_slice(
         br#"{

@@ -136,6 +136,8 @@ pub fn validate_request_binding(
     if binding.nonce.len() < MIN_SESSION_BINDING_BYTES {
         return Err(VerifierError::new(VerifierErrorReason::InvalidBinding));
     }
+    reallyme_openid4vp_types::validate_oauth_binding_value(&binding.nonce)
+        .map_err(|_| VerifierError::new(VerifierErrorReason::InvalidBinding))?;
     if binding.transaction_data_bindings.len() > MAX_TRANSACTION_DATA_BINDINGS {
         return Err(VerifierError::new(VerifierErrorReason::InvalidBinding));
     }

@@ -202,6 +202,7 @@ shared.assertReallyMeProtobufReleasePolicy({
   generatedFreshness: {
     generatedPaths: ["crates/proto/src/generated/buffa"],
     commands: [
+      ["buf", ["build", "."]],
       ["buf", ["lint"]],
       ["buf", ["generate"]],
       ["node", ["scripts/harden-generated-openid4vp-proto.mjs"]],
@@ -644,7 +645,7 @@ function checkRepositoryPolicy() {
   );
   requireText("Cargo.toml", 'reallyme-jose = { version = "=0.4.6", default-features = false }', "registry ReallyMe jose dependency");
   requireText("Cargo.toml", 'reallyme-codec = { version = "=0.3.2", default-features = false }', "registry ReallyMe codec dependency");
-  requireText("Cargo.toml", 'reallyme-cose = { version = "=0.2.9", default-features = false }', "registry ReallyMe cose dependency");
+  requireText("Cargo.toml", 'reallyme-cose = { version = "=0.2.10", default-features = false }', "registry ReallyMe cose dependency");
   requireText("Cargo.toml", 'reallyme-crypto = { version = "=0.3.17", default-features = false }', "registry ReallyMe crypto dependency");
   requireText(
     "Cargo.toml",
@@ -939,7 +940,7 @@ function checkRepositoryPolicy() {
   );
   requireText(
     ".github/workflows/crates-package-preflight.yml",
-    "default: 0.2.0",
+    "default: 0.2.1",
     "package preflight version default",
   );
   requireText(
@@ -974,8 +975,8 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "conformance/oidf/profile-matrix.json",
-    "440eec8bac7b12b7389d7ca9cbc459b53507a443",
-    "official OIDF release-v5.3.1 commit",
+    "23353b36957d6466010de767c812d2c91ed37638",
+    "official OIDF release-v5.3.4 commit",
   );
   requireText(
     ".github/workflows/conformance.yml",

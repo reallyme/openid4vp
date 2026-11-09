@@ -4,7 +4,7 @@
 
 [oidf]
 suite = "https://gitlab.com/openid/conformance-suite"
-pinned_commit = "440eec8bac7b12b7389d7ca9cbc459b53507a443"
+pinned_commit = "23353b36957d6466010de767c812d2c91ed37638"
 plan = "oid4vp-1final-verifier-haip-test-plan"
 matrix = "conformance/oidf/profile-matrix.json"
 certification_profiles = 2

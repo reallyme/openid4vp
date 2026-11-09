@@ -405,8 +405,8 @@ fn oidf_profile_matrix_covers_all_supported_haip_profiles() {
         }
     }
     assert_eq!(
-        total_expected_module_executions, 119,
-        "the reviewed suite revision has exactly 119 HAIP module executions"
+        total_expected_module_executions, 161,
+        "the reviewed suite revision has exactly 161 HAIP module executions"
     );
 }
 
@@ -550,6 +550,14 @@ fn eudi_fixture_inventory_has_owned_or_delegated_evidence() {
                     has_non_empty_string_array(&fixture, "local_evidence"),
                     "local fixture must map evidence: {fixture_id}"
                 );
+                // A nonempty label is not evidence: refactors must update the
+                // inventory when an executable test moves or is retired.
+                for test in string_array_values(&fixture, "local_evidence") {
+                    assert!(
+                        executable_test_exists(test),
+                        "local fixture evidence must resolve: {fixture_id} {test}"
+                    );
+                }
             }
             "delegated" => {
                 assert!(
@@ -575,6 +583,25 @@ fn eudi_fixture_inventory_has_owned_or_delegated_evidence() {
             }
         }
     }
+}
+
+#[test]
+fn eudi_upstream_coverage_resolves_to_executable_tests() {
+    let inventory = parse_json_or_null(include_str!("../eudi/upstream-tests.json"));
+    let tests = inventory["tests"]
+        .as_array()
+        .expect("upstream inventory tests");
+    for item in tests {
+        if item["status"].as_str() == Some("covered-locally") {
+            let test = item["local_test"]
+                .as_str()
+                .expect("local evidence identity");
+            assert!(executable_test_exists(test), "unresolved evidence: {test}");
+        }
+    }
+    assert!(!executable_test_exists(
+        "reallyme_openid4vp_wallet::jar::tests::retired_evidence_test"
+    ));
 }
 
 struct RequirementManifest {

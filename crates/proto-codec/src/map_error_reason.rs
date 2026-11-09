@@ -276,6 +276,7 @@ pub fn wallet_error_reason_to_proto(value: WalletErrorReason) -> pb::OpenId4VpEr
         WalletErrorReason::InvalidRequestObjectSignature => pb::OpenId4VpErrorReason::WalletInvalidRequestObjectSignature,
         WalletErrorReason::UnsupportedRequestObjectAlgorithm => pb::OpenId4VpErrorReason::WalletUnsupportedRequestObjectAlgorithm,
         WalletErrorReason::InvalidTransactionData => pb::OpenId4VpErrorReason::WalletInvalidTransactionData,
+        WalletErrorReason::InvalidVerifierMetadata => pb::OpenId4VpErrorReason::WalletInvalidVerifierMetadata,
     })
 }
 
@@ -316,6 +317,7 @@ pub fn proto_to_wallet_error_reason(
         pb::OpenId4VpErrorReason::WalletInvalidRequestObjectSignature => WalletErrorReason::InvalidRequestObjectSignature,
         pb::OpenId4VpErrorReason::WalletUnsupportedRequestObjectAlgorithm => WalletErrorReason::UnsupportedRequestObjectAlgorithm,
         pb::OpenId4VpErrorReason::WalletInvalidTransactionData => WalletErrorReason::InvalidTransactionData,
+        pb::OpenId4VpErrorReason::WalletInvalidVerifierMetadata => WalletErrorReason::InvalidVerifierMetadata,
     })
 }
 

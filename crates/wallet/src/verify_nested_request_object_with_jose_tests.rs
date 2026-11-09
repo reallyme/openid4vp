@@ -321,7 +321,14 @@ fn preserves_metadata_evidence_from_inner_signed_request() {
         VerifiedClientMetadataReference::new(
             metadata_uri.to_owned(),
             ClientMetadata {
-                raw: serde_json::Value::Object(JsonMap::new()),
+                raw: serde_json::json!({
+                    "vp_formats_supported": {
+                        "mso_mdoc": {
+                            "issuerauth_alg_values": [-7],
+                            "deviceauth_alg_values": [-7]
+                        }
+                    }
+                }),
             },
             20,
         )

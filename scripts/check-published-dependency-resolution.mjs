@@ -12,7 +12,7 @@ const cratesIoSource = "registry+https://github.com/rust-lang/crates.io-index";
 const manifestDependencies = [
   { manifest: "Cargo.toml", name: "reallyme-jose", version: "0.4.6" },
   { manifest: "Cargo.toml", name: "reallyme-codec", version: "0.3.2" },
-  { manifest: "Cargo.toml", name: "reallyme-cose", version: "0.2.9" },
+  { manifest: "Cargo.toml", name: "reallyme-cose", version: "0.2.10" },
   { manifest: "Cargo.toml", name: "reallyme-crypto", version: "0.3.17" },
   {
     manifest: "Cargo.toml",
@@ -66,7 +66,7 @@ const manifestDependencies = [
 const rootLockedDependencies = [
   { name: "reallyme-jose", version: "0.4.6" },
   { name: "reallyme-codec", version: "0.3.2" },
-  { name: "reallyme-cose", version: "0.2.9" },
+  { name: "reallyme-cose", version: "0.2.10" },
   { name: "reallyme-crypto", version: "0.3.17" },
   { name: "reallyme-crypto-p256", version: "0.3.17" },
   { name: "reallyme-openid4vc-profiles", version: "0.5.1" },

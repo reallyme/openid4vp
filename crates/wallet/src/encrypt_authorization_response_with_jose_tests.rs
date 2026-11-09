@@ -25,7 +25,9 @@ fn encrypts_with_selected_ecdh_es_key_and_json_content_type() {
     let request = request_with_metadata(serde_json::json!({
         "jwks": {"keys": [
             {"kty":"OKP","crv":"Ed25519","x":"AA","alg":"EdDSA","kid":"skip"},
-            p256_jwk(&public_key)
+            {"kty":"AKP","alg":"ML-KEM-9999","use":"enc","kid":"unsupported-parameter-set"},
+            p256_jwk(&public_key),
+            {"kty":"unknown-type","alg":"unknown-algorithm","use":"enc","kid":"unknown-key"}
         ]},
         "encrypted_response_enc_values_supported": ["A128GCM"]
     }));
@@ -260,6 +262,7 @@ fn defaults_to_a128gcm_and_rejects_oversized_coordinates_before_decoding() {
     }
 
     let mut padded = p256_jwk(&public_key);
+    padded["kid"] = serde_json::json!("padded-coordinate-key");
     if let Some(x) = padded.get("x").and_then(serde_json::Value::as_str) {
         let mut non_canonical = x.to_owned();
         non_canonical.push('=');
@@ -273,6 +276,66 @@ fn defaults_to_a128gcm_and_rejects_oversized_coordinates_before_decoding() {
     if let Some(request) = request {
         let encrypted = encrypt_authorization_response_with_jose(&request, &response);
         assert!(encrypted.is_ok());
+    }
+}
+
+#[test]
+fn rejects_ambiguous_or_missing_key_ids_across_the_complete_set() {
+    let keypair = reallyme_crypto::p256::generate_p256_keypair();
+    assert!(keypair.is_ok());
+    let Ok((public_key, _)) = keypair else { return };
+    let response = response_with_state(None);
+    assert!(response.is_some());
+    let Some(response) = response else { return };
+    let key = p256_jwk(&public_key);
+    for other in [
+        key.clone(),
+        serde_json::json!({"kty":"OKP", "use":"sig", "kid":"response-key"}),
+        serde_json::json!({"kty":"OKP", "use":"sig"}),
+        serde_json::json!({"kid":null}),
+        serde_json::json!({"kid":""}),
+        serde_json::json!({"kid":"invalid\nidentifier"}),
+        serde_json::json!({"kid":"x".repeat(super::MAX_KEY_ID_BYTES + 1)}),
+    ] {
+        for keys in [vec![key.clone(), other.clone()], vec![other, key.clone()]] {
+            let request = request_with_metadata(serde_json::json!({"jwks":{"keys":keys}}));
+            assert!(request.is_some());
+            let Some(request) = request else { continue };
+            assert_eq!(
+                encrypt_authorization_response_with_jose(&request, &response)
+                    .map_err(|error| error.reason()),
+                Err(WalletErrorReason::InvalidResponseEncryptionKey)
+            );
+            assert_eq!(
+                response_encryption_key_thumbprint_sha256(&request).map_err(|error| error.reason()),
+                Err(WalletErrorReason::InvalidResponseEncryptionKey)
+            );
+        }
+    }
+}
+
+#[test]
+fn rejects_malformed_algorithm_members_after_a_preferred_match() {
+    use reallyme_jose::jwe::JweContentEncryptionAlgorithm;
+    use serde_json::json;
+
+    for malformed in [json!(null), json!(42), json!(true), json!({}), json!([])] {
+        for values in [json!(["A256GCM", malformed]), json!([malformed, "A256GCM"])] {
+            assert_eq!(
+                super::select_content_encryption_algorithm(Some(&values))
+                    .map_err(|error| error.reason()),
+                Err(WalletErrorReason::UnsupportedResponseEncryptionAlgorithm)
+            );
+        }
+    }
+    for values in [
+        json!(["unknown", "A256GCM", "A128GCM"]),
+        json!(["A128GCM", "A256GCM", "unknown"]),
+    ] {
+        assert_eq!(
+            super::select_content_encryption_algorithm(Some(&values)),
+            Ok(JweContentEncryptionAlgorithm::A256Gcm)
+        );
     }
 }
 

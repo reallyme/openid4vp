@@ -109,6 +109,7 @@ pub fn validate_unsigned_dc_api_request_with_transaction_data_policy(
         || request.redirect_uri.is_some()
         || request.wallet_nonce.is_some()
         || request.nonce.is_empty()
+        || reallyme_openid4vp_types::validate_oauth_binding_value(&request.nonce).is_err()
     {
         return Err(WalletError::new(
             WalletErrorReason::InvalidAuthorizationRequestTransport,

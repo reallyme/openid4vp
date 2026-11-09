@@ -86,6 +86,8 @@ pub enum WalletErrorReason {
     InvalidVerifierAttestation,
     /// Referenced verifier metadata was absent, stale, or not bound to the request.
     InvalidMetadataReference,
+    /// Verifier metadata is malformed or does not advertise every requested format.
+    InvalidVerifierMetadata,
     /// Digital Credentials API request origin is not listed in `expected_origins`.
     ExpectedOriginMismatch,
     /// Browser platform origin evidence is absent, malformed, or used on the wrong transport.
@@ -127,6 +129,7 @@ impl From<WalletError> for ProblemDetails {
             | WalletErrorReason::DuplicateAuthorizationRequestParameter
             | WalletErrorReason::InvalidAuthorizationRequestTransport
             | WalletErrorReason::InvalidTransactionData
+            | WalletErrorReason::InvalidVerifierMetadata
             | WalletErrorReason::MissingWalletNonce
             | WalletErrorReason::ResponseEndpointClientIdentifierMismatch
             | WalletErrorReason::RequestObjectTooLarge

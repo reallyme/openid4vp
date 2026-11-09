@@ -60,7 +60,7 @@ class AssertOidfResultsTests(unittest.TestCase):
                         "repository": "https://gitlab.com/openid/conformance-suite",
                         "commit": "0" * 40,
                         "describe": "production",
-                        "version": "5.3.1",
+                        "version": "5.3.4",
                     },
                     "result_policy_sources": {},
                     "profiles": [
@@ -380,7 +380,7 @@ class AssertOidfResultsTests(unittest.TestCase):
             )
 
         self.assertEqual(len(profiles), 6)
-        self.assertEqual(module_execution_count, 119)
+        self.assertEqual(module_execution_count, 161)
 
     def assert_failure(self, reason: str) -> None:
         expected = assert_oidf_results.load_expected_profile(self.matrix, PROFILE_ID)
@@ -409,13 +409,13 @@ class AssertOidfResultsTests(unittest.TestCase):
     ) -> str:
         return json.dumps(
             {
-                "exportedVersion": "5.3.1",
+                "exportedVersion": "5.3.4",
                 "testInfo": {
                     "planId": plan_instance_id,
                     "testName": module_id,
                     "status": "FINISHED",
                     "result": result,
-                    "version": "5.3.1",
+                    "version": "5.3.4",
                     "variant": {"variant": MODULE_VARIANTS},
                 }
             }

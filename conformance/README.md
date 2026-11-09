@@ -235,8 +235,8 @@ export is accepted.
 The authoritative composed-product OIDF selection and certification evidence
 live in downstream `identity-conformance` orchestration. This repository retains
 its generic adapter configuration, a reviewed public profile matrix for suite commit
-`440eec8bac7b12b7389d7ca9cbc459b53507a443` (the official
-`release-v5.3.1` tag), and transient execute-mode outputs.
+`23353b36957d6466010de767c812d2c91ed37638` (the official
+`release-v5.3.4` tag), and transient execute-mode outputs.
 CI builds the exact pinned checkout, discovers its OpenID4VP sources, and runs
 `verify_oidf_certification_target.py`; any module drift blocks execution. The
 official release tag and the public profile matrix are the protocol-profile

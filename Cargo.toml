@@ -44,7 +44,7 @@ reallyme-jose = { version = "=0.4.6", default-features = false }
 reallyme-ssi-proto = { version = "=0.5.1", default-features = false }
 
 reallyme-codec = { version = "=0.3.2", default-features = false }
-reallyme-cose = { version = "=0.2.9", default-features = false }
+reallyme-cose = { version = "=0.2.10", default-features = false }
 reallyme-crypto = { version = "=0.3.17", default-features = false }
 reallyme-crypto-p256 = { version = "=0.3.17", default-features = false }
 reallyme-openid4vc-profiles = { version = "=0.5.1", default-features = false }

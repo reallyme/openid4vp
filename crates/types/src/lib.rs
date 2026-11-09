@@ -19,6 +19,7 @@ mod problem_details;
 mod request;
 mod response;
 mod transaction_data;
+mod validate_oauth_binding_value;
 mod zeroize_json;
 
 pub use classify_request_object_jwt::{classify_request_object_jwt, RequestObjectJwtKind};
@@ -49,3 +50,4 @@ pub use transaction_data::{
     encoded_transaction_data_string, TransactionData, TransactionDataHash,
     TransactionDataHashAlgorithm, MAX_TRANSACTION_DATA_JSON_BYTES, MAX_TRANSACTION_DATA_JSON_DEPTH,
 };
+pub use validate_oauth_binding_value::validate_oauth_binding_value;

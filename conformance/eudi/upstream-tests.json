@@ -168,7 +168,7 @@
       "topic": "dc_api_origin_binding",
       "profile": "dc_api",
       "status": "covered-locally",
-      "local_test": "reallyme_openid4vp_dc_api::request::tests::rejects_signed_dc_api_request_without_expected_origins",
+      "local_test": "reallyme_openid4vp_wallet::jar::tests::rejects_missing_expected_origin_binding",
       "normative_basis": ["OID4VP-1FINAL-8.5"],
       "license_checked": false,
       "superseded": false,

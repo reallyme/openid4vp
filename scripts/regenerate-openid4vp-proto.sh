@@ -34,6 +34,9 @@ cp "${repository_root}/buf.gen.yaml" "${generation_root}/buf.gen.yaml"
 
 (
   cd "${generation_root}"
+  # Validate the complete descriptor set before invoking code generators. This
+  # prevents a generator-specific parser from becoming the schema validator.
+  buf build .
   buf generate
 )
 

@@ -1,11 +1,29 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.2.1 (unreleased)
 
+- Update COSE to 0.2.10 in the workspace and fuzz dependency locks.
+- Enforce final-spec ASCII URL-safe nonce and state syntax at wallet and
+  verifier boundaries while continuing to ignore state in unsigned DC API requests.
+- Reject transaction data that references unknown credential queries or targets
+  an SD-JWT query with cryptographic holder binding disabled, for both signed
+  requests and unsigned Digital Credentials API requests.
+- Reject ambiguous verifier key IDs across the complete response-encryption
+  JWKS and validate every advertised content-encryption algorithm member before
+  selecting the preferred supported algorithm.
+- Repair EUDI coverage evidence links and require locally covered fixtures and
+  upstream scenarios to resolve to executable tests. Add independent claims-path
+  cases for wildcard pruning, mixed container types, and empty selections.
 - Refresh the ReallyMe codec, cryptography, JOSE, and COSE dependency baseline
   and update the locked dependency graph to current security-patched releases.
 - Update the release-readiness runner to the immutable commit published as
   release v0.6.9.
+- Advance the reviewed OIDF conformance-suite baseline to `release-v5.3.4`,
+  including the new DCQL claim-path, Request Object `typ`, credential-status,
+  credential-type, and age-over-18 module coverage.
+- Validate that every DCQL credential format is advertised by verifier
+  `vp_formats_supported` metadata and enforce the final OpenID4VP algorithm
+  capability shapes before accepting or signing a Request Object.
 
 - Add the OpenID4VP `verifier_info` request field to the canonical protobuf,
   Rust request model, and bounded protobuf codec. Presence of an empty array

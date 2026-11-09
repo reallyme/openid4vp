@@ -6,7 +6,7 @@ wire shapes.
 
 | Standard or profile | Scope in this repo | Primary modules | Verification assets |
 | --- | --- | --- | --- |
-| OpenID4VP 1.0 final | Authorization Request/Response objects, DCQL, final `vp_token` object keyed by DCQL query id, client identifier prefixes, and deny-by-default application transaction-data types | `crates/types`, `crates/dcql`, `crates/verifier`, `crates/wallet` | Unit tests in each crate; conformance harness in `conformance/`, including unknown transaction-data rejection |
+| OpenID4VP 1.0 final | Authorization Request/Response objects, DCQL, verifier `vp_formats_supported` binding and algorithm-shape validation, final `vp_token` object keyed by DCQL query id, client identifier prefixes, and deny-by-default application transaction-data types | `crates/types`, `crates/dcql`, `crates/verifier`, `crates/wallet` | Unit tests in each crate; conformance harness in `conformance/`, including unsupported DCQL formats and unknown transaction-data rejection |
 | RFC 9101 JAR | Request Object signing and verifier/wallet validation policy | `crates/verifier::jar`, `crates/wallet::jar` | Claim validation tests; injected signer/verifier traits for reallyme crypto adapters |
 | OpenID4VP Request Object transport | Pure wallet parsing plus HTTP `request_uri` resolution | `crates/wallet::transport`, `crates/http` | Transport classification, POST with optional `wallet_nonce`, HTTPS, and resolver tests |
 | OpenID4VP holder binding | OID4VP-specific comparison of decoded proof claims to request binding | `crates/verifier::holder_binding` | Audience, nonce, and expiration tests; crypto/JWT parsing remains in `reallyme/ssi` |
@@ -21,7 +21,7 @@ wire shapes.
 | ISO/IEC 18013-5 mdoc | DeviceResponse and issuer-signed mdoc structures | `reallyme/ssi` dependency `reallyme-mdoc` | SSI mdoc tests; this repo does not reimplement CBOR structures |
 | HAIP 1.0 | High Assurance Interoperability Profile presentation capabilities | `crates/profiles` | HAIP profile unit tests |
 | eIDAS ARF and CIR 2024/2977-2982 | Presentation profile alignment and EUDI interoperability | `crates/profiles`, `conformance/fixtures/eudi` | EUDI reference verifier/wallet fixtures |
-| OIDF conformance suite | Six supported HAIP protocol profiles for verifier and wallet roles, pinned to the official `release-v5.3.1` source | `.github/workflows/conformance.yml`, `conformance/oidf/profile-matrix.json`, `conformance/scripts/run_oidf_verifier_plan.sh`, `conformance/scripts/run_oidf_wallet_plan.sh`, `crates/runtime` | Public selected-profile execution, source-drift gates, and module-result validation; composed profile selection, immutable deployment binding, retained evidence, and final pre-submission acceptance belong to `identity-conformance` |
+| OIDF conformance suite | Six supported HAIP protocol profiles for verifier and wallet roles, pinned to the official `release-v5.3.4` source | `.github/workflows/conformance.yml`, `conformance/oidf/profile-matrix.json`, `conformance/scripts/run_oidf_verifier_plan.sh`, `conformance/scripts/run_oidf_wallet_plan.sh`, `crates/runtime` | Public selected-profile execution, source-drift gates, and module-result validation; composed profile selection, immutable deployment binding, retained evidence, and final pre-submission acceptance belong to `identity-conformance` |
 | EWC eudi-wallet-rfcs | Interop flows for EUDI wallet community profiles | `conformance/fixtures/ewc` | Machine-readable Digital Credentials API and EUDI Wallet RFC presentation fixtures |
 
 ## Notes
