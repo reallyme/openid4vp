@@ -307,13 +307,18 @@ jobs:
 
   mobile-composition:
     name: Mobile native composition (${{ matrix.target }})
-    runs-on: macos-15
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
-        target:
-          - aarch64-apple-ios
-          - aarch64-linux-android
+        include:
+          # iOS requires Apple's SDK, while cargo check for Android does not.
+          # Keeping Android off the capacity-constrained macOS arm64 pool also
+          # prevents a runner-allocation outage from failing both mobile gates.
+          - target: aarch64-apple-ios
+            runner: macos-15
+          - target: aarch64-linux-android
+            runner: ubuntu-24.04
     defaults:
       run:
         working-directory: openid4vp
