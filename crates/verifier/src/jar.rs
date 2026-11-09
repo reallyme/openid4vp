@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -303,6 +303,7 @@ impl From<VerifierError> for reallyme_openid4vp_types::ProblemDetails {
             | VerifierErrorReason::InvalidBinding
             | VerifierErrorReason::CredentialRevoked
             | VerifierErrorReason::InvalidCredentialStatus
+            | VerifierErrorReason::InvalidRootAssuranceStatus
             | VerifierErrorReason::CredentialStatusUnavailable
             | VerifierErrorReason::InvalidCredentialValidity
             | VerifierErrorReason::InvalidZkPresentation

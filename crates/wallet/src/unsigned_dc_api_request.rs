@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -17,6 +17,41 @@ use crate::{WalletError, WalletErrorReason, WalletTransactionDataPolicy};
 #[derive(Clone, PartialEq)]
 pub struct VerifiedUnsignedDcApiRequest {
     request: AuthorizationRequestObject,
+    untrusted_time_hint: Option<UnsignedDcApiTimeHint>,
+}
+
+/// Unauthenticated timing parameters supplied by an unsigned DC API requester.
+///
+/// These values may be used only as a proposed ZK transcript time. They do not
+/// establish requester identity, freshness, or authorization. The verifier must
+/// compare the proof time to its independently retained session binding.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct UnsignedDcApiTimeHint {
+    issued_at_unix: u64,
+    expires_at_unix: u64,
+}
+
+impl UnsignedDcApiTimeHint {
+    /// Proposed verifier session issuance time, without wallet-side authenticity.
+    #[must_use]
+    pub const fn issued_at_unix(self) -> u64 {
+        self.issued_at_unix
+    }
+
+    /// Proposed verifier session expiry, without wallet-side authenticity.
+    #[must_use]
+    pub const fn expires_at_unix(self) -> u64 {
+        self.expires_at_unix
+    }
+}
+
+impl VerifiedUnsignedDcApiRequest {
+    /// Return the unsigned request's optional transcript hint separately from
+    /// authenticated request claims. An incomplete pair is never usable.
+    #[must_use]
+    pub const fn untrusted_time_hint(&self) -> Option<UnsignedDcApiTimeHint> {
+        self.untrusted_time_hint
+    }
 }
 
 impl sealed::SealedWalletRequest for VerifiedUnsignedDcApiRequest {
@@ -36,6 +71,7 @@ impl core::fmt::Debug for VerifiedUnsignedDcApiRequest {
 impl zeroize::Zeroize for VerifiedUnsignedDcApiRequest {
     fn zeroize(&mut self) {
         zeroize::Zeroize::zeroize(&mut self.request);
+        self.untrusted_time_hint = None;
     }
 }
 
@@ -89,8 +125,29 @@ pub fn validate_unsigned_dc_api_request_with_transaction_data_policy(
     }
 
     transaction_data_policy.validate(request)?;
+    let untrusted_time_hint =
+        request
+            .iat
+            .zip(request.exp)
+            .map(|(issued_at_unix, expires_at_unix)| UnsignedDcApiTimeHint {
+                issued_at_unix,
+                expires_at_unix,
+            });
+    let mut accepted = request.clone();
+    // These fields have no authenticated requester binding in an unsigned DC
+    // API request. Keeping them on the receipt would let downstream policy use
+    // attacker-supplied identity or attestation material as verified input.
+    accepted.client_id = None;
+    accepted.expected_origins = None;
+    accepted.verifier_info = None;
+    accepted.iss = None;
+    accepted.aud = None;
+    accepted.iat = None;
+    accepted.exp = None;
+    accepted.state = None;
     Ok(VerifiedUnsignedDcApiRequest {
-        request: request.clone(),
+        request: accepted,
+        untrusted_time_hint,
     })
 }
 

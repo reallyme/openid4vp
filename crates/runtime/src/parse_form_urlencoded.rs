@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -10,7 +10,7 @@ use crate::{RuntimeError, RuntimeErrorReason};
 
 const MAX_FORM_URLENCODED_PAIRS: usize = 64;
 const MAX_FORM_KEY_BYTES: usize = 256;
-const MAX_FORM_VALUE_BYTES: usize = 64 * 1024;
+pub(crate) const DEFAULT_MAX_FORM_VALUE_BYTES: usize = 64 * 1024;
 
 /// One decoded application/x-www-form-urlencoded pair.
 #[derive(Clone, PartialEq, Eq)]
@@ -45,6 +45,16 @@ impl Drop for FormPair {
 impl ZeroizeOnDrop for FormPair {}
 
 pub(crate) fn parse_form_urlencoded(body: &[u8]) -> Result<Vec<FormPair>, RuntimeError> {
+    parse_form_urlencoded_with_large_value(body, None, DEFAULT_MAX_FORM_VALUE_BYTES)
+}
+
+/// Permit one named response field to use an endpoint-specific value limit.
+/// Other fields retain the small default cap, including state and error data.
+pub(crate) fn parse_form_urlencoded_with_large_value(
+    body: &[u8],
+    large_value_field: Option<&str>,
+    max_large_value_bytes: usize,
+) -> Result<Vec<FormPair>, RuntimeError> {
     if body.is_empty() {
         return Ok(Vec::new());
     }
@@ -65,14 +75,22 @@ pub(crate) fn parse_form_urlencoded(body: &[u8]) -> Result<Vec<FormPair>, Runtim
             Some(value) => value,
             None => &[],
         };
-        if raw_key.is_empty()
-            || raw_key.len() > MAX_FORM_KEY_BYTES
-            || raw_value.len() > MAX_FORM_VALUE_BYTES
-        {
+        if raw_key.is_empty() || raw_key.len() > MAX_FORM_KEY_BYTES {
+            return Err(RuntimeError::new(RuntimeErrorReason::InvalidFormBody));
+        }
+        let key = decode_form_component(raw_key)?;
+        let max_value_bytes = if large_value_field == Some(key.as_str()) {
+            max_large_value_bytes
+        } else {
+            DEFAULT_MAX_FORM_VALUE_BYTES
+        };
+        // Decoding percent escapes can only shorten the value. Bound the raw
+        // component before allocating its decoded representation.
+        if raw_value.len() > max_value_bytes {
             return Err(RuntimeError::new(RuntimeErrorReason::InvalidFormBody));
         }
         pairs.push(FormPair {
-            key: decode_form_component(raw_key)?,
+            key,
             value: decode_form_component(raw_value)?,
         });
     }
@@ -159,3 +177,7 @@ fn hex_value(byte: u8) -> Result<u8, RuntimeError> {
         _ => Err(RuntimeError::new(RuntimeErrorReason::InvalidFormBody)),
     }
 }
+
+#[cfg(test)]
+#[path = "parse_form_urlencoded_tests.rs"]
+mod tests;

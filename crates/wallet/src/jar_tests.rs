@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -30,7 +30,10 @@ const TEST_LEAF_CERTIFICATE_DER: &[u8] = b"test leaf certificate DER";
 
 impl VerifiedWalletRequest {
     pub(crate) const fn for_test(request: AuthorizationRequestObject) -> Self {
-        Self { request }
+        Self {
+            request,
+            x509_request_signer: None,
+        }
     }
 
     pub(crate) fn request_mut_for_test(&mut self) -> &mut AuthorizationRequestObject {
@@ -82,6 +85,7 @@ fn signed_dc_api_request() -> AuthorizationRequestObject {
         transaction_data: None,
         client_metadata: None,
         client_metadata_uri: None,
+        verifier_info: None,
         expected_origins: Some(vec!["https://rp.example".to_owned()]),
         iss: Some("client".to_owned()),
         aud: Some(vec!["wallet".to_owned()]),

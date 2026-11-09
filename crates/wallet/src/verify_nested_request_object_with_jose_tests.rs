@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -124,6 +124,7 @@ fn request(exp: u64, iat: u64) -> AuthorizationRequestObject {
         transaction_data: None,
         client_metadata: None,
         client_metadata_uri: None,
+        verifier_info: None,
         expected_origins: Some(vec!["https://rp.example".to_owned()]),
         iss: Some("decentralized_identifier:did:example:verifier".to_owned()),
         aud: Some(vec!["wallet".to_owned()]),

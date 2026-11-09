@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -28,6 +28,7 @@ pub fn request_binding_to_proto(binding: &RequestBinding) -> pb::RequestBinding 
         redirect_uri: binding.redirect_uri.clone(),
         dc_api_origin: binding.dc_api_origin.clone(),
         expiry_unix: binding.expiry_unix,
+        request_time_unix: binding.request_time_unix,
         transaction_data_bindings: binding
             .transaction_data_bindings
             .iter()
@@ -64,6 +65,7 @@ pub fn proto_to_request_binding(
         redirect_uri: binding.redirect_uri.clone(),
         dc_api_origin: binding.dc_api_origin.clone(),
         expiry_unix: binding.expiry_unix,
+        request_time_unix: binding.request_time_unix,
         transaction_data_bindings,
     })
 }

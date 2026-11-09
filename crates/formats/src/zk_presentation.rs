@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -35,7 +35,9 @@ pub const MAX_ZK_STATEMENT_BYTES: usize = 1024;
 /// Maximum bytes accepted for a circuit identifier or circuit-ref label.
 pub const MAX_ZK_CIRCUIT_LABEL_BYTES: usize = 256;
 /// Exact number of stages in the production proof-bundle contract.
-pub const ZK_PRESENTATION_STAGE_COUNT: usize = 4;
+pub const ZK_PRESENTATION_STAGE_COUNT: usize = 5;
+/// Exact number of proofs in the common-credential-root v1 presentation contract.
+pub const ZK_COMMON_CREDENTIAL_ROOT_PRESENTATION_STAGE_COUNT: usize = 9;
 
 /// Validate and encode an externally produced ZK envelope as a `vp_token` value.
 ///
@@ -78,7 +80,10 @@ pub fn is_zk_presentation_value(value: &PresentationValue) -> bool {
     };
     json.get("type")
         .and_then(serde_json::Value::as_str)
-        .is_some_and(|value| value == ZK_PRESENTATION_TYPE)
+        .is_some_and(|value| {
+            value == ZK_PRESENTATION_TYPE
+                || value == crate::zk_prepared_persona::ZK_PREPARED_PERSONA_TYPE
+        })
 }
 
 /// Build the session-binding hashes required in a ZK presentation envelope.

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -40,10 +40,10 @@ function runFixture({
   mode = "publish",
   registryToken = "test-placeholder",
   reorderIndependent = false,
-  rustVersion = "1.96",
+  rustVersion = "1.99",
   scenario = "success",
-  requirement = "^0.1.1",
-  version = "0.1.1",
+  requirement = "^0.2.0",
+  version = "0.2.0",
 } = {}) {
   const directory = mkdtempSync(join(tmpdir(), "openid4vp-publish-test-"));
   try {
@@ -355,7 +355,7 @@ childProcess.spawnSync = (command, args) => {
       ...ok,
       status: 101,
       stderr: "failed to select a version for the requirement " +
-        String.fromCharCode(96) + "reallyme-openid4vp-dcql = ^0.1.1" +
+        String.fromCharCode(96) + "reallyme-openid4vp-dcql = ^0.2.0" +
         String.fromCharCode(96),
     };
   }
@@ -525,7 +525,7 @@ test("unapproved publishable crates fail before publication", () => {
 
 test("approved crate versions and MSRV fail closed", () => {
   for (const fixture of [
-    { version: "0.1.2" },
+    { version: "0.2.1" },
     { rustVersion: "1.97" },
   ]) {
     const result = runFixture({ mode: "order", ...fixture });
@@ -543,15 +543,20 @@ test("metadata enumeration cannot change the approved publish sequence", () => {
 
 test("zero-major caret requirements match Cargo compatibility boundaries", () => {
   for (const [requirement, accepted] of [
-    ["^0.1.0", true],
-    ["^0.1.1", true],
-    ["=0.1.1", true],
-    ["0.1.1", true],
+    ["^0.2.0", true],
+    ["=0.2.0", true],
+    ["0.2.0", true],
+    ["^0.1.2", false],
+    ["=0.1.2", false],
+    ["0.1.2", false],
+    ["^0.1.0", false],
+    ["^0.1.1", false],
+    ["=0.1.1", false],
     ["=0.1.0", false],
     ["0.1.0", false],
     ["^0.0.1", false],
-    ["^0.1.2", false],
-    ["^0.2.0", false],
+    ["^0.2.2", false],
+    ["^0.3.0", false],
     ["^0.1.0junk", false],
   ]) {
     const result = runFixture({ mode: "order", requirement });

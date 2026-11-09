@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -145,6 +145,7 @@ enum OpenId4VpErrorReason {
   OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_CREDENTIAL_STATUS = 428;
   OPEN_ID4_VP_ERROR_REASON_VERIFIER_CREDENTIAL_STATUS_UNAVAILABLE = 429;
   OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_CREDENTIAL_VALIDITY = 430;
+  OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_ROOT_ASSURANCE_STATUS = 431;
 
   OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_AUTHORIZATION_REQUEST_TRANSPORT = 500;
   OPEN_ID4_VP_ERROR_REASON_WALLET_DUPLICATE_AUTHORIZATION_REQUEST_PARAMETER = 501;
@@ -270,6 +271,9 @@ message PresentationValue {
     bytes json = 2;
     // ReallyMe ZK presentation envelope.
     ZkPresentation zk = 3;
+    // Canonical ReallyMe prepared-persona presentation protobuf. The proof,
+    // current status evidence, and fresh holder signature remain one object.
+    bytes zk_prepared_persona = 4;
   }
 }
 
@@ -297,9 +301,10 @@ enum ZkPresentationProofSuite {
 // ZkPresentationProfile identifies the complete credential-proof profile.
 enum ZkPresentationProfile {
   ZK_PRESENTATION_PROFILE_UNSPECIFIED = 0;
-  ZK_PRESENTATION_PROFILE_PRIVATE_CLAIM_V1 = 1;
+  ZK_PRESENTATION_PROFILE_CREDENTIAL_SUBJECT_CLAIM_V1 = 1;
   ZK_PRESENTATION_PROFILE_PRIVATE_PERSONA_CLAIM_V1 = 2;
-  ZK_PRESENTATION_PROFILE_PUBLIC_PERSONA_CLAIM_V1 = 3;
+  ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PRIVATE_PERSONA_V1 = 4;
+  ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PUBLIC_PERSONA_V1 = 5;
 }
 
 // ZkPresentationStageKind identifies one required production proof stage.
@@ -309,6 +314,15 @@ enum ZkPresentationStageKind {
   ZK_PRESENTATION_STAGE_KIND_CREDENTIAL_ENVELOPE = 2;
   ZK_PRESENTATION_STAGE_KIND_CREDENTIAL_ROOT = 3;
   ZK_PRESENTATION_STAGE_KIND_CLAIM = 4;
+  ZK_PRESENTATION_STAGE_KIND_ROOT_ATTESTATION = 5;
+  ZK_PRESENTATION_STAGE_KIND_ROOT_STATUS = 6;
+  ZK_PRESENTATION_STAGE_KIND_LINEAGE_0 = 7;
+  ZK_PRESENTATION_STAGE_KIND_LINEAGE_1 = 8;
+  ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_0 = 9;
+  ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_1 = 10;
+  ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_0 = 11;
+  ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_1 = 12;
+  ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS = 13;
 }
 
 // ZkPresentation is the OpenID4VP vp_token envelope for a ReallyMe ZK proof.
@@ -368,6 +382,30 @@ message TransactionData {
   optional string encoded_value = 4;
 }
 
+// VerifierInfo is a profile-defined attestation carried by verifier_info.
+// Its data is JSON because OpenID4VP permits either an object or a string.
+// Consumers must authenticate and bind it before using it for authorization.
+// VerifierInfoCredentialIds preserves the distinction between omission and an
+// explicitly empty credential_ids list, which OpenID4VP rejects.
+message VerifierInfoCredentialIds {
+  repeated string values = 1;
+}
+
+// VerifierInfo carries one untrusted attestation. Authorization requires
+// format-specific proof, issuer trust, and requester binding checks.
+message VerifierInfo {
+  string format = 1;
+  // UTF-8 JSON object or string; the codec enforces type and size bounds.
+  bytes data_json = 2;
+  optional VerifierInfoCredentialIds credential_ids = 3;
+}
+
+// VerifierInfoSet preserves a present but empty verifier_info array so the
+// codec can reject it under the OpenID4VP non-empty-array rule.
+message VerifierInfoSet {
+  repeated VerifierInfo entries = 1;
+}
+
 // AuthorizationRequest is the final OpenID4VP request object projection.
 message AuthorizationRequest {
   optional ClientIdentifier client_id = 1;
@@ -392,6 +430,8 @@ message AuthorizationRequest {
   // Non-standard metadata-by-reference extension. Wallet validation rejects
   // this unless the host injects fresh trusted metadata evidence.
   optional string client_metadata_uri = 17;
+  // Signed Request Object attestations; never an authorization receipt by itself.
+  optional VerifierInfoSet verifier_info = 18;
 }
 
 // VpTokenEntry is one final-spec vp_token object member keyed by DCQL query id.
@@ -434,6 +474,10 @@ message RequestBinding {
   // Ordered bindings. Duplicate transaction_data entries are significant and
   // therefore intentionally preserved.
   repeated TransactionDataBinding transaction_data_bindings = 8;
+  // Verifier-owned Authorization Request issued-at timestamp retained with the
+  // one-time session so request-bound proofs do not depend on response arrival
+  // time.
+  uint64 request_time_unix = 9;
 }
 
 // HolderBindingClaims is the decoded holder proof subset checked by OpenID4VP.

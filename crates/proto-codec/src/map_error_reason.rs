@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -195,6 +195,7 @@ pub fn verifier_error_reason_to_proto(value: VerifierErrorReason) -> pb::OpenId4
         VerifierErrorReason::InvalidZkPresentation => pb::OpenId4VpErrorReason::VerifierInvalidZkPresentation,
         VerifierErrorReason::CredentialRevoked => pb::OpenId4VpErrorReason::VerifierCredentialRevoked,
         VerifierErrorReason::InvalidCredentialStatus => pb::OpenId4VpErrorReason::VerifierInvalidCredentialStatus,
+        VerifierErrorReason::InvalidRootAssuranceStatus => pb::OpenId4VpErrorReason::VerifierInvalidRootAssuranceStatus,
         VerifierErrorReason::CredentialStatusUnavailable => pb::OpenId4VpErrorReason::VerifierCredentialStatusUnavailable,
         VerifierErrorReason::InvalidCredentialValidity => pb::OpenId4VpErrorReason::VerifierInvalidCredentialValidity,
     })
@@ -234,6 +235,7 @@ pub fn proto_to_verifier_error_reason(
         pb::OpenId4VpErrorReason::VerifierInvalidZkPresentation => VerifierErrorReason::InvalidZkPresentation,
         pb::OpenId4VpErrorReason::VerifierCredentialRevoked => VerifierErrorReason::CredentialRevoked,
         pb::OpenId4VpErrorReason::VerifierInvalidCredentialStatus => VerifierErrorReason::InvalidCredentialStatus,
+        pb::OpenId4VpErrorReason::VerifierInvalidRootAssuranceStatus => VerifierErrorReason::InvalidRootAssuranceStatus,
         pb::OpenId4VpErrorReason::VerifierCredentialStatusUnavailable => VerifierErrorReason::CredentialStatusUnavailable,
         pb::OpenId4VpErrorReason::VerifierInvalidCredentialValidity => VerifierErrorReason::InvalidCredentialValidity,
     })

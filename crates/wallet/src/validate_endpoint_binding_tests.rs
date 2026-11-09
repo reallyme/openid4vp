@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -30,6 +30,7 @@ impl VerifiedX509CertificateBinding {
         let fingerprint = super::sha256_array(leaf_certificate_der);
         Ok(Self {
             dns_names,
+            chain: BoundedX509CertificateChain::new(vec![leaf_certificate_der.to_vec()])?,
             leaf_certificate_sha256: fingerprint,
             chain_certificate_sha256: vec![fingerprint],
             context: X509TrustDecisionContext::new(1, [1_u8; 32], [2_u8; 32], 0, u64::MAX)?,

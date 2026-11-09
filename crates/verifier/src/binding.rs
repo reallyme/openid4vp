@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -75,6 +75,12 @@ pub struct RequestBinding {
     pub dc_api_origin: Option<String>,
     /// Expiry time in Unix seconds.
     pub expiry_unix: u64,
+    /// Verifier-owned Authorization Request issued-at time in Unix seconds.
+    ///
+    /// Request-bound proof systems, including ReallyMe ZK common-credential-root proofs,
+    /// bind this timestamp inside the proof. It is retained with the one-time
+    /// session so verification does not depend on response arrival time.
+    pub request_time_unix: u64,
     /// Ordered transaction-data digests grouped by credential query.
     pub transaction_data_bindings: Vec<TransactionDataBinding>,
 }
@@ -88,6 +94,7 @@ impl fmt::Debug for RequestBinding {
             .field("has_redirect_uri", &self.redirect_uri.is_some())
             .field("has_dc_api_origin", &self.dc_api_origin.is_some())
             .field("expiry_unix", &self.expiry_unix)
+            .field("request_time_unix", &self.request_time_unix)
             .field(
                 "transaction_data_binding_count",
                 &self.transaction_data_bindings.len(),
@@ -105,6 +112,7 @@ impl Zeroize for RequestBinding {
         self.redirect_uri.zeroize();
         self.dc_api_origin.zeroize();
         self.expiry_unix.zeroize();
+        self.request_time_unix.zeroize();
         self.transaction_data_bindings.zeroize();
     }
 }
@@ -129,6 +137,12 @@ pub fn validate_request_binding(
         return Err(VerifierError::new(VerifierErrorReason::InvalidBinding));
     }
     if binding.transaction_data_bindings.len() > MAX_TRANSACTION_DATA_BINDINGS {
+        return Err(VerifierError::new(VerifierErrorReason::InvalidBinding));
+    }
+    if binding.request_time_unix == 0
+        || binding.request_time_unix > now_unix
+        || binding.request_time_unix >= binding.expiry_unix
+    {
         return Err(VerifierError::new(VerifierErrorReason::InvalidBinding));
     }
     let has_endpoint = binding.response_uri.is_some() || binding.redirect_uri.is_some();

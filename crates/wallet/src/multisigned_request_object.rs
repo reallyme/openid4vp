@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -7,7 +7,7 @@ use std::collections::BTreeSet;
 use reallyme_openid4vp_dc_api::{
     DcApiErrorReason, JwsJsonGeneral, MAX_JWS_JSON_GENERAL_BYTES, MAX_JWS_JSON_SIGNATURES,
 };
-use reallyme_openid4vp_types::ClientIdentifier;
+use reallyme_openid4vp_types::{ClientIdentifier, VerifierInfoEntry, MAX_VERIFIER_INFO_ENTRIES};
 use serde::de::{IgnoredAny, MapAccess, Visitor};
 use serde::Deserializer;
 use zeroize::{Zeroize, Zeroizing};
@@ -105,8 +105,8 @@ pub fn verify_multisigned_request_object_with_transaction_data_policy(
         {
             continue;
         }
-        let protected_client_id = match parse_protected_client_id(&signature.protected) {
-            Ok(client_id) => client_id,
+        let protected_header = match parse_protected_request_parameters(&signature.protected) {
+            Ok(header) => header,
             Err(_) => continue,
         };
         let compact_jws = match build_compact_jws(
@@ -120,19 +120,24 @@ pub fn verify_multisigned_request_object_with_transaction_data_policy(
                 continue;
             }
         };
-        let verified = match verifier.verify_multisigned_request_object_signature(
+        let mut verified = match verifier.verify_multisigned_request_object_signature(
             compact_jws.as_str(),
-            &protected_client_id,
+            &protected_header.client_id,
             invocation,
             now_unix,
         ) {
             Ok(verified) => verified,
             Err(_) => continue,
         };
-        if verified.client_identifier() != Some(&protected_client_id) {
+        if verified.client_identifier() != Some(&protected_header.client_id) {
             verified_but_invalid = Some(WalletError::new(
                 WalletErrorReason::TransportClientIdentifierMismatch,
             ));
+            continue;
+        }
+        if let Err(error) = verified.project_protected_verifier_info(protected_header.verifier_info)
+        {
+            verified_but_invalid = Some(error);
             continue;
         }
         match finish_verified_request_object_with_transaction_data_policy(
@@ -192,7 +197,14 @@ fn is_base64url_segment(value: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
 }
 
-fn parse_protected_client_id(encoded_header: &str) -> Result<ClientIdentifier, WalletError> {
+struct ProtectedRequestParameters {
+    client_id: ClientIdentifier,
+    verifier_info: Option<Vec<VerifierInfoEntry>>,
+}
+
+fn parse_protected_request_parameters(
+    encoded_header: &str,
+) -> Result<ProtectedRequestParameters, WalletError> {
     if encoded_header.len() > MAX_PROTECTED_HEADER_BYTES {
         return Err(WalletError::new(WalletErrorReason::RequestObjectTooLarge));
     }
@@ -201,19 +213,19 @@ fn parse_protected_client_id(encoded_header: &str) -> Result<ClientIdentifier, W
             .map_err(|_| WalletError::new(WalletErrorReason::InvalidRequestObject))?,
     );
     let mut deserializer = serde_json::Deserializer::from_slice(header.as_slice());
-    let client_id = deserializer
+    let parameters = deserializer
         .deserialize_map(ProtectedHeaderVisitor)
         .map_err(|_| WalletError::new(WalletErrorReason::InvalidRequestObject))?;
     deserializer
         .end()
         .map_err(|_| WalletError::new(WalletErrorReason::InvalidRequestObject))?;
-    client_id.ok_or_else(|| WalletError::new(WalletErrorReason::InvalidClientIdentifierPrefix))
+    parameters.ok_or_else(|| WalletError::new(WalletErrorReason::InvalidClientIdentifierPrefix))
 }
 
 struct ProtectedHeaderVisitor;
 
 impl<'de> Visitor<'de> for ProtectedHeaderVisitor {
-    type Value = Option<ClientIdentifier>;
+    type Value = Option<ProtectedRequestParameters>;
 
     fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         formatter.write_str("a protected JWS header with one client_id")
@@ -225,6 +237,7 @@ impl<'de> Visitor<'de> for ProtectedHeaderVisitor {
     {
         let mut keys = BTreeSet::new();
         let mut client_id = None;
+        let mut verifier_info = None;
         while let Some(key) = map.next_key::<String>()? {
             if !keys.insert(key.clone()) {
                 return Err(serde::de::Error::custom(
@@ -237,11 +250,25 @@ impl<'de> Visitor<'de> for ProtectedHeaderVisitor {
                     .map_err(|_| serde::de::Error::custom("invalid protected client_id"));
                 value.zeroize();
                 client_id = Some(parsed?);
+            } else if key == "verifier_info" {
+                let entries = map.next_value::<Vec<VerifierInfoEntry>>()?;
+                if entries.is_empty() || entries.len() > MAX_VERIFIER_INFO_ENTRIES {
+                    return Err(serde::de::Error::custom("invalid protected verifier_info"));
+                }
+                for entry in &entries {
+                    entry
+                        .validate()
+                        .map_err(|_| serde::de::Error::custom("invalid protected verifier_info"))?;
+                }
+                verifier_info = Some(entries);
             } else {
                 map.next_value::<IgnoredAny>()?;
             }
         }
-        Ok(client_id)
+        Ok(client_id.map(|client_id| ProtectedRequestParameters {
+            client_id,
+            verifier_info,
+        }))
     }
 }
 

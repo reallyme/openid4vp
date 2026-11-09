@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -70,7 +70,13 @@ function rejectDirectJsonCalls(paths, allowlist) {
     }
     const source = productionRustSource(path);
     for (const needle of forbidden) {
-      if (source.includes(needle)) {
+      // The prepared request hashes an already validated DCQL model through
+      // JCS. Admit that one transcript serialization, while still rejecting
+      // any other direct JSON call in the file.
+      const checkedSource = path === "crates/formats/src/zk_prepared_request.rs"
+        ? source.replace("serde_json::to_value(input.query)", "")
+        : source;
+      if (checkedSource.includes(needle)) {
         failures.push(`${path}: direct JSON boundary call ${JSON.stringify(needle)}`);
       }
     }

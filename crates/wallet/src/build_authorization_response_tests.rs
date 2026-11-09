@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -240,6 +240,7 @@ fn request(multiple: bool, transaction_data: bool) -> VerifiedWalletRequest {
         }),
         client_metadata: None,
         client_metadata_uri: None,
+        verifier_info: None,
         expected_origins: None,
         iss: None,
         aud: None,

@@ -1,10 +1,10 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use std::collections::BTreeSet;
 
-use reallyme_openid4vp_dcql::{validate_query_selection, QueryId};
+use reallyme_openid4vp_dcql::{validate_query_selection, CredentialFormat, QueryId};
 use reallyme_openid4vp_formats::{
     build_zk_presentation_binding, parse_zk_presentation_value, validate_zk_presentation_binding,
 };
@@ -240,13 +240,20 @@ fn validate_presentations(
             .find(|query| &query.id == query_id)
             .ok_or_else(|| VerifierError::new(VerifierErrorReason::VpTokenQueryMismatch))?;
         for presentation in presentations {
-            if let Some(zk_presentation) = parse_zk_presentation_value(presentation)
-                .map_err(|_| VerifierError::new(VerifierErrorReason::InvalidZkPresentation))?
+            let zk_presentation = parse_zk_presentation_value(presentation)
+                .map_err(|_| VerifierError::new(VerifierErrorReason::InvalidZkPresentation))?;
+            if (credential_query.format.as_str() == CredentialFormat::REALLYME_ZK_V1)
+                != zk_presentation.is_some()
             {
+                return Err(VerifierError::new(
+                    VerifierErrorReason::VpTokenQueryMismatch,
+                ));
+            }
+            if let Some(zk_presentation) = zk_presentation {
                 let transaction_data_hash = zk_transaction_data_hash(session, query_id)?;
                 let expected_binding = build_zk_presentation_binding(
                     &session.binding.nonce,
-                    &session.binding.client_id.to_wire_value(),
+                    &crate::holder_binding::expected_holder_binding_audience(&session.binding),
                     transaction_data_hash,
                 );
                 validate_zk_presentation_binding(&zk_presentation.binding, &expected_binding)

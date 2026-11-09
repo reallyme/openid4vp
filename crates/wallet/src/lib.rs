@@ -1,9 +1,8 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 //! Wallet-side OpenID4VP request verification and response construction boundary.
-
 mod build_authorization_response;
 mod client_identifier_binding;
 #[cfg(feature = "jose")]
@@ -15,6 +14,7 @@ mod metadata_reference;
 mod multisigned_request_object;
 mod platform_origin;
 mod prepare_consent_data;
+mod prepare_zk_prepared_persona;
 mod prepare_zk_presentation;
 mod transaction_data_policy;
 mod transport;
@@ -46,8 +46,8 @@ pub use jar::{
     validate_wallet_request_object_with_trust, verify_request_transport,
     verify_request_transport_with_transaction_data_policy, verify_signed_request_object,
     verify_signed_request_object_with_transaction_data_policy, RequestObjectSignatureVerifier,
-    VerifiedRequestObject, VerifiedWalletRequest, WalletAuthorizationRequest,
-    WalletClientIdentifierPolicy, WalletRequestTrustEvidence,
+    VerifiedRequestObject, VerifiedWalletRequest, VerifiedX509RequestSigner,
+    WalletAuthorizationRequest, WalletClientIdentifierPolicy, WalletRequestTrustEvidence,
 };
 pub use metadata_reference::{
     validate_client_metadata_reference_binding, VerifiedClientMetadataReference,
@@ -60,14 +60,26 @@ pub use multisigned_request_object::{
 };
 pub use platform_origin::{VerifiedPlatformOrigin, WalletInvocationContext};
 pub use prepare_consent_data::prepare_consent_data;
-pub use prepare_zk_presentation::prepare_zk_presentation;
+pub use prepare_zk_prepared_persona::{
+    prepare_zk_prepared_persona_request, prepare_zk_prepared_persona_response,
+    prepare_zk_prepared_persona_unsigned_dc_api_request,
+    prepare_zk_prepared_persona_unsigned_dc_api_response, WalletPreparedPersonaRequest,
+    ZkPersonaCredentialEvidencePresentationProvider,
+};
+pub use prepare_zk_presentation::{
+    prepare_zk_presentation, prepare_zk_presentation_from_bundle,
+    prepare_zk_presentation_from_common_credential_root,
+    prepare_zk_presentation_from_status_qualified_bundle, WalletCommonCredentialRootPresentation,
+    WalletCommonCredentialRootProof,
+};
 pub use transaction_data_policy::WalletTransactionDataPolicy;
 pub use transport::{
     parse_authorization_request_transport, AuthorizationRequestTransport, RequestTransportPolicy,
 };
 pub use unsigned_dc_api_request::{
     validate_unsigned_dc_api_request,
-    validate_unsigned_dc_api_request_with_transaction_data_policy, VerifiedUnsignedDcApiRequest,
+    validate_unsigned_dc_api_request_with_transaction_data_policy, UnsignedDcApiTimeHint,
+    VerifiedUnsignedDcApiRequest,
 };
 pub use validate_endpoint_binding::{
     BoundedX509CertificateChain, TrustedX509RequestObjectSigner, VerifiedX509CertificateBinding,

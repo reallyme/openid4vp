@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -50,7 +50,7 @@ fn generated_zk_presentation_debug_output_is_redacted() -> Result<(), buffa::Dec
             __buffa_unknown_fields: Default::default(),
         }),
         proof_suite: ZkPresentationProofSuite::BarretenbergUltraHonkKeccakZkNoIpa.into(),
-        profile: ZkPresentationProfile::PrivateClaimV1.into(),
+        profile: ZkPresentationProfile::CredentialSubjectClaimV1.into(),
         stages: vec![ZkPresentationStage {
             stage: ZkPresentationStageKind::Session.into(),
             circuit_ref: MessageField::some(ZkPresentationCircuitRef::default()),
@@ -162,7 +162,7 @@ fn generated_proto_json_round_trips_zk_suite_and_manifest_digest() -> Result<(),
 {
     let presentation = ZkPresentation {
         proof_suite: ZkPresentationProofSuite::BarretenbergUltraHonkKeccakZkNoIpa.into(),
-        profile: ZkPresentationProfile::PrivateClaimV1.into(),
+        profile: ZkPresentationProfile::CredentialSubjectClaimV1.into(),
         stages: vec![ZkPresentationStage {
             stage: ZkPresentationStageKind::Session.into(),
             circuit_ref: MessageField::some(ZkPresentationCircuitRef::default()),
@@ -204,7 +204,7 @@ fn generated_clear_removes_sensitive_byte_fields() {
 fn generated_clear_removes_zk_presentation_material() {
     let mut presentation = ZkPresentation {
         proof_suite: ZkPresentationProofSuite::BarretenbergUltraHonkKeccakZkNoIpa.into(),
-        profile: ZkPresentationProfile::PrivateClaimV1.into(),
+        profile: ZkPresentationProfile::CredentialSubjectClaimV1.into(),
         stages: vec![ZkPresentationStage {
             stage: ZkPresentationStageKind::Session.into(),
             circuit_ref: MessageField::some(ZkPresentationCircuitRef::default()),

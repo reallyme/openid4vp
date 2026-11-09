@@ -922,6 +922,7 @@ pub enum OpenId4VpErrorReason {
     OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_CREDENTIAL_STATUS = 428i32,
     OPEN_ID4_VP_ERROR_REASON_VERIFIER_CREDENTIAL_STATUS_UNAVAILABLE = 429i32,
     OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_CREDENTIAL_VALIDITY = 430i32,
+    OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_ROOT_ASSURANCE_STATUS = 431i32,
     OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_AUTHORIZATION_REQUEST_TRANSPORT = 500i32,
     OPEN_ID4_VP_ERROR_REASON_WALLET_DUPLICATE_AUTHORIZATION_REQUEST_PARAMETER = 501i32,
     OPEN_ID4_VP_ERROR_REASON_WALLET_CONFLICTING_REQUEST_OBJECT_PARAMETERS = 502i32,
@@ -1286,6 +1287,10 @@ impl OpenId4VpErrorReason {
     #[allow(non_upper_case_globals)]
     pub const VerifierInvalidCredentialValidity: Self =
         Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_CREDENTIAL_VALIDITY;
+    ///Idiomatic alias for [`Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_ROOT_ASSURANCE_STATUS`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const VerifierInvalidRootAssuranceStatus: Self =
+        Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_ROOT_ASSURANCE_STATUS;
     ///Idiomatic alias for [`Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_AUTHORIZATION_REQUEST_TRANSPORT`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const WalletInvalidAuthorizationRequestTransport: Self =
@@ -1936,6 +1941,9 @@ impl ::buffa::Enumeration for OpenId4VpErrorReason {
             430i32 => ::core::option::Option::Some(
                 Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_CREDENTIAL_VALIDITY,
             ),
+            431i32 => ::core::option::Option::Some(
+                Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_ROOT_ASSURANCE_STATUS,
+            ),
             500i32 => ::core::option::Option::Some(
                 Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_AUTHORIZATION_REQUEST_TRANSPORT,
             ),
@@ -2443,6 +2451,9 @@ impl ::buffa::Enumeration for OpenId4VpErrorReason {
             }
             Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_CREDENTIAL_VALIDITY => {
                 "OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_CREDENTIAL_VALIDITY"
+            }
+            Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_ROOT_ASSURANCE_STATUS => {
+                "OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_ROOT_ASSURANCE_STATUS"
             }
             Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_AUTHORIZATION_REQUEST_TRANSPORT => {
                 "OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_AUTHORIZATION_REQUEST_TRANSPORT"
@@ -3092,6 +3103,11 @@ impl ::buffa::Enumeration for OpenId4VpErrorReason {
                     Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_CREDENTIAL_VALIDITY,
                 )
             }
+            "OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_ROOT_ASSURANCE_STATUS" => {
+                ::core::option::Option::Some(
+                    Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_ROOT_ASSURANCE_STATUS,
+                )
+            }
             "OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_AUTHORIZATION_REQUEST_TRANSPORT" => {
                 ::core::option::Option::Some(
                     Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_AUTHORIZATION_REQUEST_TRANSPORT,
@@ -3657,6 +3673,7 @@ impl ::buffa::Enumeration for OpenId4VpErrorReason {
             Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_CREDENTIAL_STATUS,
             Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_CREDENTIAL_STATUS_UNAVAILABLE,
             Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_CREDENTIAL_VALIDITY,
+            Self::OPEN_ID4_VP_ERROR_REASON_VERIFIER_INVALID_ROOT_ASSURANCE_STATUS,
             Self::OPEN_ID4_VP_ERROR_REASON_WALLET_INVALID_AUTHORIZATION_REQUEST_TRANSPORT,
             Self::OPEN_ID4_VP_ERROR_REASON_WALLET_DUPLICATE_AUTHORIZATION_REQUEST_PARAMETER,
             Self::OPEN_ID4_VP_ERROR_REASON_WALLET_CONFLICTING_REQUEST_OBJECT_PARAMETERS,
@@ -4033,23 +4050,30 @@ impl ::buffa::Enumeration for ZkPresentationProofSuite {
 #[repr(i32)]
 pub enum ZkPresentationProfile {
     ZK_PRESENTATION_PROFILE_UNSPECIFIED = 0i32,
-    ZK_PRESENTATION_PROFILE_PRIVATE_CLAIM_V1 = 1i32,
+    ZK_PRESENTATION_PROFILE_CREDENTIAL_SUBJECT_CLAIM_V1 = 1i32,
     ZK_PRESENTATION_PROFILE_PRIVATE_PERSONA_CLAIM_V1 = 2i32,
-    ZK_PRESENTATION_PROFILE_PUBLIC_PERSONA_CLAIM_V1 = 3i32,
+    ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PRIVATE_PERSONA_V1 = 4i32,
+    ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PUBLIC_PERSONA_V1 = 5i32,
 }
 impl ZkPresentationProfile {
     ///Idiomatic alias for [`Self::ZK_PRESENTATION_PROFILE_UNSPECIFIED`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const Unspecified: Self = Self::ZK_PRESENTATION_PROFILE_UNSPECIFIED;
-    ///Idiomatic alias for [`Self::ZK_PRESENTATION_PROFILE_PRIVATE_CLAIM_V1`]; `Debug` prints the variant name.
+    ///Idiomatic alias for [`Self::ZK_PRESENTATION_PROFILE_CREDENTIAL_SUBJECT_CLAIM_V1`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
-    pub const PrivateClaimV1: Self = Self::ZK_PRESENTATION_PROFILE_PRIVATE_CLAIM_V1;
+    pub const CredentialSubjectClaimV1: Self =
+        Self::ZK_PRESENTATION_PROFILE_CREDENTIAL_SUBJECT_CLAIM_V1;
     ///Idiomatic alias for [`Self::ZK_PRESENTATION_PROFILE_PRIVATE_PERSONA_CLAIM_V1`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const PrivatePersonaClaimV1: Self = Self::ZK_PRESENTATION_PROFILE_PRIVATE_PERSONA_CLAIM_V1;
-    ///Idiomatic alias for [`Self::ZK_PRESENTATION_PROFILE_PUBLIC_PERSONA_CLAIM_V1`]; `Debug` prints the variant name.
+    ///Idiomatic alias for [`Self::ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PRIVATE_PERSONA_V1`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
-    pub const PublicPersonaClaimV1: Self = Self::ZK_PRESENTATION_PROFILE_PUBLIC_PERSONA_CLAIM_V1;
+    pub const CommonCredentialRootPrivatePersonaV1: Self =
+        Self::ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PRIVATE_PERSONA_V1;
+    ///Idiomatic alias for [`Self::ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PUBLIC_PERSONA_V1`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const CommonCredentialRootPublicPersonaV1: Self =
+        Self::ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PUBLIC_PERSONA_V1;
 }
 impl ::core::default::Default for ZkPresentationProfile {
     fn default() -> Self {
@@ -4123,13 +4147,18 @@ impl ::buffa::Enumeration for ZkPresentationProfile {
     fn from_i32(value: i32) -> ::core::option::Option<Self> {
         match value {
             0i32 => ::core::option::Option::Some(Self::ZK_PRESENTATION_PROFILE_UNSPECIFIED),
-            1i32 => ::core::option::Option::Some(Self::ZK_PRESENTATION_PROFILE_PRIVATE_CLAIM_V1),
+            1i32 => ::core::option::Option::Some(
+                Self::ZK_PRESENTATION_PROFILE_CREDENTIAL_SUBJECT_CLAIM_V1,
+            ),
             2i32 => {
                 ::core::option::Option::Some(Self::ZK_PRESENTATION_PROFILE_PRIVATE_PERSONA_CLAIM_V1)
             }
-            3i32 => {
-                ::core::option::Option::Some(Self::ZK_PRESENTATION_PROFILE_PUBLIC_PERSONA_CLAIM_V1)
-            }
+            4i32 => ::core::option::Option::Some(
+                Self::ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PRIVATE_PERSONA_V1,
+            ),
+            5i32 => ::core::option::Option::Some(
+                Self::ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PUBLIC_PERSONA_V1,
+            ),
             _ => ::core::option::Option::None,
         }
     }
@@ -4139,14 +4168,17 @@ impl ::buffa::Enumeration for ZkPresentationProfile {
     fn proto_name(&self) -> &'static str {
         match self {
             Self::ZK_PRESENTATION_PROFILE_UNSPECIFIED => "ZK_PRESENTATION_PROFILE_UNSPECIFIED",
-            Self::ZK_PRESENTATION_PROFILE_PRIVATE_CLAIM_V1 => {
-                "ZK_PRESENTATION_PROFILE_PRIVATE_CLAIM_V1"
+            Self::ZK_PRESENTATION_PROFILE_CREDENTIAL_SUBJECT_CLAIM_V1 => {
+                "ZK_PRESENTATION_PROFILE_CREDENTIAL_SUBJECT_CLAIM_V1"
             }
             Self::ZK_PRESENTATION_PROFILE_PRIVATE_PERSONA_CLAIM_V1 => {
                 "ZK_PRESENTATION_PROFILE_PRIVATE_PERSONA_CLAIM_V1"
             }
-            Self::ZK_PRESENTATION_PROFILE_PUBLIC_PERSONA_CLAIM_V1 => {
-                "ZK_PRESENTATION_PROFILE_PUBLIC_PERSONA_CLAIM_V1"
+            Self::ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PRIVATE_PERSONA_V1 => {
+                "ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PRIVATE_PERSONA_V1"
+            }
+            Self::ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PUBLIC_PERSONA_V1 => {
+                "ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PUBLIC_PERSONA_V1"
             }
         }
     }
@@ -4155,14 +4187,21 @@ impl ::buffa::Enumeration for ZkPresentationProfile {
             "ZK_PRESENTATION_PROFILE_UNSPECIFIED" => {
                 ::core::option::Option::Some(Self::ZK_PRESENTATION_PROFILE_UNSPECIFIED)
             }
-            "ZK_PRESENTATION_PROFILE_PRIVATE_CLAIM_V1" => {
-                ::core::option::Option::Some(Self::ZK_PRESENTATION_PROFILE_PRIVATE_CLAIM_V1)
-            }
+            "ZK_PRESENTATION_PROFILE_CREDENTIAL_SUBJECT_CLAIM_V1" => ::core::option::Option::Some(
+                Self::ZK_PRESENTATION_PROFILE_CREDENTIAL_SUBJECT_CLAIM_V1,
+            ),
             "ZK_PRESENTATION_PROFILE_PRIVATE_PERSONA_CLAIM_V1" => {
                 ::core::option::Option::Some(Self::ZK_PRESENTATION_PROFILE_PRIVATE_PERSONA_CLAIM_V1)
             }
-            "ZK_PRESENTATION_PROFILE_PUBLIC_PERSONA_CLAIM_V1" => {
-                ::core::option::Option::Some(Self::ZK_PRESENTATION_PROFILE_PUBLIC_PERSONA_CLAIM_V1)
+            "ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PRIVATE_PERSONA_V1" => {
+                ::core::option::Option::Some(
+                    Self::ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PRIVATE_PERSONA_V1,
+                )
+            }
+            "ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PUBLIC_PERSONA_V1" => {
+                ::core::option::Option::Some(
+                    Self::ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PUBLIC_PERSONA_V1,
+                )
             }
             _ => ::core::option::Option::None,
         }
@@ -4170,9 +4209,10 @@ impl ::buffa::Enumeration for ZkPresentationProfile {
     fn values() -> &'static [Self] {
         &[
             Self::ZK_PRESENTATION_PROFILE_UNSPECIFIED,
-            Self::ZK_PRESENTATION_PROFILE_PRIVATE_CLAIM_V1,
+            Self::ZK_PRESENTATION_PROFILE_CREDENTIAL_SUBJECT_CLAIM_V1,
             Self::ZK_PRESENTATION_PROFILE_PRIVATE_PERSONA_CLAIM_V1,
-            Self::ZK_PRESENTATION_PROFILE_PUBLIC_PERSONA_CLAIM_V1,
+            Self::ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PRIVATE_PERSONA_V1,
+            Self::ZK_PRESENTATION_PROFILE_COMMON_CREDENTIAL_ROOT_PUBLIC_PERSONA_V1,
         ]
     }
 }
@@ -4186,6 +4226,15 @@ pub enum ZkPresentationStageKind {
     ZK_PRESENTATION_STAGE_KIND_CREDENTIAL_ENVELOPE = 2i32,
     ZK_PRESENTATION_STAGE_KIND_CREDENTIAL_ROOT = 3i32,
     ZK_PRESENTATION_STAGE_KIND_CLAIM = 4i32,
+    ZK_PRESENTATION_STAGE_KIND_ROOT_ATTESTATION = 5i32,
+    ZK_PRESENTATION_STAGE_KIND_ROOT_STATUS = 6i32,
+    ZK_PRESENTATION_STAGE_KIND_LINEAGE_0 = 7i32,
+    ZK_PRESENTATION_STAGE_KIND_LINEAGE_1 = 8i32,
+    ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_0 = 9i32,
+    ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_1 = 10i32,
+    ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_0 = 11i32,
+    ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_1 = 12i32,
+    ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS = 13i32,
 }
 impl ZkPresentationStageKind {
     ///Idiomatic alias for [`Self::ZK_PRESENTATION_STAGE_KIND_UNSPECIFIED`]; `Debug` prints the variant name.
@@ -4203,6 +4252,36 @@ impl ZkPresentationStageKind {
     ///Idiomatic alias for [`Self::ZK_PRESENTATION_STAGE_KIND_CLAIM`]; `Debug` prints the variant name.
     #[allow(non_upper_case_globals)]
     pub const Claim: Self = Self::ZK_PRESENTATION_STAGE_KIND_CLAIM;
+    ///Idiomatic alias for [`Self::ZK_PRESENTATION_STAGE_KIND_ROOT_ATTESTATION`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const RootAttestation: Self = Self::ZK_PRESENTATION_STAGE_KIND_ROOT_ATTESTATION;
+    ///Idiomatic alias for [`Self::ZK_PRESENTATION_STAGE_KIND_ROOT_STATUS`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const RootStatus: Self = Self::ZK_PRESENTATION_STAGE_KIND_ROOT_STATUS;
+    ///Idiomatic alias for [`Self::ZK_PRESENTATION_STAGE_KIND_LINEAGE_0`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const Lineage0: Self = Self::ZK_PRESENTATION_STAGE_KIND_LINEAGE_0;
+    ///Idiomatic alias for [`Self::ZK_PRESENTATION_STAGE_KIND_LINEAGE_1`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const Lineage1: Self = Self::ZK_PRESENTATION_STAGE_KIND_LINEAGE_1;
+    ///Idiomatic alias for [`Self::ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_0`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const SelectedClaim0: Self = Self::ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_0;
+    ///Idiomatic alias for [`Self::ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_1`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const SelectedClaim1: Self = Self::ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_1;
+    ///Idiomatic alias for [`Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_0`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const IssuerCredentialStatus0: Self =
+        Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_0;
+    ///Idiomatic alias for [`Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_1`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const IssuerCredentialStatus1: Self =
+        Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_1;
+    ///Idiomatic alias for [`Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS`]; `Debug` prints the variant name.
+    #[allow(non_upper_case_globals)]
+    pub const IssuerCredentialStatus: Self =
+        Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS;
 }
 impl ::core::default::Default for ZkPresentationStageKind {
     fn default() -> Self {
@@ -4282,6 +4361,23 @@ impl ::buffa::Enumeration for ZkPresentationStageKind {
             }
             3i32 => ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_CREDENTIAL_ROOT),
             4i32 => ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_CLAIM),
+            5i32 => ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_ROOT_ATTESTATION),
+            6i32 => ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_ROOT_STATUS),
+            7i32 => ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_LINEAGE_0),
+            8i32 => ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_LINEAGE_1),
+            9i32 => ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_0),
+            10i32 => {
+                ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_1)
+            }
+            11i32 => ::core::option::Option::Some(
+                Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_0,
+            ),
+            12i32 => ::core::option::Option::Some(
+                Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_1,
+            ),
+            13i32 => ::core::option::Option::Some(
+                Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS,
+            ),
             _ => ::core::option::Option::None,
         }
     }
@@ -4301,6 +4397,29 @@ impl ::buffa::Enumeration for ZkPresentationStageKind {
                 "ZK_PRESENTATION_STAGE_KIND_CREDENTIAL_ROOT"
             }
             Self::ZK_PRESENTATION_STAGE_KIND_CLAIM => "ZK_PRESENTATION_STAGE_KIND_CLAIM",
+            Self::ZK_PRESENTATION_STAGE_KIND_ROOT_ATTESTATION => {
+                "ZK_PRESENTATION_STAGE_KIND_ROOT_ATTESTATION"
+            }
+            Self::ZK_PRESENTATION_STAGE_KIND_ROOT_STATUS => {
+                "ZK_PRESENTATION_STAGE_KIND_ROOT_STATUS"
+            }
+            Self::ZK_PRESENTATION_STAGE_KIND_LINEAGE_0 => "ZK_PRESENTATION_STAGE_KIND_LINEAGE_0",
+            Self::ZK_PRESENTATION_STAGE_KIND_LINEAGE_1 => "ZK_PRESENTATION_STAGE_KIND_LINEAGE_1",
+            Self::ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_0 => {
+                "ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_0"
+            }
+            Self::ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_1 => {
+                "ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_1"
+            }
+            Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_0 => {
+                "ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_0"
+            }
+            Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_1 => {
+                "ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_1"
+            }
+            Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS => {
+                "ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS"
+            }
         }
     }
     fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
@@ -4320,6 +4439,37 @@ impl ::buffa::Enumeration for ZkPresentationStageKind {
             "ZK_PRESENTATION_STAGE_KIND_CLAIM" => {
                 ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_CLAIM)
             }
+            "ZK_PRESENTATION_STAGE_KIND_ROOT_ATTESTATION" => {
+                ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_ROOT_ATTESTATION)
+            }
+            "ZK_PRESENTATION_STAGE_KIND_ROOT_STATUS" => {
+                ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_ROOT_STATUS)
+            }
+            "ZK_PRESENTATION_STAGE_KIND_LINEAGE_0" => {
+                ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_LINEAGE_0)
+            }
+            "ZK_PRESENTATION_STAGE_KIND_LINEAGE_1" => {
+                ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_LINEAGE_1)
+            }
+            "ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_0" => {
+                ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_0)
+            }
+            "ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_1" => {
+                ::core::option::Option::Some(Self::ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_1)
+            }
+            "ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_0" => {
+                ::core::option::Option::Some(
+                    Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_0,
+                )
+            }
+            "ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_1" => {
+                ::core::option::Option::Some(
+                    Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_1,
+                )
+            }
+            "ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS" => ::core::option::Option::Some(
+                Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS,
+            ),
             _ => ::core::option::Option::None,
         }
     }
@@ -4330,6 +4480,15 @@ impl ::buffa::Enumeration for ZkPresentationStageKind {
             Self::ZK_PRESENTATION_STAGE_KIND_CREDENTIAL_ENVELOPE,
             Self::ZK_PRESENTATION_STAGE_KIND_CREDENTIAL_ROOT,
             Self::ZK_PRESENTATION_STAGE_KIND_CLAIM,
+            Self::ZK_PRESENTATION_STAGE_KIND_ROOT_ATTESTATION,
+            Self::ZK_PRESENTATION_STAGE_KIND_ROOT_STATUS,
+            Self::ZK_PRESENTATION_STAGE_KIND_LINEAGE_0,
+            Self::ZK_PRESENTATION_STAGE_KIND_LINEAGE_1,
+            Self::ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_0,
+            Self::ZK_PRESENTATION_STAGE_KIND_SELECTED_CLAIM_1,
+            Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_0,
+            Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS_1,
+            Self::ZK_PRESENTATION_STAGE_KIND_ISSUER_CREDENTIAL_STATUS,
         ]
     }
 }
@@ -4473,6 +4632,11 @@ pub struct PresentationValue {
     // .field("json", &"<redacted>")
     // ::zeroize::Zeroize::zeroize(&mut self.json);
     // json: ::zeroize::Zeroizing<::buffa::alloc::vec::Vec<u8>>
+    // ReallyMe oneof hardening for zk_prepared_persona is implemented by the generated
+    // oneof enum's Debug and Drop impls and its zeroizing ProtoJSON staging:
+    // .field("zk_prepared_persona", &"<redacted>")
+    // ::zeroize::Zeroize::zeroize(&mut self.zk_prepared_persona);
+    // zk_prepared_persona: ::zeroize::Zeroizing<::buffa::alloc::vec::Vec<u8>>
     #[serde(flatten)]
     pub kind: ::core::option::Option<__buffa::oneof::presentation_value::Kind>,
     #[serde(skip)]
@@ -4534,6 +4698,9 @@ impl ::buffa::Message for PresentationValue {
                     size +=
                         1u64 + ::buffa::encoding::varint_len(inner as u64) as u64 + inner as u64;
                 }
+                __buffa::oneof::presentation_value::Kind::ZkPreparedPersona(x) => {
+                    size += 1u64 + ::buffa::types::bytes_encoded_len(x) as u64;
+                }
             }
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
@@ -4557,6 +4724,9 @@ impl ::buffa::Message for PresentationValue {
                         buf,
                     );
                     x.write_to(__cache, buf);
+                }
+                __buffa::oneof::presentation_value::Kind::ZkPreparedPersona(x) => {
+                    ::buffa::types::put_shared_bytes_field(4u32, x, buf);
                 }
             }
         }
@@ -4612,6 +4782,17 @@ impl ::buffa::Message for PresentationValue {
                             ::buffa::alloc::boxed::Box::new(val),
                         ));
                 }
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                self.kind = ::core::option::Option::Some(
+                    __buffa::oneof::presentation_value::Kind::ZkPreparedPersona(
+                        ::buffa::types::decode_bytes(buf)?,
+                    ),
+                );
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -4745,6 +4926,50 @@ impl<'de> ::serde::Deserialize<'de> for PresentationValue {
                                 __oneof_kind = Some(__buffa::oneof::presentation_value::Kind::Zk(
                                     ::buffa::alloc::boxed::Box::new(v),
                                 ));
+                            }
+                        }
+                        "zkPreparedPersona" | "zk_prepared_persona" => {
+                            struct _DeserSeed;
+                            impl<'de> ::serde::de::DeserializeSeed<'de> for _DeserSeed {
+                                type Value = ::buffa::alloc::vec::Vec<u8>;
+                                fn deserialize<D: ::serde::Deserializer<'de>>(
+                                    self,
+                                    d: D,
+                                ) -> ::core::result::Result<::buffa::alloc::vec::Vec<u8>, D::Error>
+                                {
+                                    ::buffa::json_helpers::bytes::deserialize(d)
+                                }
+                            }
+                            struct _ReallyMeSensitiveSeed;
+                            impl<'de> serde::de::DeserializeSeed<'de> for _ReallyMeSensitiveSeed {
+                                type Value = ::zeroize::Zeroizing<::buffa::alloc::vec::Vec<u8>>;
+                                fn deserialize<D: serde::Deserializer<'de>>(
+                                    self,
+                                    d: D,
+                                ) -> ::core::result::Result<Self::Value, D::Error>
+                                {
+                                    ::buffa::json_helpers::bytes::deserialize(d)
+                                        .map(::zeroize::Zeroizing::new)
+                                }
+                            }
+                            let v: ::core::option::Option<
+                                ::zeroize::Zeroizing<::buffa::alloc::vec::Vec<u8>>,
+                            > = map.next_value_seed(
+                                ::buffa::json_helpers::NullableDeserializeSeed(
+                                    _ReallyMeSensitiveSeed,
+                                ),
+                            )?;
+                            if let Some(mut v) = v {
+                                if __oneof_kind.is_some() {
+                                    return Err(::serde::de::Error::custom(
+                                        "multiple oneof fields set for 'kind'",
+                                    ));
+                                }
+                                __oneof_kind = Some(
+                                    __buffa::oneof::presentation_value::Kind::ZkPreparedPersona(
+                                        ::core::mem::take(&mut *v),
+                                    ),
+                                );
                             }
                         }
                         _ => {
@@ -6692,6 +6917,557 @@ pub const __TRANSACTION_DATA_JSON_ANY: ::buffa::type_registry::JsonAnyEntry =
         from_json: ::buffa::type_registry::any_from_json::<TransactionData>,
         is_wkt: false,
     };
+/// VerifierInfo is a profile-defined attestation carried by verifier_info.
+/// Its data is JSON because OpenID4VP permits either an object or a string.
+/// Consumers must authenticate and bind it before using it for authorization.
+/// VerifierInfoCredentialIds preserves the distinction between omission and an
+/// explicitly empty credential_ids list, which OpenID4VP rejects.
+#[derive(Clone, PartialEq, Default, ::serde::Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct VerifierInfoCredentialIds {
+    /// Field 1: `values`
+    #[serde(
+        rename = "values",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub values: ::buffa::alloc::vec::Vec<::buffa::alloc::string::String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for VerifierInfoCredentialIds {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("VerifierInfoCredentialIds")
+            .field("values", &"<redacted>")
+            .finish()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for VerifierInfoCredentialIds {
+    fn deserialize<D>(deserializer: D) -> ::core::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        fn deserialize_zeroizing_string<'de, D>(
+            deserializer: D,
+        ) -> ::core::result::Result<::zeroize::Zeroizing<::buffa::alloc::string::String>, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::buffa::json_helpers::proto_string::deserialize(deserializer)
+                .map(::zeroize::Zeroizing::new)
+        }
+
+        #[derive(::serde::Deserialize)]
+        #[serde(transparent)]
+        struct ValuesSensitiveValue {
+            #[serde(deserialize_with = "deserialize_zeroizing_string")]
+            values: ::zeroize::Zeroizing<::buffa::alloc::string::String>,
+        }
+
+        #[derive(Default, ::serde::Deserialize)]
+        #[serde(default, deny_unknown_fields)]
+        struct Wire {
+            #[serde(
+                rename = "values",
+                skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+                deserialize_with = "::buffa::json_helpers::null_as_default"
+            )]
+            values: ::buffa::alloc::vec::Vec<ValuesSensitiveValue>,
+        }
+
+        let mut wire = Wire::deserialize(deserializer)?;
+        Ok(Self {
+            values: ::core::mem::take(&mut wire.values)
+                .into_iter()
+                .map(|mut value| ::core::mem::take(&mut *value.values))
+                .collect(),
+            __buffa_unknown_fields: Default::default(),
+        })
+    }
+}
+impl ::core::ops::Drop for VerifierInfoCredentialIds {
+    fn drop(&mut self) {
+        ::zeroize::Zeroize::zeroize(&mut self.values);
+        __reallyme_zeroize_unknown_fields(&mut self.__buffa_unknown_fields);
+    }
+}
+impl VerifierInfoCredentialIds {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str =
+        "type.googleapis.com/reallyme.openid4vp.v1.VerifierInfoCredentialIds";
+}
+::buffa::impl_default_instance!(VerifierInfoCredentialIds);
+impl ::buffa::MessageName for VerifierInfoCredentialIds {
+    const PACKAGE: &'static str = "reallyme.openid4vp.v1";
+    const NAME: &'static str = "VerifierInfoCredentialIds";
+    const FULL_NAME: &'static str = "reallyme.openid4vp.v1.VerifierInfoCredentialIds";
+    const TYPE_URL: &'static str =
+        "type.googleapis.com/reallyme.openid4vp.v1.VerifierInfoCredentialIds";
+}
+impl ::buffa::Message for VerifierInfoCredentialIds {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        for v in &self.values {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(&self, _cache: &mut ::buffa::SizeCache, buf: &mut impl ::buffa::EncodeSink) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        for v in &self.values {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __elem = ::buffa::types::decode_string(buf)?;
+                ctx.register_element_memory(::buffa::__private::element_footprint(&__elem))?;
+                self.values.push(__elem);
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        ::zeroize::Zeroize::zeroize(&mut self.values);
+        __reallyme_zeroize_unknown_fields(&mut self.__buffa_unknown_fields);
+    }
+}
+impl ::buffa::ExtensionSet for VerifierInfoCredentialIds {
+    const PROTO_FQN: &'static str = "reallyme.openid4vp.v1.VerifierInfoCredentialIds";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for VerifierInfoCredentialIds {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __VERIFIER_INFO_CREDENTIAL_IDS_JSON_ANY: ::buffa::type_registry::JsonAnyEntry =
+    ::buffa::type_registry::JsonAnyEntry {
+        type_url: "type.googleapis.com/reallyme.openid4vp.v1.VerifierInfoCredentialIds",
+        to_json: ::buffa::type_registry::any_to_json::<VerifierInfoCredentialIds>,
+        from_json: ::buffa::type_registry::any_from_json::<VerifierInfoCredentialIds>,
+        is_wkt: false,
+    };
+/// VerifierInfo carries one untrusted attestation. Authorization requires
+/// format-specific proof, issuer trust, and requester binding checks.
+#[derive(Clone, PartialEq, Default, ::serde::Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct VerifierInfo {
+    /// Field 1: `format`
+    #[serde(
+        rename = "format",
+        with = "::buffa::json_helpers::proto_string",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+    )]
+    pub format: ::buffa::alloc::string::String,
+    /// UTF-8 JSON object or string; the codec enforces type and size bounds.
+    ///
+    /// Field 2: `data_json`
+    #[serde(
+        rename = "dataJson",
+        alias = "data_json",
+        with = "::buffa::json_helpers::bytes",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_bytes"
+    )]
+    pub data_json: ::buffa::alloc::vec::Vec<u8>,
+    /// Field 3: `credential_ids`
+    #[serde(
+        rename = "credentialIds",
+        alias = "credential_ids",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub credential_ids: ::buffa::MessageField<
+        VerifierInfoCredentialIds,
+        ::buffa::Inline<VerifierInfoCredentialIds>,
+    >,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for VerifierInfo {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("VerifierInfo")
+            .field("format", &self.format)
+            .field("data_json", &"<redacted>")
+            .field("credential_ids", &self.credential_ids)
+            .finish()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for VerifierInfo {
+    fn deserialize<D>(deserializer: D) -> ::core::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        fn deserialize_zeroizing_bytes<'de, D>(
+            deserializer: D,
+        ) -> ::core::result::Result<::zeroize::Zeroizing<::buffa::alloc::vec::Vec<u8>>, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::buffa::json_helpers::bytes::deserialize(deserializer).map(::zeroize::Zeroizing::new)
+        }
+
+        #[derive(Default, ::serde::Deserialize)]
+        #[serde(default, deny_unknown_fields)]
+        struct Wire {
+            #[serde(
+                rename = "format",
+                with = "::buffa::json_helpers::proto_string",
+                skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+            )]
+            format: ::buffa::alloc::string::String,
+            #[serde(
+                rename = "dataJson",
+                alias = "data_json",
+                deserialize_with = "deserialize_zeroizing_bytes",
+                skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_bytes"
+            )]
+            data_json: ::zeroize::Zeroizing<::buffa::alloc::vec::Vec<u8>>,
+            #[serde(
+                rename = "credentialIds",
+                alias = "credential_ids",
+                skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+            )]
+            credential_ids: ::buffa::MessageField<
+                VerifierInfoCredentialIds,
+                ::buffa::Inline<VerifierInfoCredentialIds>,
+            >,
+        }
+
+        let mut wire = Wire::deserialize(deserializer)?;
+        Ok(Self {
+            format: wire.format,
+            data_json: ::core::mem::take(&mut *wire.data_json),
+            credential_ids: wire.credential_ids,
+            __buffa_unknown_fields: Default::default(),
+        })
+    }
+}
+impl ::core::ops::Drop for VerifierInfo {
+    fn drop(&mut self) {
+        ::zeroize::Zeroize::zeroize(&mut self.data_json);
+        __reallyme_zeroize_unknown_fields(&mut self.__buffa_unknown_fields);
+    }
+}
+impl VerifierInfo {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/reallyme.openid4vp.v1.VerifierInfo";
+}
+::buffa::impl_default_instance!(VerifierInfo);
+impl ::buffa::MessageName for VerifierInfo {
+    const PACKAGE: &'static str = "reallyme.openid4vp.v1";
+    const NAME: &'static str = "VerifierInfo";
+    const FULL_NAME: &'static str = "reallyme.openid4vp.v1.VerifierInfo";
+    const TYPE_URL: &'static str = "type.googleapis.com/reallyme.openid4vp.v1.VerifierInfo";
+}
+impl ::buffa::Message for VerifierInfo {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if !self.format.is_empty() {
+            size += 1u64 + ::buffa::types::string_encoded_len(&self.format) as u64;
+        }
+        if !self.data_json.is_empty() {
+            size += 1u64 + ::buffa::types::bytes_encoded_len(&self.data_json) as u64;
+        }
+        if self.credential_ids.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.credential_ids.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size +=
+                1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64 + inner_size as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(&self, __cache: &mut ::buffa::SizeCache, buf: &mut impl ::buffa::EncodeSink) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if !self.format.is_empty() {
+            ::buffa::types::put_string_field(1u32, &self.format, buf);
+        }
+        if !self.data_json.is_empty() {
+            ::buffa::types::put_shared_bytes_field(2u32, &self.data_json, buf);
+        }
+        if self.credential_ids.is_set() {
+            ::buffa::types::put_len_delimited_header(3u32, u64::from(__cache.consume_next()), buf);
+            self.credential_ids.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(&mut self.format, buf)?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_bytes(&mut self.data_json, buf)?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.credential_ids.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.format.clear();
+        ::zeroize::Zeroize::zeroize(&mut self.data_json);
+        self.credential_ids = ::buffa::MessageField::none();
+        __reallyme_zeroize_unknown_fields(&mut self.__buffa_unknown_fields);
+    }
+}
+impl ::buffa::ExtensionSet for VerifierInfo {
+    const PROTO_FQN: &'static str = "reallyme.openid4vp.v1.VerifierInfo";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for VerifierInfo {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __VERIFIER_INFO_JSON_ANY: ::buffa::type_registry::JsonAnyEntry =
+    ::buffa::type_registry::JsonAnyEntry {
+        type_url: "type.googleapis.com/reallyme.openid4vp.v1.VerifierInfo",
+        to_json: ::buffa::type_registry::any_to_json::<VerifierInfo>,
+        from_json: ::buffa::type_registry::any_from_json::<VerifierInfo>,
+        is_wkt: false,
+    };
+/// VerifierInfoSet preserves a present but empty verifier_info array so the
+/// codec can reject it under the OpenID4VP non-empty-array rule.
+#[derive(Clone, PartialEq, Default, ::serde::Serialize, ::serde::Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct VerifierInfoSet {
+    /// Field 1: `entries`
+    #[serde(
+        rename = "entries",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub entries: ::buffa::alloc::vec::Vec<VerifierInfo>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for VerifierInfoSet {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("VerifierInfoSet")
+            .field("entries", &self.entries)
+            .finish()
+    }
+}
+impl VerifierInfoSet {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/reallyme.openid4vp.v1.VerifierInfoSet";
+}
+::buffa::impl_default_instance!(VerifierInfoSet);
+impl ::buffa::MessageName for VerifierInfoSet {
+    const PACKAGE: &'static str = "reallyme.openid4vp.v1";
+    const NAME: &'static str = "VerifierInfoSet";
+    const FULL_NAME: &'static str = "reallyme.openid4vp.v1.VerifierInfoSet";
+    const TYPE_URL: &'static str = "type.googleapis.com/reallyme.openid4vp.v1.VerifierInfoSet";
+}
+impl ::buffa::Message for VerifierInfoSet {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// Accumulates in `u64` (which cannot overflow for in-memory
+    /// data) and saturates to `u32` at return, so a message whose
+    /// encoded size exceeds the 2 GiB protobuf limit yields a value
+    /// above [`::buffa::MAX_MESSAGE_BYTES`] that the encode entry
+    /// points reject, never a silently wrapped size.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        for v in &self.entries {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size +=
+                1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64 + inner_size as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    fn write_to(&self, __cache: &mut ::buffa::SizeCache, buf: &mut impl ::buffa::EncodeSink) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        for v in &self.entries {
+            ::buffa::types::put_len_delimited_header(1u32, u64::from(__cache.consume_next()), buf);
+            v.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ctx.register_element_memory(::buffa::__private::element_footprint(&elem))?;
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.entries.push(elem);
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.entries.clear();
+        __reallyme_zeroize_unknown_fields(&mut self.__buffa_unknown_fields);
+    }
+}
+impl ::buffa::ExtensionSet for VerifierInfoSet {
+    const PROTO_FQN: &'static str = "reallyme.openid4vp.v1.VerifierInfoSet";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for VerifierInfoSet {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __VERIFIER_INFO_SET_JSON_ANY: ::buffa::type_registry::JsonAnyEntry =
+    ::buffa::type_registry::JsonAnyEntry {
+        type_url: "type.googleapis.com/reallyme.openid4vp.v1.VerifierInfoSet",
+        to_json: ::buffa::type_registry::any_to_json::<VerifierInfoSet>,
+        from_json: ::buffa::type_registry::any_from_json::<VerifierInfoSet>,
+        is_wkt: false,
+    };
 /// AuthorizationRequest is the final OpenID4VP request object projection.
 #[derive(Clone, PartialEq, Default, ::serde::Serialize)]
 #[serde(default, deny_unknown_fields)]
@@ -6825,6 +7601,15 @@ pub struct AuthorizationRequest {
         skip_serializing_if = "::core::option::Option::is_none"
     )]
     pub client_metadata_uri: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Signed Request Object attestations; never an authorization receipt by itself.
+    ///
+    /// Field 18: `verifier_info`
+    #[serde(
+        rename = "verifierInfo",
+        alias = "verifier_info",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub verifier_info: ::buffa::MessageField<VerifierInfoSet, ::buffa::Inline<VerifierInfoSet>>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -6849,6 +7634,7 @@ impl ::core::fmt::Debug for AuthorizationRequest {
             .field("iat", &self.iat)
             .field("exp", &self.exp)
             .field("client_metadata_uri", &"<redacted>")
+            .field("verifier_info", &self.verifier_info)
             .finish()
     }
 }
@@ -7040,6 +7826,12 @@ impl<'de> ::serde::Deserialize<'de> for AuthorizationRequest {
                 skip_serializing_if = "::core::option::Option::is_none"
             )]
             client_metadata_uri: ::core::option::Option<ClientMetadataUriSensitiveValue>,
+            #[serde(
+                rename = "verifierInfo",
+                alias = "verifier_info",
+                skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+            )]
+            verifier_info: ::buffa::MessageField<VerifierInfoSet, ::buffa::Inline<VerifierInfoSet>>,
         }
 
         let mut wire = Wire::deserialize(deserializer)?;
@@ -7085,6 +7877,7 @@ impl<'de> ::serde::Deserialize<'de> for AuthorizationRequest {
                 .client_metadata_uri
                 .take()
                 .map(|mut value| ::core::mem::take(&mut *value.client_metadata_uri)),
+            verifier_info: wire.verifier_info,
             __buffa_unknown_fields: Default::default(),
         })
     }
@@ -7269,6 +8062,13 @@ impl ::buffa::Message for AuthorizationRequest {
         if let Some(ref v) = self.client_metadata_uri {
             size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if self.verifier_info.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.verifier_info.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size +=
+                2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64 + inner_size as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -7331,6 +8131,10 @@ impl ::buffa::Message for AuthorizationRequest {
         }
         if let Some(ref v) = self.client_metadata_uri {
             ::buffa::types::put_string_field(17u32, v, buf);
+        }
+        if self.verifier_info.is_set() {
+            ::buffa::types::put_len_delimited_header(18u32, u64::from(__cache.consume_next()), buf);
+            self.verifier_info.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -7493,6 +8297,17 @@ impl ::buffa::Message for AuthorizationRequest {
                     buf,
                 )?;
             }
+            18u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.verifier_info.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -7524,6 +8339,7 @@ impl ::buffa::Message for AuthorizationRequest {
         self.exp = ::core::option::Option::None;
         ::zeroize::Zeroize::zeroize(&mut self.client_metadata_uri);
         self.client_metadata_uri = ::core::option::Option::None;
+        self.verifier_info = ::buffa::MessageField::none();
         __reallyme_zeroize_unknown_fields(&mut self.__buffa_unknown_fields);
     }
 }
@@ -8282,6 +9098,18 @@ pub struct RequestBinding {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub transaction_data_bindings: ::buffa::alloc::vec::Vec<TransactionDataBinding>,
+    /// Verifier-owned Authorization Request issued-at timestamp retained with the
+    /// one-time session so request-bound proofs do not depend on response arrival
+    /// time.
+    ///
+    /// Field 9: `request_time_unix`
+    #[serde(
+        rename = "requestTimeUnix",
+        alias = "request_time_unix",
+        with = "::buffa::json_helpers::uint64",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_zero_u64"
+    )]
+    pub request_time_unix: u64,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -8296,6 +9124,7 @@ impl ::core::fmt::Debug for RequestBinding {
             .field("expiry_unix", &self.expiry_unix)
             .field("dc_api_origin", &"<redacted>")
             .field("transaction_data_bindings", &self.transaction_data_bindings)
+            .field("request_time_unix", &self.request_time_unix)
             .finish()
     }
 }
@@ -8382,6 +9211,13 @@ impl<'de> ::serde::Deserialize<'de> for RequestBinding {
                 deserialize_with = "::buffa::json_helpers::null_as_default"
             )]
             transaction_data_bindings: ::buffa::alloc::vec::Vec<TransactionDataBinding>,
+            #[serde(
+                rename = "requestTimeUnix",
+                alias = "request_time_unix",
+                with = "::buffa::json_helpers::uint64",
+                skip_serializing_if = "::buffa::json_helpers::skip_if::is_zero_u64"
+            )]
+            request_time_unix: u64,
         }
 
         let mut wire = Wire::deserialize(deserializer)?;
@@ -8402,6 +9238,7 @@ impl<'de> ::serde::Deserialize<'de> for RequestBinding {
                 .take()
                 .map(|mut value| ::core::mem::take(&mut *value.dc_api_origin)),
             transaction_data_bindings: wire.transaction_data_bindings,
+            request_time_unix: wire.request_time_unix,
             __buffa_unknown_fields: Default::default(),
         })
     }
@@ -8494,6 +9331,9 @@ impl ::buffa::Message for RequestBinding {
             size +=
                 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64 + inner_size as u64;
         }
+        if self.request_time_unix != 0u64 {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(self.request_time_unix) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -8522,6 +9362,9 @@ impl ::buffa::Message for RequestBinding {
         for v in &self.transaction_data_bindings {
             ::buffa::types::put_len_delimited_header(8u32, u64::from(__cache.consume_next()), buf);
             v.write_to(__cache, buf);
+        }
+        if self.request_time_unix != 0u64 {
+            ::buffa::types::put_uint64_field(9u32, self.request_time_unix, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -8601,6 +9444,10 @@ impl ::buffa::Message for RequestBinding {
                 ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
                 self.transaction_data_bindings.push(elem);
             }
+            9u32 => {
+                ::buffa::encoding::check_wire_type(tag, ::buffa::encoding::WireType::Varint)?;
+                self.request_time_unix = ::buffa::types::decode_uint64(buf)?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -8619,6 +9466,7 @@ impl ::buffa::Message for RequestBinding {
         ::zeroize::Zeroize::zeroize(&mut self.dc_api_origin);
         self.dc_api_origin = ::core::option::Option::None;
         self.transaction_data_bindings.clear();
+        self.request_time_unix = 0u64;
         __reallyme_zeroize_unknown_fields(&mut self.__buffa_unknown_fields);
     }
 }

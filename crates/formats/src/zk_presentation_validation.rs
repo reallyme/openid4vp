@@ -1,14 +1,16 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use subtle::{Choice, ConstantTimeEq};
 
 use super::{
-    ZkPresentation, ZkPresentationBinding, ZkPresentationStageKind, MAX_ZK_CIRCUIT_LABEL_BYTES,
-    MAX_ZK_PRESENTATION_DERIVED_CLAIMS, MAX_ZK_PRESENTATION_PROOF_BYTES,
-    MAX_ZK_PRESENTATION_PUBLIC_INPUT_BYTES, MAX_ZK_STATEMENT_BYTES, MAX_ZK_STATEMENT_ID_BYTES,
-    ZK_PRESENTATION_STAGE_COUNT, ZK_PRESENTATION_TYPE,
+    ZkPresentation, ZkPresentationBinding, ZkPresentationProfile, ZkPresentationStageKind,
+    MAX_ZK_CIRCUIT_LABEL_BYTES, MAX_ZK_PRESENTATION_DERIVED_CLAIMS,
+    MAX_ZK_PRESENTATION_PROOF_BYTES, MAX_ZK_PRESENTATION_PUBLIC_INPUT_BYTES,
+    MAX_ZK_STATEMENT_BYTES, MAX_ZK_STATEMENT_ID_BYTES,
+    ZK_COMMON_CREDENTIAL_ROOT_PRESENTATION_STAGE_COUNT, ZK_PRESENTATION_STAGE_COUNT,
+    ZK_PRESENTATION_TYPE,
 };
 use crate::report_zk_error::{ZkFormatError, ZkFormatErrorReason};
 
@@ -46,7 +48,7 @@ pub fn validate_zk_presentation_binding(
 /// satisfy before cryptographic verification starts.
 pub fn validate_zk_presentation_shape(presentation: &ZkPresentation) -> Result<(), ZkFormatError> {
     if presentation.type_ != ZK_PRESENTATION_TYPE
-        || presentation.stages.len() != ZK_PRESENTATION_STAGE_COUNT
+        || !valid_stage_count(presentation.profile, presentation.stages.len())
         || presentation.derived_claims.len() > MAX_ZK_PRESENTATION_DERIVED_CLAIMS
         || all_zero(&presentation.binding.nonce_hash)
         || all_zero(&presentation.binding.audience_hash)
@@ -82,8 +84,9 @@ fn validate_derived_claims(presentation: &ZkPresentation) -> Result<(), ZkFormat
 
 fn validate_stages(presentation: &ZkPresentation) -> Result<(), ZkFormatError> {
     for (index, stage) in presentation.stages.iter().enumerate() {
-        let expected_kind = canonical_stage(index).ok_or_else(invalid_encoding)?;
-        let expected_stage_name = stage_name(expected_kind);
+        let expected_kind =
+            canonical_stage(presentation.profile, index).ok_or_else(invalid_encoding)?;
+        let expected_stage_name = stage_name(presentation.profile, expected_kind);
         let circuit_ref = &stage.circuit_ref;
         if stage.stage != expected_kind
             || stage.proof.is_empty()
@@ -103,22 +106,92 @@ fn validate_stages(presentation: &ZkPresentation) -> Result<(), ZkFormatError> {
     Ok(())
 }
 
-const fn canonical_stage(index: usize) -> Option<ZkPresentationStageKind> {
-    match index {
-        0 => Some(ZkPresentationStageKind::Session),
-        1 => Some(ZkPresentationStageKind::CredentialEnvelope),
-        2 => Some(ZkPresentationStageKind::CredentialRoot),
-        3 => Some(ZkPresentationStageKind::Claim),
-        _ => None,
+const fn expected_stage_count(profile: ZkPresentationProfile) -> usize {
+    match profile {
+        ZkPresentationProfile::CredentialSubjectClaimV1
+        | ZkPresentationProfile::PrivatePersonaClaimV1 => ZK_PRESENTATION_STAGE_COUNT,
+        ZkPresentationProfile::CommonCredentialRootPrivatePersonaV1
+        | ZkPresentationProfile::CommonCredentialRootPublicPersonaV1 => {
+            ZK_COMMON_CREDENTIAL_ROOT_PRESENTATION_STAGE_COUNT
+        }
     }
 }
 
-const fn stage_name(stage: ZkPresentationStageKind) -> &'static str {
-    match stage {
-        ZkPresentationStageKind::Session => "session",
-        ZkPresentationStageKind::CredentialEnvelope => "credential_envelope",
-        ZkPresentationStageKind::CredentialRoot => "credential_root",
-        ZkPresentationStageKind::Claim => "claim",
+const fn valid_stage_count(profile: ZkPresentationProfile, count: usize) -> bool {
+    match profile {
+        ZkPresentationProfile::CredentialSubjectClaimV1
+        | ZkPresentationProfile::PrivatePersonaClaimV1 => {
+            // The format parser admits historical four-stage data so the
+            // verifier can return a typed unsupported result. It grants no
+            // claim without the issuer-status fifth proof.
+            count == ZK_PRESENTATION_STAGE_COUNT || count == 4
+        }
+        _ => count == expected_stage_count(profile),
+    }
+}
+
+const fn canonical_stage(
+    profile: ZkPresentationProfile,
+    index: usize,
+) -> Option<ZkPresentationStageKind> {
+    match profile {
+        ZkPresentationProfile::CredentialSubjectClaimV1
+        | ZkPresentationProfile::PrivatePersonaClaimV1 => match index {
+            0 => Some(ZkPresentationStageKind::Session),
+            1 => Some(ZkPresentationStageKind::CredentialEnvelope),
+            2 => Some(ZkPresentationStageKind::CredentialRoot),
+            3 => Some(ZkPresentationStageKind::Claim),
+            4 => Some(ZkPresentationStageKind::IssuerCredentialStatus),
+            _ => None,
+        },
+        ZkPresentationProfile::CommonCredentialRootPrivatePersonaV1
+        | ZkPresentationProfile::CommonCredentialRootPublicPersonaV1 => match index {
+            0 => Some(ZkPresentationStageKind::RootAttestation),
+            1 => Some(ZkPresentationStageKind::RootStatus),
+            2 => Some(ZkPresentationStageKind::Lineage0),
+            3 => Some(ZkPresentationStageKind::Lineage1),
+            4 => Some(ZkPresentationStageKind::SelectedClaim0),
+            5 => Some(ZkPresentationStageKind::SelectedClaim1),
+            6 => Some(ZkPresentationStageKind::Session),
+            7 => Some(ZkPresentationStageKind::IssuerCredentialStatus0),
+            8 => Some(ZkPresentationStageKind::IssuerCredentialStatus1),
+            _ => None,
+        },
+    }
+}
+
+const fn stage_name(
+    profile: ZkPresentationProfile,
+    stage: ZkPresentationStageKind,
+) -> &'static str {
+    match (profile, stage) {
+        (
+            ZkPresentationProfile::CommonCredentialRootPublicPersonaV1,
+            ZkPresentationStageKind::Session,
+        ) => "public_session",
+        (_, ZkPresentationStageKind::Session) => "session",
+        (_, ZkPresentationStageKind::CredentialEnvelope) => "credential_envelope",
+        (_, ZkPresentationStageKind::CredentialRoot) => "credential_root",
+        (_, ZkPresentationStageKind::Claim) => "claim",
+        (_, ZkPresentationStageKind::IssuerCredentialStatus) => "issuer_credential_status",
+        (_, ZkPresentationStageKind::RootAttestation) => "root_attestation",
+        (_, ZkPresentationStageKind::RootStatus) => "root_status",
+        (_, ZkPresentationStageKind::Lineage0 | ZkPresentationStageKind::Lineage1) => "lineage",
+        (
+            ZkPresentationProfile::CommonCredentialRootPrivatePersonaV1
+            | ZkPresentationProfile::CommonCredentialRootPublicPersonaV1,
+            ZkPresentationStageKind::IssuerCredentialStatus0
+            | ZkPresentationStageKind::IssuerCredentialStatus1,
+        ) => "issuer_credential_status",
+        (
+            ZkPresentationProfile::CommonCredentialRootPrivatePersonaV1,
+            ZkPresentationStageKind::SelectedClaim0 | ZkPresentationStageKind::SelectedClaim1,
+        ) => "private_persona_claim",
+        (
+            ZkPresentationProfile::CommonCredentialRootPublicPersonaV1,
+            ZkPresentationStageKind::SelectedClaim0 | ZkPresentationStageKind::SelectedClaim1,
+        ) => "public_persona_claim",
+        _ => "",
     }
 }
 

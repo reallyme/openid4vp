@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -93,8 +93,12 @@ pub(super) fn test_source_for_module(module: &str) -> Option<&'static str> {
         "reallyme_openid4vp_profiles::describe_haip::tests" => Some(include_str!(
             "../../../crates/profiles/src/describe_haip_tests.rs"
         )),
-        "reallyme_openid4vp_proto_codec::verify_codec" => Some(include_str!(
-            "../../../crates/proto-codec/tests/verify_codec.rs"
+        "reallyme_openid4vp_proto_codec::verify_codec" => Some(concat!(
+            include_str!("../../../crates/proto-codec/tests/verify_codec.rs"),
+            include_str!("../../../crates/proto-codec/tests/verify_codec/dc_api.rs")
+        )),
+        "reallyme_openid4vp_proto_codec::verify_codec::multisigned_tests" => Some(include_str!(
+            "../../../crates/proto-codec/tests/verify_codec/multisigned.rs"
         )),
         "reallyme_openid4vp_runtime::build_direct_post_success_response::tests" => Some(
             include_str!("../../../crates/runtime/src/build_direct_post_success_response_tests.rs"),

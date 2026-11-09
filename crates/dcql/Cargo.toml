@@ -1,10 +1,10 @@
-# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+# SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
 [package]
 name = "reallyme-openid4vp-dcql"
-version = "0.1.1"
+version = "0.2.0"
 description = "Digital Credentials Query Language model and evaluation engine."
 edition.workspace = true
 rust-version.workspace = true

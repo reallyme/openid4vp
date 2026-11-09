@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -36,7 +36,10 @@ pub use problem_details::{
     HttpStatusCode, ProblemDetails, ProblemDetailsExt, ProblemInstance, ProblemKind, ProblemTitle,
     ProblemType, PROBLEM_JSON_MEDIA_TYPE,
 };
-pub use request::{AuthorizationRequestObject, RequestUriMethod, ResponseMode, ResponseType};
+pub use request::{
+    AuthorizationRequestObject, RequestUriMethod, ResponseMode, ResponseType, VerifierInfoEntry,
+    MAX_VERIFIER_INFO_DATA_BYTES, MAX_VERIFIER_INFO_ENTRIES,
+};
 pub use response::{
     canonical_authorization_response_bytes, canonical_presentation_json_bytes,
     AuthorizationResponse, PresentationValue, VpToken, MAX_AUTHORIZATION_RESPONSE_JSON_BYTES,

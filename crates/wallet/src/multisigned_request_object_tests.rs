@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -7,7 +7,7 @@
 use reallyme_openid4vp_dc_api::{DcApiErrorReason, JwsJsonGeneral};
 use reallyme_openid4vp_dcql::{CredentialFormat, CredentialQuery, DcqlQuery, QueryId};
 use reallyme_openid4vp_types::{
-    AuthorizationRequestObject, ClientIdentifier, ResponseMode, ResponseType,
+    AuthorizationRequestObject, ClientIdentifier, ResponseMode, ResponseType, VerifierInfoEntry,
 };
 use serde_json::{json, Map as JsonMap};
 
@@ -37,13 +37,17 @@ impl MultiSignedRequestObjectSignatureVerifier for FixtureVerifier {
         _invocation: &crate::WalletInvocationContext,
         _now_unix: u64,
     ) -> Result<VerifiedRequestObject, WalletError> {
-        if !compact_jws.ends_with(".valid") {
+        if !compact_jws.ends_with(".valid") && !compact_jws.ends_with(".payload") {
             return Err(WalletError::new(
                 WalletErrorReason::InvalidRequestObjectSignature,
             ));
         }
+        let mut request = request(protected_client_id.clone());
+        if compact_jws.ends_with(".payload") {
+            request.verifier_info = Some(vec![registration_info()]);
+        }
         Ok(VerifiedRequestObject::new(
-            request(protected_client_id.clone()),
+            request,
             crate::WalletRequestTrustEvidence {
                 client_identifier_binding: Some(crate::VerifiedClientIdentifierBinding::new(
                     protected_client_id.clone(),
@@ -91,6 +95,7 @@ fn request(client_id: ClientIdentifier) -> AuthorizationRequestObject {
         transaction_data: None,
         client_metadata: None,
         client_metadata_uri: None,
+        verifier_info: None,
         expected_origins: Some(vec!["https://rp.example".to_owned()]),
         iss: Some("client".to_owned()),
         aud: Some(vec!["wallet".to_owned()]),
@@ -105,6 +110,31 @@ fn protected(client_id: &str) -> String {
             "alg": "ES256",
             "typ": "oauth-authz-req+jwt",
             "client_id": client_id,
+        }))
+        .expect("test header serializes")
+        .as_slice(),
+    )
+}
+
+fn registration_info() -> VerifierInfoEntry {
+    VerifierInfoEntry::try_new(
+        "registrar_dataset".to_owned(),
+        json!({"identifier": "rp.example"}),
+        None,
+    )
+    .expect("test attestation is structurally valid")
+}
+
+fn protected_with_info(client_id: &str) -> String {
+    reallyme_codec::base64url::bytes_to_base64url(
+        serde_json::to_vec(&json!({
+            "alg": "ES256",
+            "typ": "oauth-authz-req+jwt",
+            "client_id": client_id,
+            "verifier_info": [{
+                "format": "registrar_dataset",
+                "data": {"identifier": "rp.example"}
+            }]
         }))
         .expect("test header serializes")
         .as_slice(),
@@ -139,6 +169,66 @@ fn accepts_when_one_of_multiple_signatures_is_valid() {
     let parsed = parse_general_jws(&body);
     verify_multisigned_request_object(&FixtureVerifier, &parsed, &dc_api_invocation(), 11)
         .expect("one independently valid signature accepts the shared request");
+}
+
+#[test]
+fn projects_verifier_info_only_from_the_accepted_signers_protected_header() {
+    let body = general_jws(json!([
+        {
+            "protected": protected_with_info("decentralized_identifier:did:example:first"),
+            "signature": "invalid"
+        },
+        {
+            "protected": protected("decentralized_identifier:did:example:second"),
+            "signature": "valid"
+        }
+    ]));
+    let accepted = verify_multisigned_request_object(
+        &FixtureVerifier,
+        &parse_general_jws(&body),
+        &dc_api_invocation(),
+        11,
+    )
+    .expect("the second signature is valid");
+    assert!(crate::WalletAuthorizationRequest::request(&accepted)
+        .verifier_info
+        .is_none());
+
+    let body = general_jws(json!([{
+        "protected": protected_with_info("decentralized_identifier:did:example:second"),
+        "signature": "valid"
+    }]));
+    let accepted = verify_multisigned_request_object(
+        &FixtureVerifier,
+        &parse_general_jws(&body),
+        &dc_api_invocation(),
+        11,
+    )
+    .expect("verified header attestation is projected");
+    assert_eq!(
+        crate::WalletAuthorizationRequest::request(&accepted)
+            .verifier_info
+            .as_ref()
+            .and_then(|entries| entries.first())
+            .map(VerifierInfoEntry::format),
+        Some("registrar_dataset")
+    );
+}
+
+#[test]
+fn rejects_verifier_info_in_the_shared_multisigned_payload() {
+    let body = general_jws(json!([{
+        "protected": protected("decentralized_identifier:did:example:verifier"),
+        "signature": "payload"
+    }]));
+    let error = verify_multisigned_request_object(
+        &FixtureVerifier,
+        &parse_general_jws(&body),
+        &dc_api_invocation(),
+        11,
+    )
+    .expect_err("attestation cannot be taken from the shared payload");
+    assert_eq!(error.reason(), WalletErrorReason::InvalidRequestObject);
 }
 
 #[test]

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -333,6 +333,10 @@ fn verifier_error_reasons_round_trip_through_proto() -> Result<(), OpenId4VpProt
         (
             VerifierErrorReason::InvalidCredentialStatus,
             pb::OpenId4VpErrorReason::VerifierInvalidCredentialStatus,
+        ),
+        (
+            VerifierErrorReason::InvalidRootAssuranceStatus,
+            pb::OpenId4VpErrorReason::VerifierInvalidRootAssuranceStatus,
         ),
         (
             VerifierErrorReason::CredentialStatusUnavailable,

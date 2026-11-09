@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -24,7 +24,7 @@ const expected = Object.freeze({
   repository: "reallyme/openid4vp",
   runId: 123,
   releaseSha,
-  releaseVersion: "0.2.1",
+  releaseVersion: "0.2.0",
 });
 const attestation = (overrides = {}) => ({
   schema: "reallyme.openid4vp.crates_preflight.v4",

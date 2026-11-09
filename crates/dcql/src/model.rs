@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -89,6 +89,8 @@ impl CredentialFormat {
     pub const JWT_VC_JSON: &'static str = "jwt_vc_json";
     /// W3C Linked Data Proof VP format identifier.
     pub const LDP_VP: &'static str = "ldp_vp";
+    /// ReallyMe's versioned four-stage ZK presentation format.
+    pub const REALLYME_ZK_V1: &'static str = "reallyme.openid4vp.zk_presentation.v1";
 
     /// Construct a credential format identifier.
     pub fn new(value: String) -> Result<Self, DcqlError> {

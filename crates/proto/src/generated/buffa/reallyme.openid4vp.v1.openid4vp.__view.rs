@@ -90,6 +90,17 @@ impl<'a> ::buffa::MessageView<'a> for PresentationValueView<'a> {
                     );
                 }
             }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.kind = Some(
+                    super::super::__buffa::view::oneof::presentation_value::Kind::ZkPreparedPersona(
+                        ::buffa::types::borrow_bytes(&mut cur)?,
+                    ),
+                );
+            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -114,21 +125,42 @@ impl<'a> ::buffa::MessageView<'a> for PresentationValueView<'a> {
         let _ = __buffa_src;
         ::core::result::Result::Ok(super::super::PresentationValue {
             kind: match self.kind.as_ref() {
-                ::core::option::Option::Some(v) => ::core::option::Option::Some(match v {
-                    super::super::__buffa::view::oneof::presentation_value::Kind::Compact(v) => {
-                        super::super::__buffa::oneof::presentation_value::Kind::Compact(
-                            v.to_string(),
-                        )
-                    }
-                    super::super::__buffa::view::oneof::presentation_value::Kind::Json(v) => {
-                        super::super::__buffa::oneof::presentation_value::Kind::Json((v).to_vec())
-                    }
-                    super::super::__buffa::view::oneof::presentation_value::Kind::Zk(v) => {
-                        super::super::__buffa::oneof::presentation_value::Kind::Zk(
-                            ::buffa::alloc::boxed::Box::new(v.to_owned_from_source(__buffa_src)?),
-                        )
-                    }
-                }),
+                ::core::option::Option::Some(v) => {
+                    ::core::option::Option::Some(
+                        match v {
+                            super::super::__buffa::view::oneof::presentation_value::Kind::Compact(
+                                v,
+                            ) => {
+                                super::super::__buffa::oneof::presentation_value::Kind::Compact(
+                                    v.to_string(),
+                                )
+                            }
+                            super::super::__buffa::view::oneof::presentation_value::Kind::Json(
+                                v,
+                            ) => {
+                                super::super::__buffa::oneof::presentation_value::Kind::Json(
+                                    (v).to_vec(),
+                                )
+                            }
+                            super::super::__buffa::view::oneof::presentation_value::Kind::Zk(
+                                v,
+                            ) => {
+                                super::super::__buffa::oneof::presentation_value::Kind::Zk(
+                                    ::buffa::alloc::boxed::Box::new(
+                                        v.to_owned_from_source(__buffa_src)?,
+                                    ),
+                                )
+                            }
+                            super::super::__buffa::view::oneof::presentation_value::Kind::ZkPreparedPersona(
+                                v,
+                            ) => {
+                                super::super::__buffa::oneof::presentation_value::Kind::ZkPreparedPersona(
+                                    (v).to_vec(),
+                                )
+                            }
+                        },
+                    )
+                }
                 ::core::option::Option::None => ::core::option::Option::None,
             },
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
@@ -157,6 +189,11 @@ impl<'a> ::buffa::ViewEncode<'a> for PresentationValueView<'a> {
                     size +=
                         1u64 + ::buffa::encoding::varint_len(inner as u64) as u64 + inner as u64;
                 }
+                super::super::__buffa::view::oneof::presentation_value::Kind::ZkPreparedPersona(
+                    x,
+                ) => {
+                    size += 1u64 + ::buffa::types::bytes_encoded_len(x) as u64;
+                }
             }
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
@@ -181,6 +218,11 @@ impl<'a> ::buffa::ViewEncode<'a> for PresentationValueView<'a> {
                         buf,
                     );
                     x.write_to(__cache, buf);
+                }
+                super::super::__buffa::view::oneof::presentation_value::Kind::ZkPreparedPersona(
+                    x,
+                ) => {
+                    ::buffa::types::put_shared_bytes_field(4u32, x, buf);
                 }
             }
         }
@@ -215,6 +257,14 @@ impl<'__a> ::serde::Serialize for PresentationValueView<'__a> {
                 }
                 super::super::__buffa::view::oneof::presentation_value::Kind::Zk(v) => {
                     __map.serialize_entry("zk", v)?;
+                }
+                super::super::__buffa::view::oneof::presentation_value::Kind::ZkPreparedPersona(
+                    v,
+                ) => {
+                    __map.serialize_entry(
+                        "zkPreparedPersona",
+                        &::buffa::json_helpers::BytesJson(v),
+                    )?;
                 }
             }
         }
@@ -3027,6 +3077,877 @@ impl ::serde::Serialize for TransactionDataOwnedView {
         ::serde::Serialize::serialize(&self.0, __s)
     }
 }
+/// VerifierInfo is a profile-defined attestation carried by verifier_info.
+/// Its data is JSON because OpenID4VP permits either an object or a string.
+/// Consumers must authenticate and bind it before using it for authorization.
+/// VerifierInfoCredentialIds preserves the distinction between omission and an
+/// explicitly empty credential_ids list, which OpenID4VP rejects.
+#[derive(Clone, Default)]
+pub struct VerifierInfoCredentialIdsView<'a> {
+    /// Field 1: `values`
+    pub values: ::buffa::RepeatedView<'a, &'a str>,
+    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::core::fmt::Debug for VerifierInfoCredentialIdsView<'a> {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.write_str("VerifierInfoCredentialIdsView(<redacted>)")
+    }
+}
+impl<'a> ::buffa::MessageView<'a> for VerifierInfoCredentialIdsView<'a> {
+    type Owned = super::super::VerifierInfoCredentialIds;
+    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
+        <Self as ::buffa::MessageView>::decode_view_ctx(
+            buf,
+            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
+                .with_element_memory(&__elem),
+        )
+    }
+    fn decode_view_with_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+    }
+    #[inline]
+    fn merge_view_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+        let _ = ctx;
+        #[allow(unused_variables)]
+        let view = self;
+        let mut cur = cur;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __elem = ::buffa::types::borrow_str(&mut cur)?;
+                ctx.register_element_memory(::buffa::__private::element_footprint(&__elem))?;
+                view.values.push(__elem);
+            }
+            _ => {
+                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                let span_len = before_tag.len() - cur.len();
+                view.__buffa_unknown_fields
+                    .push_record(before_tag, span_len, ctx)?;
+            }
+        }
+        ::core::result::Result::Ok(cur)
+    }
+    fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::VerifierInfoCredentialIds, ::buffa::DecodeError> {
+        self.to_owned_from_source(None)
+    }
+    #[allow(clippy::useless_conversion, clippy::needless_update)]
+    fn to_owned_from_source(
+        &self,
+        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+    ) -> ::core::result::Result<super::super::VerifierInfoCredentialIds, ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::alloc::string::ToString as _;
+        let _ = __buffa_src;
+        ::core::result::Result::Ok(super::super::VerifierInfoCredentialIds {
+            values: self.values.iter().map(|s| s.to_string()).collect(),
+            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+            ..::core::default::Default::default()
+        })
+    }
+}
+impl<'a> ::buffa::ViewEncode<'a> for VerifierInfoCredentialIdsView<'a> {
+    #[allow(clippy::needless_borrow, clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        for v in &self.values {
+            size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    #[allow(clippy::needless_borrow)]
+    fn write_to(&self, _cache: &mut ::buffa::SizeCache, buf: &mut impl ::buffa::EncodeSink) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        for v in &self.values {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+}
+/// Serializes this view as protobuf JSON.
+///
+/// Implicit-presence fields with default values are omitted, `required`
+/// fields are always emitted, explicit-presence (`optional`) fields are
+/// emitted only when set, bytes fields are base64-encoded, and enum
+/// values are their proto name strings.
+///
+/// This impl uses `serialize_map(None)` because the number of emitted
+/// fields depends on default-omission rules; serializers that require
+/// known map lengths (e.g. `bincode`) will return a runtime error.
+/// Use the owned message type for those formats.
+impl<'__a> ::serde::Serialize for VerifierInfoCredentialIdsView<'__a> {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        use ::serde::ser::SerializeMap as _;
+        let mut __map = __s.serialize_map(::core::option::Option::None)?;
+        if !self.values.is_empty() {
+            __map.serialize_entry("values", &*self.values)?;
+        }
+        __map.end()
+    }
+}
+impl<'a> ::buffa::MessageName for VerifierInfoCredentialIdsView<'a> {
+    const PACKAGE: &'static str = "reallyme.openid4vp.v1";
+    const NAME: &'static str = "VerifierInfoCredentialIds";
+    const FULL_NAME: &'static str = "reallyme.openid4vp.v1.VerifierInfoCredentialIds";
+    const TYPE_URL: &'static str =
+        "type.googleapis.com/reallyme.openid4vp.v1.VerifierInfoCredentialIds";
+}
+::buffa::impl_default_view_instance!(VerifierInfoCredentialIdsView);
+::buffa::impl_view_reborrow!(VerifierInfoCredentialIdsView);
+/** Self-contained, `'static` owned view of a `VerifierInfoCredentialIds` message.
+
+Wraps [`::buffa::OwnedView`]`<`[`VerifierInfoCredentialIdsView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`VerifierInfoCredentialIdsView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+#[derive(Clone)]
+pub struct VerifierInfoCredentialIdsOwnedView(
+    ::buffa::OwnedView<VerifierInfoCredentialIdsView<'static>>,
+);
+impl ::core::fmt::Debug for VerifierInfoCredentialIdsOwnedView {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.write_str("VerifierInfoCredentialIdsOwnedView(<redacted>)")
+    }
+}
+impl VerifierInfoCredentialIdsOwnedView {
+    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+    ///
+    /// The view borrows directly from the buffer's data; the buffer is
+    /// retained inside the returned handle.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+    /// protobuf data.
+    pub fn decode(
+        bytes: ::buffa::bytes::Bytes,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(VerifierInfoCredentialIdsOwnedView(
+            ::buffa::OwnedView::decode(bytes)?,
+        ))
+    }
+    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+    /// max message size).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+    /// exceeds the configured limits.
+    pub fn decode_with_options(
+        bytes: ::buffa::bytes::Bytes,
+        opts: &::buffa::DecodeOptions,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(VerifierInfoCredentialIdsOwnedView(
+            ::buffa::OwnedView::decode_with_options(bytes, opts)?,
+        ))
+    }
+    /// Build from an owned message via an encode → decode round-trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
+    /// message's encoded size exceeds the 2 GiB protobuf limit, or
+    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
+    /// somehow invalid (should not happen for well-formed messages).
+    pub fn from_owned(
+        msg: &super::super::VerifierInfoCredentialIds,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(VerifierInfoCredentialIdsOwnedView(
+            ::buffa::OwnedView::from_owned(msg)?,
+        ))
+    }
+    /// Borrow the full [`VerifierInfoCredentialIdsView`] with its lifetime tied to `&self`.
+    #[must_use]
+    pub fn view(&self) -> &VerifierInfoCredentialIdsView<'_> {
+        self.0.reborrow()
+    }
+    /// Convert to the owned message type.
+    ///
+    /// Infallible: this type's constructors wire-decode their
+    /// buffer, and a view produced by wire decoding always
+    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
+    /// whose contract also governs handles converted from a raw
+    /// [`::buffa::OwnedView`].
+    #[must_use]
+    pub fn to_owned_message(&self) -> super::super::VerifierInfoCredentialIds {
+        self.0.to_owned_message()
+    }
+    /// The underlying bytes buffer.
+    #[must_use]
+    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+        self.0.bytes()
+    }
+    /// Consume the handle, returning the underlying bytes buffer.
+    #[must_use]
+    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+        self.0.into_bytes()
+    }
+    /// Field 1: `values`
+    #[must_use]
+    pub fn values(&self) -> &::buffa::RepeatedView<'_, &'_ str> {
+        &self.0.reborrow().values
+    }
+}
+impl ::core::convert::From<::buffa::OwnedView<VerifierInfoCredentialIdsView<'static>>>
+    for VerifierInfoCredentialIdsOwnedView
+{
+    fn from(inner: ::buffa::OwnedView<VerifierInfoCredentialIdsView<'static>>) -> Self {
+        VerifierInfoCredentialIdsOwnedView(inner)
+    }
+}
+impl ::core::convert::From<VerifierInfoCredentialIdsOwnedView>
+    for ::buffa::OwnedView<VerifierInfoCredentialIdsView<'static>>
+{
+    fn from(wrapper: VerifierInfoCredentialIdsOwnedView) -> Self {
+        wrapper.0
+    }
+}
+impl ::core::convert::AsRef<::buffa::OwnedView<VerifierInfoCredentialIdsView<'static>>>
+    for VerifierInfoCredentialIdsOwnedView
+{
+    fn as_ref(&self) -> &::buffa::OwnedView<VerifierInfoCredentialIdsView<'static>> {
+        &self.0
+    }
+}
+impl ::buffa::HasMessageView for super::super::VerifierInfoCredentialIds {
+    type View<'a> = VerifierInfoCredentialIdsView<'a>;
+    type ViewHandle = VerifierInfoCredentialIdsOwnedView;
+}
+impl ::serde::Serialize for VerifierInfoCredentialIdsOwnedView {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
+/// VerifierInfo carries one untrusted attestation. Authorization requires
+/// format-specific proof, issuer trust, and requester binding checks.
+#[derive(Clone, Default)]
+pub struct VerifierInfoView<'a> {
+    /// Field 1: `format`
+    pub format: &'a str,
+    /// UTF-8 JSON object or string; the codec enforces type and size bounds.
+    ///
+    /// Field 2: `data_json`
+    pub data_json: &'a [u8],
+    /// Field 3: `credential_ids`
+    pub credential_ids:
+        ::buffa::MessageFieldView<super::super::__buffa::view::VerifierInfoCredentialIdsView<'a>>,
+    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::core::fmt::Debug for VerifierInfoView<'a> {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.write_str("VerifierInfoView(<redacted>)")
+    }
+}
+impl<'a> ::buffa::MessageView<'a> for VerifierInfoView<'a> {
+    type Owned = super::super::VerifierInfo;
+    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
+        <Self as ::buffa::MessageView>::decode_view_ctx(
+            buf,
+            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
+                .with_element_memory(&__elem),
+        )
+    }
+    fn decode_view_with_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+    }
+    #[inline]
+    fn merge_view_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+        let _ = ctx;
+        #[allow(unused_variables)]
+        let view = self;
+        let mut cur = cur;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.format = ::buffa::types::borrow_str(&mut cur)?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.data_json = ::buffa::types::borrow_bytes(&mut cur)?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                match view.credential_ids.as_mut() {
+                    Some(existing) => {
+                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
+                    }
+                    None => {
+                        view.credential_ids = ::buffa::MessageFieldView::set(
+                            <super::super::__buffa::view::VerifierInfoCredentialIdsView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
+                    }
+                }
+            }
+            _ => {
+                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                let span_len = before_tag.len() - cur.len();
+                view.__buffa_unknown_fields
+                    .push_record(before_tag, span_len, ctx)?;
+            }
+        }
+        ::core::result::Result::Ok(cur)
+    }
+    fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::VerifierInfo, ::buffa::DecodeError> {
+        self.to_owned_from_source(None)
+    }
+    #[allow(clippy::useless_conversion, clippy::needless_update)]
+    fn to_owned_from_source(
+        &self,
+        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+    ) -> ::core::result::Result<super::super::VerifierInfo, ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::alloc::string::ToString as _;
+        let _ = __buffa_src;
+        ::core::result::Result::Ok(super::super::VerifierInfo {
+            format: self.format.to_string(),
+            data_json: (self.data_json).to_vec(),
+            credential_ids: match self.credential_ids.as_option() {
+                Some(v) => ::buffa::MessageField::<
+                    super::super::VerifierInfoCredentialIds,
+                    ::buffa::Inline<super::super::VerifierInfoCredentialIds>,
+                >::some(v.to_owned_from_source(__buffa_src)?),
+                None => ::buffa::MessageField::none(),
+            },
+            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+            ..::core::default::Default::default()
+        })
+    }
+}
+impl<'a> ::buffa::ViewEncode<'a> for VerifierInfoView<'a> {
+    #[allow(clippy::needless_borrow, clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        if !self.format.is_empty() {
+            size += 1u64 + ::buffa::types::string_encoded_len(&self.format) as u64;
+        }
+        if !self.data_json.is_empty() {
+            size += 1u64 + ::buffa::types::bytes_encoded_len(&self.data_json) as u64;
+        }
+        if self.credential_ids.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.credential_ids.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size +=
+                1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64 + inner_size as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    #[allow(clippy::needless_borrow)]
+    fn write_to(&self, __cache: &mut ::buffa::SizeCache, buf: &mut impl ::buffa::EncodeSink) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if !self.format.is_empty() {
+            ::buffa::types::put_string_field(1u32, &self.format, buf);
+        }
+        if !self.data_json.is_empty() {
+            ::buffa::types::put_shared_bytes_field(2u32, &self.data_json, buf);
+        }
+        if self.credential_ids.is_set() {
+            ::buffa::types::put_len_delimited_header(3u32, u64::from(__cache.consume_next()), buf);
+            self.credential_ids.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+}
+/// Serializes this view as protobuf JSON.
+///
+/// Implicit-presence fields with default values are omitted, `required`
+/// fields are always emitted, explicit-presence (`optional`) fields are
+/// emitted only when set, bytes fields are base64-encoded, and enum
+/// values are their proto name strings.
+///
+/// This impl uses `serialize_map(None)` because the number of emitted
+/// fields depends on default-omission rules; serializers that require
+/// known map lengths (e.g. `bincode`) will return a runtime error.
+/// Use the owned message type for those formats.
+impl<'__a> ::serde::Serialize for VerifierInfoView<'__a> {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        use ::serde::ser::SerializeMap as _;
+        let mut __map = __s.serialize_map(::core::option::Option::None)?;
+        if !::buffa::json_helpers::skip_if::is_empty_str(self.format) {
+            __map.serialize_entry("format", self.format)?;
+        }
+        if !::buffa::json_helpers::skip_if::is_empty_bytes(self.data_json) {
+            __map.serialize_entry(
+                "dataJson",
+                &::buffa::json_helpers::BytesJson(self.data_json),
+            )?;
+        }
+        {
+            if let ::core::option::Option::Some(__v) = self.credential_ids.as_option() {
+                __map.serialize_entry("credentialIds", __v)?;
+            }
+        }
+        __map.end()
+    }
+}
+impl<'a> ::buffa::MessageName for VerifierInfoView<'a> {
+    const PACKAGE: &'static str = "reallyme.openid4vp.v1";
+    const NAME: &'static str = "VerifierInfo";
+    const FULL_NAME: &'static str = "reallyme.openid4vp.v1.VerifierInfo";
+    const TYPE_URL: &'static str = "type.googleapis.com/reallyme.openid4vp.v1.VerifierInfo";
+}
+::buffa::impl_default_view_instance!(VerifierInfoView);
+::buffa::impl_view_reborrow!(VerifierInfoView);
+/** Self-contained, `'static` owned view of a `VerifierInfo` message.
+
+Wraps [`::buffa::OwnedView`]`<`[`VerifierInfoView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`VerifierInfoView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+#[derive(Clone)]
+pub struct VerifierInfoOwnedView(::buffa::OwnedView<VerifierInfoView<'static>>);
+impl ::core::fmt::Debug for VerifierInfoOwnedView {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.write_str("VerifierInfoOwnedView(<redacted>)")
+    }
+}
+impl VerifierInfoOwnedView {
+    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+    ///
+    /// The view borrows directly from the buffer's data; the buffer is
+    /// retained inside the returned handle.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+    /// protobuf data.
+    pub fn decode(
+        bytes: ::buffa::bytes::Bytes,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(VerifierInfoOwnedView(::buffa::OwnedView::decode(bytes)?))
+    }
+    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+    /// max message size).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+    /// exceeds the configured limits.
+    pub fn decode_with_options(
+        bytes: ::buffa::bytes::Bytes,
+        opts: &::buffa::DecodeOptions,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(VerifierInfoOwnedView(
+            ::buffa::OwnedView::decode_with_options(bytes, opts)?,
+        ))
+    }
+    /// Build from an owned message via an encode → decode round-trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
+    /// message's encoded size exceeds the 2 GiB protobuf limit, or
+    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
+    /// somehow invalid (should not happen for well-formed messages).
+    pub fn from_owned(
+        msg: &super::super::VerifierInfo,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(VerifierInfoOwnedView(::buffa::OwnedView::from_owned(msg)?))
+    }
+    /// Borrow the full [`VerifierInfoView`] with its lifetime tied to `&self`.
+    #[must_use]
+    pub fn view(&self) -> &VerifierInfoView<'_> {
+        self.0.reborrow()
+    }
+    /// Convert to the owned message type.
+    ///
+    /// Infallible: this type's constructors wire-decode their
+    /// buffer, and a view produced by wire decoding always
+    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
+    /// whose contract also governs handles converted from a raw
+    /// [`::buffa::OwnedView`].
+    #[must_use]
+    pub fn to_owned_message(&self) -> super::super::VerifierInfo {
+        self.0.to_owned_message()
+    }
+    /// The underlying bytes buffer.
+    #[must_use]
+    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+        self.0.bytes()
+    }
+    /// Consume the handle, returning the underlying bytes buffer.
+    #[must_use]
+    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+        self.0.into_bytes()
+    }
+    /// Field 1: `format`
+    #[must_use]
+    pub fn format(&self) -> &'_ str {
+        self.0.reborrow().format
+    }
+    /// UTF-8 JSON object or string; the codec enforces type and size bounds.
+    ///
+    /// Field 2: `data_json`
+    #[must_use]
+    pub fn data_json(&self) -> &'_ [u8] {
+        self.0.reborrow().data_json
+    }
+    /// Field 3: `credential_ids`
+    #[must_use]
+    pub fn credential_ids(
+        &self,
+    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::VerifierInfoCredentialIdsView<'_>>
+    {
+        &self.0.reborrow().credential_ids
+    }
+}
+impl ::core::convert::From<::buffa::OwnedView<VerifierInfoView<'static>>>
+    for VerifierInfoOwnedView
+{
+    fn from(inner: ::buffa::OwnedView<VerifierInfoView<'static>>) -> Self {
+        VerifierInfoOwnedView(inner)
+    }
+}
+impl ::core::convert::From<VerifierInfoOwnedView>
+    for ::buffa::OwnedView<VerifierInfoView<'static>>
+{
+    fn from(wrapper: VerifierInfoOwnedView) -> Self {
+        wrapper.0
+    }
+}
+impl ::core::convert::AsRef<::buffa::OwnedView<VerifierInfoView<'static>>>
+    for VerifierInfoOwnedView
+{
+    fn as_ref(&self) -> &::buffa::OwnedView<VerifierInfoView<'static>> {
+        &self.0
+    }
+}
+impl ::buffa::HasMessageView for super::super::VerifierInfo {
+    type View<'a> = VerifierInfoView<'a>;
+    type ViewHandle = VerifierInfoOwnedView;
+}
+impl ::serde::Serialize for VerifierInfoOwnedView {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
+/// VerifierInfoSet preserves a present but empty verifier_info array so the
+/// codec can reject it under the OpenID4VP non-empty-array rule.
+#[derive(Clone, Debug, Default)]
+pub struct VerifierInfoSetView<'a> {
+    /// Field 1: `entries`
+    pub entries: ::buffa::RepeatedView<'a, super::super::__buffa::view::VerifierInfoView<'a>>,
+    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::buffa::MessageView<'a> for VerifierInfoSetView<'a> {
+    type Owned = super::super::VerifierInfoSet;
+    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
+        <Self as ::buffa::MessageView>::decode_view_ctx(
+            buf,
+            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit)
+                .with_element_memory(&__elem),
+        )
+    }
+    fn decode_view_with_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+    }
+    #[inline]
+    fn merge_view_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+        let _ = ctx;
+        #[allow(unused_variables)]
+        let view = self;
+        let mut cur = cur;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                ctx.register_element_memory(::core::mem::size_of::<
+                    super::super::__buffa::view::VerifierInfoView,
+                >())?;
+                view.entries
+                    .push(
+                        <super::super::__buffa::view::VerifierInfoView as ::buffa::MessageView>::decode_view_ctx(
+                            sub,
+                            __sub_ctx,
+                        )?,
+                    );
+            }
+            _ => {
+                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                let span_len = before_tag.len() - cur.len();
+                view.__buffa_unknown_fields
+                    .push_record(before_tag, span_len, ctx)?;
+            }
+        }
+        ::core::result::Result::Ok(cur)
+    }
+    fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::VerifierInfoSet, ::buffa::DecodeError> {
+        self.to_owned_from_source(None)
+    }
+    #[allow(clippy::useless_conversion, clippy::needless_update)]
+    fn to_owned_from_source(
+        &self,
+        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+    ) -> ::core::result::Result<super::super::VerifierInfoSet, ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::alloc::string::ToString as _;
+        let _ = __buffa_src;
+        ::core::result::Result::Ok(super::super::VerifierInfoSet {
+            entries: self
+                .entries
+                .iter()
+                .map(|v| v.to_owned_from_source(__buffa_src))
+                .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
+            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+            ..::core::default::Default::default()
+        })
+    }
+}
+impl<'a> ::buffa::ViewEncode<'a> for VerifierInfoSetView<'a> {
+    #[allow(clippy::needless_borrow, clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u64;
+        for v in &self.entries {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size +=
+                1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64 + inner_size as u64;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u64;
+        ::buffa::saturate_size(size)
+    }
+    #[allow(clippy::needless_borrow)]
+    fn write_to(&self, __cache: &mut ::buffa::SizeCache, buf: &mut impl ::buffa::EncodeSink) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        for v in &self.entries {
+            ::buffa::types::put_len_delimited_header(1u32, u64::from(__cache.consume_next()), buf);
+            v.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+}
+/// Serializes this view as protobuf JSON.
+///
+/// Implicit-presence fields with default values are omitted, `required`
+/// fields are always emitted, explicit-presence (`optional`) fields are
+/// emitted only when set, bytes fields are base64-encoded, and enum
+/// values are their proto name strings.
+///
+/// This impl uses `serialize_map(None)` because the number of emitted
+/// fields depends on default-omission rules; serializers that require
+/// known map lengths (e.g. `bincode`) will return a runtime error.
+/// Use the owned message type for those formats.
+impl<'__a> ::serde::Serialize for VerifierInfoSetView<'__a> {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        use ::serde::ser::SerializeMap as _;
+        let mut __map = __s.serialize_map(::core::option::Option::None)?;
+        if !self.entries.is_empty() {
+            __map.serialize_entry("entries", &*self.entries)?;
+        }
+        __map.end()
+    }
+}
+impl<'a> ::buffa::MessageName for VerifierInfoSetView<'a> {
+    const PACKAGE: &'static str = "reallyme.openid4vp.v1";
+    const NAME: &'static str = "VerifierInfoSet";
+    const FULL_NAME: &'static str = "reallyme.openid4vp.v1.VerifierInfoSet";
+    const TYPE_URL: &'static str = "type.googleapis.com/reallyme.openid4vp.v1.VerifierInfoSet";
+}
+::buffa::impl_default_view_instance!(VerifierInfoSetView);
+::buffa::impl_view_reborrow!(VerifierInfoSetView);
+/** Self-contained, `'static` owned view of a `VerifierInfoSet` message.
+
+Wraps [`::buffa::OwnedView`]`<`[`VerifierInfoSetView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`VerifierInfoSetView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+#[derive(Clone, Debug)]
+pub struct VerifierInfoSetOwnedView(::buffa::OwnedView<VerifierInfoSetView<'static>>);
+impl VerifierInfoSetOwnedView {
+    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+    ///
+    /// The view borrows directly from the buffer's data; the buffer is
+    /// retained inside the returned handle.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+    /// protobuf data.
+    pub fn decode(
+        bytes: ::buffa::bytes::Bytes,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(VerifierInfoSetOwnedView(::buffa::OwnedView::decode(bytes)?))
+    }
+    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+    /// max message size).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+    /// exceeds the configured limits.
+    pub fn decode_with_options(
+        bytes: ::buffa::bytes::Bytes,
+        opts: &::buffa::DecodeOptions,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(VerifierInfoSetOwnedView(
+            ::buffa::OwnedView::decode_with_options(bytes, opts)?,
+        ))
+    }
+    /// Build from an owned message via an encode → decode round-trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError::MessageTooLarge`] if the
+    /// message's encoded size exceeds the 2 GiB protobuf limit, or
+    /// another [`::buffa::DecodeError`] if the re-encoded bytes are
+    /// somehow invalid (should not happen for well-formed messages).
+    pub fn from_owned(
+        msg: &super::super::VerifierInfoSet,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(VerifierInfoSetOwnedView(::buffa::OwnedView::from_owned(
+            msg,
+        )?))
+    }
+    /// Borrow the full [`VerifierInfoSetView`] with its lifetime tied to `&self`.
+    #[must_use]
+    pub fn view(&self) -> &VerifierInfoSetView<'_> {
+        self.0.reborrow()
+    }
+    /// Convert to the owned message type.
+    ///
+    /// Infallible: this type's constructors wire-decode their
+    /// buffer, and a view produced by wire decoding always
+    /// converts. Delegates to [`::buffa::OwnedView::to_owned_message`],
+    /// whose contract also governs handles converted from a raw
+    /// [`::buffa::OwnedView`].
+    #[must_use]
+    pub fn to_owned_message(&self) -> super::super::VerifierInfoSet {
+        self.0.to_owned_message()
+    }
+    /// The underlying bytes buffer.
+    #[must_use]
+    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+        self.0.bytes()
+    }
+    /// Consume the handle, returning the underlying bytes buffer.
+    #[must_use]
+    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+        self.0.into_bytes()
+    }
+    /// Field 1: `entries`
+    #[must_use]
+    pub fn entries(
+        &self,
+    ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::VerifierInfoView<'_>> {
+        &self.0.reborrow().entries
+    }
+}
+impl ::core::convert::From<::buffa::OwnedView<VerifierInfoSetView<'static>>>
+    for VerifierInfoSetOwnedView
+{
+    fn from(inner: ::buffa::OwnedView<VerifierInfoSetView<'static>>) -> Self {
+        VerifierInfoSetOwnedView(inner)
+    }
+}
+impl ::core::convert::From<VerifierInfoSetOwnedView>
+    for ::buffa::OwnedView<VerifierInfoSetView<'static>>
+{
+    fn from(wrapper: VerifierInfoSetOwnedView) -> Self {
+        wrapper.0
+    }
+}
+impl ::core::convert::AsRef<::buffa::OwnedView<VerifierInfoSetView<'static>>>
+    for VerifierInfoSetOwnedView
+{
+    fn as_ref(&self) -> &::buffa::OwnedView<VerifierInfoSetView<'static>> {
+        &self.0
+    }
+}
+impl ::buffa::HasMessageView for super::super::VerifierInfoSet {
+    type View<'a> = VerifierInfoSetView<'a>;
+    type ViewHandle = VerifierInfoSetOwnedView;
+}
+impl ::serde::Serialize for VerifierInfoSetOwnedView {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
 /// AuthorizationRequest is the final OpenID4VP request object projection.
 #[derive(Clone, Default)]
 pub struct AuthorizationRequestView<'a> {
@@ -3073,6 +3994,11 @@ pub struct AuthorizationRequestView<'a> {
     ///
     /// Field 17: `client_metadata_uri`
     pub client_metadata_uri: ::core::option::Option<&'a str>,
+    /// Signed Request Object attestations; never an authorization receipt by itself.
+    ///
+    /// Field 18: `verifier_info`
+    pub verifier_info:
+        ::buffa::MessageFieldView<super::super::__buffa::view::VerifierInfoSetView<'a>>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::core::fmt::Debug for AuthorizationRequestView<'a> {
@@ -3227,6 +4153,27 @@ impl<'a> ::buffa::MessageView<'a> for AuthorizationRequestView<'a> {
                 )?;
                 view.client_metadata_uri = Some(::buffa::types::borrow_str(&mut cur)?);
             }
+            18u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                match view.verifier_info.as_mut() {
+                    Some(existing) => {
+                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
+                    }
+                    None => {
+                        view.verifier_info = ::buffa::MessageFieldView::set(
+                            <super::super::__buffa::view::VerifierInfoSetView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
+                    }
+                }
+            }
             10u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
@@ -3323,6 +4270,13 @@ impl<'a> ::buffa::MessageView<'a> for AuthorizationRequestView<'a> {
             iat: self.iat,
             exp: self.exp,
             client_metadata_uri: self.client_metadata_uri.map(|s| s.to_string()),
+            verifier_info: match self.verifier_info.as_option() {
+                Some(v) => ::buffa::MessageField::<
+                    super::super::VerifierInfoSet,
+                    ::buffa::Inline<super::super::VerifierInfoSet>,
+                >::some(v.to_owned_from_source(__buffa_src)?),
+                None => ::buffa::MessageField::none(),
+            },
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -3400,6 +4354,13 @@ impl<'a> ::buffa::ViewEncode<'a> for AuthorizationRequestView<'a> {
         if let Some(ref v) = self.client_metadata_uri {
             size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
+        if self.verifier_info.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.verifier_info.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size +=
+                2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64 + inner_size as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -3463,6 +4424,10 @@ impl<'a> ::buffa::ViewEncode<'a> for AuthorizationRequestView<'a> {
         }
         if let Some(ref v) = self.client_metadata_uri {
             ::buffa::types::put_string_field(17u32, v, buf);
+        }
+        if self.verifier_info.is_set() {
+            ::buffa::types::put_len_delimited_header(18u32, u64::from(__cache.consume_next()), buf);
+            self.verifier_info.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -3542,6 +4507,11 @@ impl<'__a> ::serde::Serialize for AuthorizationRequestView<'__a> {
         }
         if let ::core::option::Option::Some(__v) = self.client_metadata_uri {
             __map.serialize_entry("clientMetadataUri", __v)?;
+        }
+        {
+            if let ::core::option::Option::Some(__v) = self.verifier_info.as_option() {
+                __map.serialize_entry("verifierInfo", __v)?;
+            }
         }
         __map.end()
     }
@@ -3738,6 +4708,15 @@ impl AuthorizationRequestOwnedView {
     #[must_use]
     pub fn client_metadata_uri(&self) -> ::core::option::Option<&'_ str> {
         self.0.reborrow().client_metadata_uri
+    }
+    /// Signed Request Object attestations; never an authorization receipt by itself.
+    ///
+    /// Field 18: `verifier_info`
+    #[must_use]
+    pub fn verifier_info(
+        &self,
+    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::VerifierInfoSetView<'_>> {
+        &self.0.reborrow().verifier_info
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<AuthorizationRequestView<'static>>>
@@ -4714,6 +5693,12 @@ pub struct RequestBindingView<'a> {
     /// Field 8: `transaction_data_bindings`
     pub transaction_data_bindings:
         ::buffa::RepeatedView<'a, super::super::__buffa::view::TransactionDataBindingView<'a>>,
+    /// Verifier-owned Authorization Request issued-at timestamp retained with the
+    /// one-time session so request-bound proofs do not depend on response arrival
+    /// time.
+    ///
+    /// Field 9: `request_time_unix`
+    pub request_time_unix: u64,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::core::fmt::Debug for RequestBindingView<'a> {
@@ -4804,6 +5789,10 @@ impl<'a> ::buffa::MessageView<'a> for RequestBindingView<'a> {
                 )?;
                 view.dc_api_origin = Some(::buffa::types::borrow_str(&mut cur)?);
             }
+            9u32 => {
+                ::buffa::encoding::check_wire_type(tag, ::buffa::encoding::WireType::Varint)?;
+                view.request_time_unix = ::buffa::types::decode_uint64(&mut cur)?;
+            }
             8u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
@@ -4862,6 +5851,7 @@ impl<'a> ::buffa::MessageView<'a> for RequestBindingView<'a> {
                 .iter()
                 .map(|v| v.to_owned_from_source(__buffa_src))
                 .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
+            request_time_unix: self.request_time_unix,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -4902,6 +5892,9 @@ impl<'a> ::buffa::ViewEncode<'a> for RequestBindingView<'a> {
             size +=
                 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64 + inner_size as u64;
         }
+        if self.request_time_unix != 0u64 {
+            size += 1u64 + ::buffa::types::uint64_encoded_len(self.request_time_unix) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -4931,6 +5924,9 @@ impl<'a> ::buffa::ViewEncode<'a> for RequestBindingView<'a> {
         for v in &self.transaction_data_bindings {
             ::buffa::types::put_len_delimited_header(8u32, u64::from(__cache.consume_next()), buf);
             v.write_to(__cache, buf);
+        }
+        if self.request_time_unix != 0u64 {
+            ::buffa::types::put_uint64_field(9u32, self.request_time_unix, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -4978,6 +5974,12 @@ impl<'__a> ::serde::Serialize for RequestBindingView<'__a> {
         }
         if !self.transaction_data_bindings.is_empty() {
             __map.serialize_entry("transactionDataBindings", &*self.transaction_data_bindings)?;
+        }
+        if !::buffa::json_helpers::skip_if::is_zero_u64(&self.request_time_unix) {
+            __map.serialize_entry(
+                "requestTimeUnix",
+                &::buffa::json_helpers::ProtoJson(&self.request_time_unix),
+            )?;
         }
         __map.end()
     }
@@ -5117,6 +6119,15 @@ impl RequestBindingOwnedView {
     ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::TransactionDataBindingView<'_>>
     {
         &self.0.reborrow().transaction_data_bindings
+    }
+    /// Verifier-owned Authorization Request issued-at timestamp retained with the
+    /// one-time session so request-bound proofs do not depend on response arrival
+    /// time.
+    ///
+    /// Field 9: `request_time_unix`
+    #[must_use]
+    pub fn request_time_unix(&self) -> u64 {
+        self.0.reborrow().request_time_unix
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<RequestBindingView<'static>>>

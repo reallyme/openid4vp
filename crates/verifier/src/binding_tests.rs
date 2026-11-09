@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -19,6 +19,7 @@ fn binding() -> RequestBinding {
         redirect_uri: None,
         dc_api_origin: None,
         expiry_unix: 100,
+        request_time_unix: 10,
         transaction_data_bindings: Vec::new(),
     }
 }
@@ -55,6 +56,28 @@ fn rejects_unavailable_clock_before_response_validation() {
         .expect_err("zero cannot represent a trusted verification time");
 
     assert_eq!(error.reason(), VerifierErrorReason::ClockUnavailable);
+}
+
+#[test]
+fn rejects_request_time_after_response_validation_time() {
+    let mut binding = binding();
+    binding.request_time_unix = 11;
+
+    let error = validate_request_binding(&binding, 10)
+        .expect_err("future request timestamps are not verifier-owned evidence");
+
+    assert_eq!(error.reason(), VerifierErrorReason::InvalidBinding);
+}
+
+#[test]
+fn rejects_request_time_after_expiry() {
+    let mut binding = binding();
+    binding.request_time_unix = binding.expiry_unix;
+
+    let error = validate_request_binding(&binding, 101)
+        .expect_err("request timestamps must precede request expiry");
+
+    assert_eq!(error.reason(), VerifierErrorReason::InvalidBinding);
 }
 
 #[test]

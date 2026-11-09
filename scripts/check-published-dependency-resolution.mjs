@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -8,24 +8,80 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const manifest = readFileSync(resolve(root, "Cargo.toml"), "utf8");
 const cratesIoSource = "registry+https://github.com/rust-lang/crates.io-index";
-const directDependencies = [
-  { name: "reallyme-jose", version: "0.4.2" },
-  { name: "reallyme-openid4vc-profiles", version: "0.3.4" },
-  { name: "reallyme-ssi-proto", version: "0.3.4" },
+const manifestDependencies = [
+  { manifest: "Cargo.toml", name: "reallyme-jose", version: "0.4.6" },
+  { manifest: "Cargo.toml", name: "reallyme-codec", version: "0.3.2" },
+  { manifest: "Cargo.toml", name: "reallyme-cose", version: "0.2.9" },
+  { manifest: "Cargo.toml", name: "reallyme-crypto", version: "0.3.17" },
+  {
+    manifest: "Cargo.toml",
+    name: "reallyme-crypto-p256",
+    version: "0.3.17",
+  },
+  {
+    manifest: "Cargo.toml",
+    name: "reallyme-openid4vc-profiles",
+    version: "0.5.1",
+  },
+  {
+    manifest: "Cargo.toml",
+    name: "reallyme-ssi-proto",
+    version: "0.5.1",
+  },
+  {
+    manifest: "Cargo.toml",
+    name: "reallyme-credential-status",
+    version: "0.5.1",
+  },
+  {
+    manifest: "crates/dc-api/Cargo.toml",
+    name: "reallyme-mdoc",
+    version: "0.5.1",
+  },
+  {
+    manifest: "crates/formats/Cargo.toml",
+    name: "reallyme-mdoc",
+    version: "0.5.1",
+  },
+  {
+    manifest: "crates/formats/Cargo.toml",
+    name: "reallyme-sd-jwt",
+    version: "0.5.1",
+  },
+  {
+    manifest: "crates/wallet/Cargo.toml",
+    name: "reallyme-zk-api",
+    version: "0.2.1",
+  },
+  {
+    manifest: "crates/verifier/Cargo.toml",
+    name: "reallyme-zk-api",
+    version: "0.2.1",
+  },
+  { manifest: "fuzz/Cargo.toml", name: "reallyme-codec", version: "0.3.2" },
+  { manifest: "fuzz/Cargo.toml", name: "reallyme-crypto", version: "0.3.17" },
+  { manifest: "fuzz/Cargo.toml", name: "reallyme-jose", version: "0.4.6" },
 ];
 const rootLockedDependencies = [
-  ...directDependencies,
-  { name: "reallyme-mdoc", version: "0.3.4" },
-  { name: "reallyme-sd-jwt", version: "0.3.4" },
+  { name: "reallyme-jose", version: "0.4.6" },
+  { name: "reallyme-codec", version: "0.3.2" },
+  { name: "reallyme-cose", version: "0.2.9" },
+  { name: "reallyme-crypto", version: "0.3.17" },
+  { name: "reallyme-crypto-p256", version: "0.3.17" },
+  { name: "reallyme-openid4vc-profiles", version: "0.5.1" },
+  { name: "reallyme-ssi-proto", version: "0.5.1" },
+  { name: "reallyme-credential-status", version: "0.5.1" },
+  { name: "reallyme-mdoc", version: "0.5.1" },
+  { name: "reallyme-sd-jwt", version: "0.5.1" },
+  { name: "reallyme-zk-api", version: "0.2.1" },
 ];
 const fuzzLockedDependencies = rootLockedDependencies.filter(
   ({ name }) => name !== "reallyme-openid4vc-profiles",
 );
 
 function fail(message) {
-  console.error(`SSI remote resolution check failed: ${message}`);
+  console.error(`published dependency resolution check failed: ${message}`);
   process.exit(1);
 }
 
@@ -33,14 +89,15 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 }
 
-for (const { name, version } of directDependencies) {
+for (const { manifest, name, version } of manifestDependencies) {
+  const manifestContents = readFileSync(resolve(root, manifest), "utf8");
   const dependencyPattern = new RegExp(
     `^${escapeRegExp(name)}\\s*=\\s*\\{([^}]+)\\}$`,
     "gmu",
   );
-  const matches = [...manifest.matchAll(dependencyPattern)];
+  const matches = [...manifestContents.matchAll(dependencyPattern)];
   if (matches.length !== 1 || matches[0][1] === undefined) {
-    fail(`Cargo.toml must declare ${name} exactly once`);
+    fail(`${manifest} must declare ${name} exactly once`);
   }
 
   const declaration = matches[0][1];
@@ -99,5 +156,5 @@ for (const expected of fuzzLockedDependencies) {
 }
 
 console.log(
-  `SSI remote resolution check passed for ${rootLockedDependencies.length} locked crates`,
+  `published dependency resolution check passed for ${rootLockedDependencies.length} locked crates`,
 );

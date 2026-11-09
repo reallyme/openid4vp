@@ -1,8 +1,8 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use reallyme_openid4vp_proto_codec::decode_vp_token_json;
+use reallyme_openid4vp_proto_codec::{decode_vp_token_json, MAX_PRESENTATION_JSON_BYTES};
 use reallyme_openid4vp_types::AuthorizationResponse;
 use reallyme_openid4vp_verifier::NonAuthorizingResponseDiagnostics;
 use reallyme_openid4vp_verifier::SessionRecord;
@@ -13,7 +13,8 @@ use crate::handle_authorization_error_response::{
     handle_authorization_error_response, has_authorization_error,
 };
 use crate::parse_form_urlencoded::{
-    optional_unique_field, parse_form_urlencoded, required_unique_field,
+    optional_unique_field, parse_form_urlencoded_with_large_value, required_unique_field,
+    DEFAULT_MAX_FORM_VALUE_BYTES,
 };
 use crate::serve_request_object::form_urlencoded_media_type;
 use crate::serve_request_object::validate_content_type;
@@ -25,6 +26,10 @@ use crate::{
 };
 
 const DEFAULT_MAX_DIRECT_POST_BODY_BYTES: usize = 128 * 1024;
+// Percent encoding can triple the size of a bounded JSON value. This ceiling
+// also limits aggregate fields when a host configures a larger endpoint body.
+pub(crate) const MAX_DIRECT_POST_FORM_BODY_BYTES: usize =
+    3 * MAX_PRESENTATION_JSON_BYTES + 16 * 1024;
 const VP_TOKEN_FIELD: &str = "vp_token";
 const STATE_FIELD: &str = "state";
 
@@ -60,6 +65,22 @@ impl<'a> DirectPostValidationContext<'a> {
     pub(crate) const fn with_max_body_bytes(mut self, max_body_bytes: usize) -> Self {
         self.max_body_bytes = max_body_bytes;
         self
+    }
+
+    pub(crate) const fn accepted_body_limit(&self) -> usize {
+        if self.max_body_bytes < MAX_DIRECT_POST_FORM_BODY_BYTES {
+            self.max_body_bytes
+        } else {
+            MAX_DIRECT_POST_FORM_BODY_BYTES
+        }
+    }
+
+    pub(crate) const fn large_form_value_limit(&self) -> usize {
+        if self.max_body_bytes > DEFAULT_MAX_DIRECT_POST_BODY_BYTES {
+            self.accepted_body_limit()
+        } else {
+            DEFAULT_MAX_FORM_VALUE_BYTES
+        }
     }
 
     /// Bind encrypted-response key selection to the hosted session route.
@@ -162,11 +183,15 @@ fn try_handle_direct_post_http(
         request.content_type.as_deref(),
         form_urlencoded_media_type(),
     )?;
-    if request.body.len() > context.max_body_bytes {
+    if request.body.len() > context.accepted_body_limit() {
         return Err(RuntimeError::new(RuntimeErrorReason::BodyTooLarge));
     }
 
-    let pairs = parse_form_urlencoded(&request.body)?;
+    let pairs = parse_form_urlencoded_with_large_value(
+        &request.body,
+        Some(VP_TOKEN_FIELD),
+        context.large_form_value_limit(),
+    )?;
     if has_authorization_error(&pairs) {
         return handle_authorization_error_response(&pairs, &context);
     }

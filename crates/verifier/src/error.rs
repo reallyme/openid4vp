@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -69,6 +69,8 @@ pub enum VerifierErrorReason {
     InvalidCredentialStatus,
     /// Credential status information was required by verifier policy but could not be resolved.
     CredentialStatusUnavailable,
+    /// Signed ReallyMe root-assurance status failed authority or freshness policy.
+    InvalidRootAssuranceStatus,
     /// Credential validity claims were malformed or outside their accepted time window.
     InvalidCredentialValidity,
     /// Request binding has expired.

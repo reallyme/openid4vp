@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -8,6 +8,7 @@ mod binding;
 mod compare_secret;
 mod error;
 mod holder_binding;
+mod holder_binding_context;
 mod jar;
 #[cfg(any(feature = "native", feature = "wasm"))]
 mod mdoc_holder_binding;
@@ -18,6 +19,7 @@ mod sd_jwt_holder_binding;
 mod session;
 mod validate_transaction_data_binding;
 mod verify_holder_binding;
+mod zk_holder_binding;
 
 pub use binding::{
     validate_request_binding, RequestBinding, TransactionDataBinding,
@@ -25,6 +27,10 @@ pub use binding::{
 };
 pub use error::{VerifierError, VerifierErrorReason};
 pub use holder_binding::{validate_holder_binding_claims, HolderBindingClaims};
+pub use holder_binding_context::{
+    HolderBindingVerificationContext, HolderBindingVerifier, VerifiedHolderBinding,
+    VerifiedTrustProvenance,
+};
 pub use jar::{
     build_signed_request_object, validate_jar_claims, validate_jar_claims_for_signing, CompactJwt,
     JarPolicy, RequestObjectSigner, MAX_COMPACT_REQUEST_OBJECT_JWT_BYTES,
@@ -48,6 +54,15 @@ pub use session::{
     MAX_RETAINED_MDOC_SESSION_TRANSCRIPT_BYTES,
 };
 pub use verify_holder_binding::{
-    HolderBindingVerificationContext, HolderBindingVerifier, VerifiedDisclosureSet,
-    VerifiedHolderBinding, VerifiedJsonClaims, VerifiedTrustProvenance,
+    VerifiedDisclosureSet, VerifiedJsonClaims, VerifiedZkClaim,
+    VerifiedZkCommonCredentialRootClaim, VerifiedZkCommonCredentialRootPresentation,
+    VerifiedZkPersonaCredentialEvidenceClaim,
+};
+#[cfg(any(feature = "native", feature = "wasm"))]
+pub use zk_holder_binding::verified_issuer_status_expectation;
+pub use zk_holder_binding::{
+    ZkCommonCredentialRootTrustPolicy, ZkCommonCredentialRootVerificationPolicy,
+    ZkHolderBindingVerifier, ZkIssuerStatusRollbackFloor, ZkIssuerStatusTrust,
+    ZkPersonaCredentialEvidenceProofVerifier, ZkPersonaCredentialEvidenceVerifyRequest,
+    ZkRootStatusRollbackFloor, ZkVerificationRequirements,
 };

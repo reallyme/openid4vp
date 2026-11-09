@@ -1,5 +1,5 @@
 {
-  "spdx_file_copyright_text": "2026 ReallyMe LLC",
+  "spdx_file_copyright_text": "2026 ReallyMe Technologies Limited",
   "spdx_license_identifier": "MIT OR Apache-2.0",
   "schema_version": 2,
   "specification": "openid4vp-1.0-final",
@@ -345,7 +345,7 @@
       "positive_tests": [
         "reallyme_openid4vp_wallet::multisigned_request_object::tests::accepts_when_one_of_multiple_signatures_is_valid",
         "reallyme_openid4vp_wallet::verify_signed_request_object_with_jose::tests::accepts_multisigned_x509_request_when_one_signature_is_valid",
-        "reallyme_openid4vp_proto_codec::verify_codec::maps_multisigned_dc_api_request_options"
+        "reallyme_openid4vp_proto_codec::verify_codec::multisigned_tests::maps_multisigned_dc_api_request_options"
       ],
       "negative_tests": [
         "reallyme_openid4vp_wallet::multisigned_request_object::tests::rejects_when_every_signature_is_invalid",

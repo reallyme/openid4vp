@@ -7,7 +7,7 @@
 [![OpenID4VP 1.0 Final](https://img.shields.io/badge/OpenID4VP-1.0%20Final-0f766e)](https://openid.net/specs/openid-4-verifiable-presentations-1_0-final.html)
 [![HAIP 1.0 Final](https://img.shields.io/badge/HAIP-1.0%20Final-0f766e)](https://openid.net/specs/openid4vc-high-assurance-interoperability-profile-1_0-final.html)
 [![crates.io](https://img.shields.io/crates/v/reallyme-openid4vp.svg)](https://crates.io/crates/reallyme-openid4vp)
-[![MSRV](https://img.shields.io/badge/MSRV-1.96-475569)](Cargo.toml)
+[![MSRV](https://img.shields.io/badge/MSRV-1.99-475569)](Cargo.toml)
 [![Security Policy](https://img.shields.io/badge/security-policy-0f766e)](SECURITY.md)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
 
@@ -41,7 +41,7 @@ validation and wallet-side evaluation, add the standalone public crate:
 
 ```toml
 [dependencies]
-reallyme-openid4vp-dcql = "0.1"
+reallyme-openid4vp-dcql = "0.2"
 serde_json = "1"
 ```
 
@@ -160,12 +160,21 @@ but response authorization is not enabled without the server-owned session
 lifecycle required for authorization. Constrained mdoc queries and responses
 without proven `SessionTranscript` inputs also fail closed.
 
-ZK-enabled products compose their prover and verifier outside this repository.
-The wallet passes the resulting typed envelope through
-`prepare_zk_presentation`; the verifier injects a `HolderBindingVerifier`
-security boundary whose implementation must verify the envelope's proof
-stages, issuer trust, credential status, DCQL projection, and session binding.
-Without that adapter, ZK presentations fail closed.
+ZK-enabled products compose their prover and linked-library verifier outside
+this repository. For direct or private credential presentations, the wallet
+passes an API-owned five-proof package through
+`prepare_zk_presentation_from_status_qualified_bundle` with a verified request
+receipt. The verifier injects `ZkHolderBindingVerifier` with claim and
+issuer-status proof verifiers, trusted issuer keys, and an independently
+authenticated current issuer-status authority. It verifies the four claim
+proofs, the fifth issuer-signed validity and hidden-index status proof, their
+exact credential join, the active nonce, audience, transaction data, and the
+verifier clock. A missing proof or verifier fails closed. Separate
+verified bundles remain separate disclosures: the response verifier does not
+currently establish that all bundles used one private persona. The typed
+verified claim offers a compatible-session presenting-key comparison for
+Identity composition; a false result is inconclusive when transaction data,
+expiry, profile, or hash lane differs.
 
 ## Which layer should I use?
 
@@ -182,7 +191,8 @@ Without that adapter, ZK presentations fail closed.
 
 Released dependencies resolve from crates.io; a sibling checkout is not
 required. Released SSI dependencies are exact-version pinned by the workspace
-and release gate; the current assurance baseline is crates.io version `0.3.4`.
+and release gate; the current assurance baseline is the lockstep SSI `0.5.1`
+release, including the corrected `reallyme-mdoc` package.
 
 ## Repository structure
 
@@ -259,16 +269,17 @@ prevention, and repeatable Request Object retrieval.
 
 ## Development
 
-Development, release packaging, and primary CI use the pinned Rust 1.98.1
-toolchain in `rust-toolchain.toml`. The twelve public crates retain an MSRV of
-Rust 1.96, which is checked separately and must not be raised merely to match
-the maintainer toolchain.
+Development, release packaging, and primary CI use the pinned Rust 1.99.0
+toolchain in `rust-toolchain.toml`. The twelve public crates declare Rust 1.99
+as their minimum supported version; a separate job checks the exact publish
+set at that version.
 
 Run the repository gate and core workspace checks before submitting changes:
 
 ```sh
 scripts/check-openid4vp-format.sh
-npm exec --yes --package=github:reallyme/release-readiness#bdedc88f3f25fcc14242730d4dec6ce6a0c75531 -- \
+# v0.6.9: https://github.com/reallyme/release-readiness/releases/tag/v0.6.9
+npm exec --yes --package=github:reallyme/release-readiness#9cf40c7da1def8a8d809af51789284097c572dd5 -- \
   reallyme-release-readiness
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace --all-features
@@ -306,6 +317,6 @@ Third-party components retain their own licenses and notices.
 
 ## Copyright and Trademarks
 
-Copyright © 2026 by ReallyMe LLC.
+Copyright © 2026 by ReallyMe Technologies Limited.
 
-ReallyMe® is a registered trademark of ReallyMe LLC.
+ReallyMe® is a registered trademark of ReallyMe Technologies Limited.

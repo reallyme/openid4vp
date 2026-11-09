@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -8,7 +8,9 @@ use crate::handle_authorization_error_response::{
     handle_authorization_error_response, has_authorization_error,
 };
 use crate::handle_direct_post::DirectPostValidationContext;
-use crate::parse_form_urlencoded::{parse_form_urlencoded, required_unique_field, FormPair};
+use crate::parse_form_urlencoded::{
+    parse_form_urlencoded_with_large_value, required_unique_field, FormPair,
+};
 use crate::serve_request_object::form_urlencoded_media_type;
 use crate::serve_request_object::validate_content_type;
 use crate::validate_authorization_response::validate_authorization_response_for_session;
@@ -51,11 +53,15 @@ fn try_handle_direct_post_jwt_http(
         request.content_type.as_deref(),
         form_urlencoded_media_type(),
     )?;
-    if request.body.len() > context.max_body_bytes {
+    if request.body.len() > context.accepted_body_limit() {
         return Err(RuntimeError::new(RuntimeErrorReason::BodyTooLarge));
     }
 
-    let pairs = parse_form_urlencoded(&request.body)?;
+    let pairs = parse_form_urlencoded_with_large_value(
+        &request.body,
+        Some(RESPONSE_FIELD),
+        context.large_form_value_limit(),
+    )?;
     if has_authorization_error(&pairs) {
         return handle_authorization_error_response(&pairs, &context);
     }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -98,6 +98,9 @@ pub(crate) fn request_binding_from_authorization_request(
     let Some(expiry_unix) = request.exp else {
         return Err(RuntimeError::new(RuntimeErrorReason::MissingField));
     };
+    let Some(request_time_unix) = request.iat else {
+        return Err(RuntimeError::new(RuntimeErrorReason::MissingField));
+    };
     if request.nonce.is_empty() {
         return Err(RuntimeError::new(RuntimeErrorReason::MissingField));
     }
@@ -124,6 +127,7 @@ pub(crate) fn request_binding_from_authorization_request(
         redirect_uri: request.redirect_uri.clone(),
         dc_api_origin,
         expiry_unix,
+        request_time_unix,
         transaction_data_bindings: transaction_data_bindings_from_request(request)?,
     })
 }

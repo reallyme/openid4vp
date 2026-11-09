@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -53,7 +53,7 @@ const shared = createReleaseReadinessContext({
 
 shared.assertReallyMeReleasePackagePolicy({
   scriptPath: "scripts/check_release_readiness.mjs",
-  version: "0.6.6",
+  version: "0.6.9",
 });
 shared.assertWorkflowActionsPinned();
 shared.assertNodeWorkflowJobsPinNode({ nodeVersion: "24" });
@@ -279,6 +279,13 @@ function rejectText(path, rejectedText, reason) {
   }
 }
 
+function rejectPattern(path, rejectedPattern, reason) {
+  const text = readRepoFile(path);
+  if (rejectedPattern.test(text)) {
+    recordFailure(path + ": contains stale " + reason);
+  }
+}
+
 function rejectExistingPath(path, reason) {
   if (existsSync(resolve(repoRoot, path))) {
     recordFailure(path + ": stale " + reason + " must not be checked in");
@@ -353,7 +360,6 @@ function checkWorkspacePackagePolicy(metadata) {
   const workspacePackageIds = new Set(metadata.workspace_members);
   const workspacePackages = metadata.packages.filter((pkg) => workspacePackageIds.has(pkg.id));
   const publishable = new Map();
-  const approvedExternalPathDependencies = new Map();
 
   for (const pkg of workspacePackages) {
     const manifestPath = relative(repoRoot, pkg.manifest_path);
@@ -380,15 +386,7 @@ function checkWorkspacePackagePolicy(metadata) {
       const depName = dep.package ?? dep.name;
       const target = publishable.get(depName);
       if (target === undefined) {
-        const approvedPathSuffix = approvedExternalPathDependencies.get(depName);
-        const normalizedPath = dep.path.replaceAll("\\", "/");
-        if (
-          approvedPathSuffix === undefined
-          || !normalizedPath.endsWith(approvedPathSuffix)
-          || !isCaretReqSatisfied(dep.req, "0.1.1")
-        ) {
-          recordFailure(`${pkg.name}: unapproved external path dependency ${depName}`);
-        }
+        recordFailure(`${pkg.name}: unapproved external path dependency ${depName}`);
         continue;
       }
 
@@ -464,33 +462,33 @@ function checkRepositoryPolicy() {
 
   requireText(
     "rust-toolchain.toml",
-    'channel = "1.98.1"',
+    'channel = "1.99.0"',
     "pinned maintainer Rust toolchain",
   );
-  requireText("Cargo.toml", 'rust-version = "1.96"', "public crate MSRV");
+  requireText("Cargo.toml", 'rust-version = "1.99"', "public crate MSRV");
   for (const workflowPath of [
     ".github/workflows/conformance.yml",
     ".github/workflows/crates-package-preflight.yml",
     ".github/workflows/crates-release.yml",
     ".github/workflows/protobuf-ci.yml",
   ]) {
-    requireText(workflowPath, "toolchain: 1.98.1", "pinned Rust 1.98.1 toolchain");
-    rejectText(workflowPath, "toolchain: 1.96.0", "maintenance toolchain pinned to the MSRV");
+    requireText(workflowPath, "toolchain: 1.99.0", "pinned Rust 1.99.0 toolchain");
+    rejectText(workflowPath, "toolchain: 1.98.1", "stale maintainer toolchain");
   }
   requireText(
     ".github/workflows/ci.yml",
-    "name: Public crates MSRV 1.96",
+    "name: Public crates MSRV 1.99",
     "narrow public-crate MSRV job",
   );
   requireText(
     ".github/workflows/ci.yml",
-    "toolchain: 1.98.1",
-    "primary Rust 1.98.1 toolchain",
+    "toolchain: 1.99.0",
+    "primary Rust 1.99.0 toolchain",
   );
   requireText(
     ".github/workflows/ci.yml",
-    "toolchain: 1.96.0",
-    "Rust 1.96 MSRV toolchain",
+    "toolchain: 1.99.0",
+    "Rust 1.99 MSRV toolchain",
   );
   requireText(
     ".github/workflows/ci.yml",
@@ -549,13 +547,13 @@ function checkRepositoryPolicy() {
   );
   requireText(
     ".github/workflows/ci.yml",
-    "bdedc88f3f25fcc14242730d4dec6ce6a0c75531",
-    "release-readiness v0.6.6 commit pin",
+    "9cf40c7da1def8a8d809af51789284097c572dd5",
+    "release-readiness v0.6.9 commit pin",
   );
   requireText(
     ".github/workflows/protobuf-ci.yml",
-    "bdedc88f3f25fcc14242730d4dec6ce6a0c75531",
-    "protobuf release-readiness v0.6.6 commit pin",
+    "9cf40c7da1def8a8d809af51789284097c572dd5",
+    "protobuf release-readiness v0.6.9 commit pin",
   );
   requireText(
     "formal/README.md",
@@ -620,8 +618,13 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "README.md",
-    "crates.io version `0.3.4`",
-    "current exact SSI dependency version",
+    "lockstep SSI `0.5.1`",
+    "current exact SSI dependency baseline",
+  );
+  requireText(
+    "README.md",
+    "including the corrected `reallyme-mdoc` package",
+    "corrected mdoc dependency version",
   );
   rejectText(
     "README.md",
@@ -639,12 +642,13 @@ function checkRepositoryPolicy() {
     "ConnectServer",
     "Connect-owned runtime error",
   );
-  requireText("Cargo.toml", 'reallyme-jose = { version = "=0.4.2", default-features = false }', "registry ReallyMe jose dependency");
-  requireText("Cargo.toml", 'reallyme-codec = { version = "=0.2.3", default-features = false }', "registry ReallyMe codec dependency");
-  requireText("Cargo.toml", 'reallyme-crypto = { version = "=0.3.9", default-features = false }', "registry ReallyMe crypto dependency");
+  requireText("Cargo.toml", 'reallyme-jose = { version = "=0.4.6", default-features = false }', "registry ReallyMe jose dependency");
+  requireText("Cargo.toml", 'reallyme-codec = { version = "=0.3.2", default-features = false }', "registry ReallyMe codec dependency");
+  requireText("Cargo.toml", 'reallyme-cose = { version = "=0.2.9", default-features = false }', "registry ReallyMe cose dependency");
+  requireText("Cargo.toml", 'reallyme-crypto = { version = "=0.3.17", default-features = false }', "registry ReallyMe crypto dependency");
   requireText(
     "Cargo.toml",
-    'reallyme-ssi-proto = { version = "=0.3.4", default-features = false }',
+    'reallyme-ssi-proto = { version = "=0.5.1", default-features = false }',
     "registry SSI canonical proto dependency",
   );
   rejectText(
@@ -659,14 +663,19 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "Cargo.toml",
-    'reallyme-openid4vc-profiles = { version = "=0.3.4", default-features = false }',
+    'reallyme-openid4vc-profiles = { version = "=0.5.1", default-features = false }',
     "registry shared OpenID4VC profiles dependency",
+  );
+  requireText(
+    "Cargo.toml",
+    'reallyme-credential-status = { version = "=0.5.1", default-features = false }',
+    "registry SSI credential-status dependency",
   );
   rejectText("Cargo.toml", 'path = "../ssi/', "SSI sibling dependency path");
   rejectText("Cargo.toml", 'path = "../identity/', "old identity sibling dependency path");
   requireText(
     "crates/dc-api/Cargo.toml",
-    'reallyme-mdoc = { version = "=0.3.4", default-features = false }',
+    'reallyme-mdoc = { version = "=0.5.1", default-features = false }',
     "registry SSI mdoc dependency",
   );
   rejectText(
@@ -681,12 +690,12 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "crates/formats/Cargo.toml",
-    'reallyme-mdoc = { version = "=0.3.4", default-features = false }',
+    'reallyme-mdoc = { version = "=0.5.1", default-features = false }',
     "formats registry SSI mdoc dependency",
   );
   requireText(
     "crates/formats/Cargo.toml",
-    'reallyme-sd-jwt = { version = "=0.3.4", default-features = false }',
+    'reallyme-sd-jwt = { version = "=0.5.1", default-features = false }',
     "formats registry SSI SD-JWT dependency",
   );
   rejectText(
@@ -704,6 +713,16 @@ function checkRepositoryPolicy() {
     "repository: reallyme/ssi",
     "redundant SSI source checkout",
   );
+  for (const manifest of [
+    "crates/wallet/Cargo.toml",
+    "crates/verifier/Cargo.toml",
+  ]) {
+    requireText(
+      manifest,
+      'reallyme-zk-api = { version = "=0.2.1", default-features = false }',
+      "exact registry ZK API dependency",
+    );
+  }
   if (existsSync(resolve(repoRoot, ".github/dependency-pins.json"))) {
     recordFailure("obsolete source dependency pins file must not return");
   }
@@ -724,7 +743,8 @@ function checkRepositoryPolicy() {
     "crates/wallet/Cargo.toml",
     "crates/runtime/Cargo.toml",
   ]) {
-    rejectText(manifest, "reallyme-zk", "ZK crate dependency");
+    // The proof-system-neutral API is permitted; concrete ZK backends are not.
+    rejectPattern(manifest, /\breallyme-zk(?:-(?!api\b)[a-z0-9-]+)?\s*=/, "ZK crate dependency");
   }
   rejectText(
     ".github/workflows/ci.yml",
@@ -788,7 +808,7 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "README.md",
-    "reallyme/release-readiness#bdedc88f3f25fcc14242730d4dec6ce6a0c75531",
+    "reallyme/release-readiness#9cf40c7da1def8a8d809af51789284097c572dd5",
     "pinned release-readiness validation command",
   );
   requireText("README.md", "docs/rust-publishing.md", "Rust publishing ownership documentation");
@@ -842,7 +862,7 @@ function checkRepositoryPolicy() {
   );
   for (const policyCommand of [
     "scripts/check-rust-source-policy.sh",
-    "node scripts/check-ssi-remote-resolution.mjs",
+    "node scripts/check-published-dependency-resolution.mjs",
     "node scripts/check-sdk-facade-inventory.mjs",
     "scripts/check-zk-boundary-policy.sh",
   ]) {
@@ -919,7 +939,7 @@ function checkRepositoryPolicy() {
   );
   requireText(
     ".github/workflows/crates-package-preflight.yml",
-    "default: 0.1.1",
+    "default: 0.2.0",
     "package preflight version default",
   );
   requireText(
@@ -1203,7 +1223,7 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "scripts/publish-crates-in-order.mjs",
-    'const APPROVED_MSRV = "1.96";',
+    'const APPROVED_MSRV = "1.99";',
     "public crate MSRV enforcement",
   );
   requireText(
@@ -1398,6 +1418,7 @@ const headerCheckedNames = new Set([".gitignore"]);
 const skippedDirectories = new Set([
   ".git",
   ".idea",
+  ".release-readiness",
   ".vscode",
   "target",
   "node_modules",
@@ -1463,7 +1484,7 @@ function checkSpdxHeaders() {
     }
 
     const text = readRepoFile(path);
-    if (!text.includes("SPDX-FileCopyrightText: 2026 ReallyMe LLC")) {
+    if (!text.includes("SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited")) {
       recordFailure(`${path}: missing ReallyMe SPDX copyright header`);
     }
     if (!text.includes("SPDX-License-Identifier: MIT OR Apache-2.0")) {

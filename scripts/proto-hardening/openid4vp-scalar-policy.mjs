@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -24,6 +24,7 @@ const publicScalar = (message, field, kind) => ({
 export const OPENID4VP_SCALAR_FIELD_CLASSIFICATIONS = Object.freeze([
   sensitive("PresentationValue", "compact", "string"),
   sensitive("PresentationValue", "json", "bytes"),
+  sensitive("PresentationValue", "zk_prepared_persona", "bytes"),
   sensitive("DerivedClaimStatement", "statement_id", "string"),
   sensitive("DerivedClaimStatement", "statement", "string"),
   sensitive("ZkPresentationBinding", "nonce_hash", "bytes"),
@@ -43,6 +44,9 @@ export const OPENID4VP_SCALAR_FIELD_CLASSIFICATIONS = Object.freeze([
   sensitive("TransactionData", "credential_ids", "string"),
   sensitive("TransactionData", "payload_json", "bytes"),
   sensitive("TransactionData", "encoded_value", "string"),
+  publicScalar("VerifierInfo", "format", "string"),
+  sensitive("VerifierInfo", "data_json", "bytes"),
+  sensitive("VerifierInfoCredentialIds", "values", "string"),
   sensitive("AuthorizationRequest", "response_uri", "string"),
   sensitive("AuthorizationRequest", "redirect_uri", "string"),
   sensitive("AuthorizationRequest", "nonce", "string"),

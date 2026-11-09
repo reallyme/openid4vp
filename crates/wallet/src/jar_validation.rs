@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -153,6 +153,30 @@ fn validate_wallet_request_object_with_evidence_and_policies(
 
     reallyme_openid4vp_dcql::validate_query(&request.dcql_query)
         .map_err(|_| WalletError::new(WalletErrorReason::InvalidRequestObject))?;
+
+    if let Some(entries) = request.verifier_info.as_ref() {
+        if entries.is_empty()
+            || entries.len() > reallyme_openid4vp_types::MAX_VERIFIER_INFO_ENTRIES
+        {
+            return Err(WalletError::new(WalletErrorReason::InvalidRequestObject));
+        }
+        for entry in entries {
+            entry
+                .validate()
+                .map_err(|_| WalletError::new(WalletErrorReason::InvalidRequestObject))?;
+            if entry.credential_ids().is_some_and(|ids| {
+                ids.iter().any(|id| {
+                    !request
+                        .dcql_query
+                        .credentials
+                        .iter()
+                        .any(|query| query.id.as_str() == id)
+                })
+            }) {
+                return Err(WalletError::new(WalletErrorReason::InvalidRequestObject));
+            }
+        }
+    }
 
     if let Some(iat) = request.iat {
         let latest_iat = now_unix

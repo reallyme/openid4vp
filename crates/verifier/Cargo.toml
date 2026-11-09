@@ -1,10 +1,10 @@
-# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+# SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
 [package]
 name = "reallyme-openid4vp-verifier"
-version = "0.1.1"
+version = "0.2.0"
 description = "OpenID4VP verifier request and response validation boundary."
 edition.workspace = true
 rust-version.workspace = true
@@ -16,20 +16,24 @@ include = ["/src/**/*.rs", "/Cargo.toml", "/README.md"]
 [features]
 default = ["native"]
 native = [
+    "reallyme-zk-api/native",
     "reallyme-openid4vp-dc-api/native",
     "reallyme-openid4vp-formats/native",
 ]
 wasm = [
+    "reallyme-zk-api/wasm",
     "reallyme-openid4vp-dc-api/wasm",
     "reallyme-openid4vp-formats/wasm",
 ]
 
 [dependencies]
 reallyme-codec = { workspace = true, features = ["base64url"] }
-reallyme-openid4vp-dc-api = { path = "../dc-api", version = "0.1.1", default-features = false }
-reallyme-openid4vp-dcql = { path = "../dcql", version = "0.1.1" }
-reallyme-openid4vp-formats = { path = "../formats", version = "0.1.1", default-features = false }
-reallyme-openid4vp-types = { path = "../types", version = "0.1.1", default-features = false }
+reallyme-credential-status = { workspace = true }
+reallyme-openid4vp-dc-api = { path = "../dc-api", version = "0.2.0", default-features = false }
+reallyme-openid4vp-dcql = { path = "../dcql", version = "0.2.0" }
+reallyme-openid4vp-formats = { path = "../formats", version = "0.2.0", default-features = false }
+reallyme-openid4vp-types = { path = "../types", version = "0.2.0", default-features = false }
+reallyme-zk-api = { version = "=0.2.1", default-features = false }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
@@ -37,6 +41,10 @@ subtle = { workspace = true }
 thiserror = { workspace = true }
 url = { workspace = true }
 zeroize = { workspace = true }
+
+[dev-dependencies]
+reallyme-crypto = { workspace = true, features = ["p256", "native"] }
+reallyme-crypto-p256 = { workspace = true, features = ["native"] }
 
 [lints]
 workspace = true

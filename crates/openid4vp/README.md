@@ -7,7 +7,7 @@
 [![OpenID4VP 1.0 Final](https://img.shields.io/badge/OpenID4VP-1.0%20Final-0f766e)](https://openid.net/specs/openid-4-verifiable-presentations-1_0-final.html)
 [![HAIP 1.0 Final](https://img.shields.io/badge/HAIP-1.0%20Final-0f766e)](https://openid.net/specs/openid4vc-high-assurance-interoperability-profile-1_0-final.html)
 [![crates.io](https://img.shields.io/crates/v/reallyme-openid4vp.svg)](https://crates.io/crates/reallyme-openid4vp)
-[![MSRV](https://img.shields.io/badge/MSRV-1.96-475569)](https://github.com/reallyme/openid4vp/blob/main/Cargo.toml)
+[![MSRV](https://img.shields.io/badge/MSRV-1.99-475569)](https://github.com/reallyme/openid4vp/blob/main/Cargo.toml)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](https://github.com/reallyme/openid4vp#license)
 
 Identity · [SSI](https://github.com/reallyme/ssi) · [OpenID4VCI](https://github.com/reallyme/openid4vci) · **OpenID4VP** · Wallet · [ZK](https://github.com/reallyme/zk)
@@ -31,14 +31,14 @@ Use the default native verifier and wallet surface:
 
 ```toml
 [dependencies]
-reallyme-openid4vp = "0.1"
+reallyme-openid4vp = "0.2"
 ```
 
 Enable only the additional boundaries the application owns:
 
 ```toml
 [dependencies]
-reallyme-openid4vp = { version = "0.1", features = [
+reallyme-openid4vp = { version = "0.2", features = [
   "codec",
   "formats",
   "http",
@@ -51,7 +51,7 @@ For WebAssembly composition, disable the default native feature explicitly:
 
 ```toml
 [dependencies]
-reallyme-openid4vp = { version = "0.1", default-features = false, features = [
+reallyme-openid4vp = { version = "0.2", default-features = false, features = [
   "wasm",
   "codec",
   "formats",

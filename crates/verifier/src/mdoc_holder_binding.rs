@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -325,6 +325,7 @@ fn validate_supported_mdoc_query(
 pub struct OpenId4VpHolderBindingVerifier<'a> {
     sd_jwt: SdJwtHolderBindingVerifier<'a>,
     mdoc: MdocHolderBindingVerifier<'a>,
+    zk: Option<crate::ZkHolderBindingVerifier<'a>>,
 }
 
 impl<'a> OpenId4VpHolderBindingVerifier<'a> {
@@ -343,7 +344,15 @@ impl<'a> OpenId4VpHolderBindingVerifier<'a> {
                 mdoc_session_transcript_provider,
                 mdoc_status_verifier,
             ),
+            zk: None,
         }
+    }
+
+    /// Enable the versioned ZK format with an explicitly configured bundle verifier.
+    #[must_use]
+    pub fn with_zk(mut self, zk: crate::ZkHolderBindingVerifier<'a>) -> Self {
+        self.zk = Some(zk);
+        self
     }
 }
 
@@ -356,6 +365,11 @@ impl HolderBindingVerifier for OpenId4VpHolderBindingVerifier<'_> {
         match context.credential_query().format.as_str() {
             CredentialFormat::DC_SD_JWT => self.sd_jwt.verify_holder_binding(presentation, context),
             CredentialFormat::MSO_MDOC => self.mdoc.verify_holder_binding(presentation, context),
+            CredentialFormat::REALLYME_ZK_V1 => self
+                .zk
+                .as_ref()
+                .ok_or_else(|| VerifierError::new(VerifierErrorReason::UnsupportedFormat))?
+                .verify_holder_binding(presentation, context),
             _ => Err(VerifierError::new(VerifierErrorReason::UnsupportedFormat)),
         }
     }

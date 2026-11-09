@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+# SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -55,9 +55,15 @@ skip = [
     { name = "getrandom", version = "=0.2.17" },
     { name = "hashbrown", version = "=0.15.5" },
     { name = "keccak", version = "=0.1.6" },
+    # Arkworks in reallyme-zk-api still uses rand 0.8/rand_core 0.6. The
+    # cryptographic stack uses rand_core 0.10, so this documents the
+    # unavoidable legacy edge.
+    { name = "rand_core", version = "=0.6.4" },
     { name = "sha3", version = "=0.10.9" },
-    { name = "sha3", version = "=0.11.0" },
     { name = "syn", version = "=2.0.119" },
+    # codec 0.3.1's multihash graph and the current ICU derive graph use
+    # different, semver-incompatible synstructure releases.
+    { name = "synstructure", version = "=0.13.2" },
 ]
 skip-tree = []
 

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -13,9 +13,9 @@ use reallyme_openid4vp_dc_api::{
 };
 use reallyme_openid4vp_dcql::{CredentialFormat, CredentialQuery, DcqlQuery, QueryId};
 use reallyme_openid4vp_formats::{
-    DerivedClaimStatement, ZkPresentation, ZkPresentationBinding, ZkPresentationCircuitRef,
-    ZkPresentationProfile, ZkPresentationProofSuite, ZkPresentationStage, ZkPresentationStageKind,
-    ZK_PRESENTATION_TYPE,
+    encode_zk_prepared_persona_value, parse_zk_prepared_persona_value, DerivedClaimStatement,
+    ZkPresentation, ZkPresentationBinding, ZkPresentationCircuitRef, ZkPresentationProfile,
+    ZkPresentationProofSuite, ZkPresentationStage, ZkPresentationStageKind, ZK_PRESENTATION_TYPE,
 };
 use reallyme_openid4vp_proto::generated::proto::reallyme::openid4vp::v1 as pb;
 use reallyme_openid4vp_proto_codec::{
@@ -36,6 +36,7 @@ use reallyme_openid4vp_types::{
     decode_transaction_data_string, AuthorizationRequestObject, AuthorizationResponse,
     ClientIdentifier, ClientMetadata, PresentationValue, ProblemDetails, ProblemInstance,
     ProblemKind, RequestUriMethod, ResponseMode, ResponseType, TransactionDataHashAlgorithm,
+    VerifierInfoEntry, MAX_VERIFIER_INFO_DATA_BYTES,
 };
 use reallyme_openid4vp_verifier::{
     BrowserSessionBinding, FollowBackRequirement, HolderBindingClaims, PostResponseRedirectUri,
@@ -75,6 +76,7 @@ fn verifier_session() -> SessionRecord {
             redirect_uri: None,
             dc_api_origin: None,
             expiry_unix: 1_900_000_000,
+            request_time_unix: 1_800_000_000,
             transaction_data_bindings: vec![TransactionDataBinding {
                 query_id: QueryId::parse("pid").expect("test query id is valid"),
                 algorithm: TransactionDataHashAlgorithm::Sha256,
@@ -348,10 +350,96 @@ fn proto_mapping_rejects_excessive_embedded_json_nesting() {
 }
 
 #[test]
+fn proto_mapping_rejects_malformed_verifier_info_payloads() {
+    let dcql = serde_json::to_vec(&dcql_query()).expect("fixture DCQL serializes");
+    for data_json in [
+        br#"null"#.to_vec(),
+        br#"[]"#.to_vec(),
+        br#"{}"#.to_vec(),
+        br#"{"issuer":1,"issuer":2}"#.to_vec(),
+        vec![b'x'; MAX_VERIFIER_INFO_DATA_BYTES + 1],
+    ] {
+        let mut request = authorization_request_with_dcql_json(dcql.clone());
+        request.verifier_info = MessageField::some(pb::VerifierInfoSet {
+            entries: vec![pb::VerifierInfo {
+                format: "jwt".to_owned(),
+                data_json,
+                credential_ids: MessageField::none(),
+                __buffa_unknown_fields: Default::default(),
+            }],
+            __buffa_unknown_fields: Default::default(),
+        });
+        assert!(proto_to_authorization_request(&request).is_err());
+    }
+}
+
+#[test]
+fn proto_mapping_rejects_explicitly_empty_verifier_info_arrays() {
+    let dcql = serde_json::to_vec(&dcql_query()).expect("fixture DCQL serializes");
+    let mut request = authorization_request_with_dcql_json(dcql.clone());
+    request.verifier_info = MessageField::some(pb::VerifierInfoSet::default());
+    assert_eq!(
+        proto_to_authorization_request(&request)
+            .expect_err("a present empty verifier_info must fail"),
+        OpenId4VpProtoError::InvalidField
+    );
+
+    let mut request = authorization_request_with_dcql_json(dcql);
+    request.verifier_info = MessageField::some(pb::VerifierInfoSet {
+        entries: vec![pb::VerifierInfo {
+            format: "jwt".to_owned(),
+            data_json: br#""signed""#.to_vec(),
+            credential_ids: MessageField::some(pb::VerifierInfoCredentialIds::default()),
+            __buffa_unknown_fields: Default::default(),
+        }],
+        __buffa_unknown_fields: Default::default(),
+    });
+    assert_eq!(
+        proto_to_authorization_request(&request)
+            .expect_err("a present empty credential_ids must fail"),
+        OpenId4VpProtoError::InvalidField
+    );
+}
+
+#[test]
+fn prepared_persona_uses_typed_proto_oneof_and_roundtrips() {
+    let value = encode_zk_prepared_persona_value(&[1, 2, 3, 4])
+        .expect("bounded prepared presentation encodes");
+    let response = AuthorizationResponse::single(
+        QueryId::parse("pid").expect("test query id is valid"),
+        vec![value],
+        None,
+    )
+    .expect("test response is valid");
+    let proto = authorization_response_to_proto(&response).expect("typed response maps to proto");
+    let prepared = proto.vp_token[0].presentations[0]
+        .kind
+        .as_ref()
+        .and_then(|kind| match kind {
+            pb::presentation_value::Kind::ZkPreparedPersona(bytes) => Some(bytes.as_slice()),
+            _ => None,
+        })
+        .expect("prepared presentation has a dedicated proto arm");
+    assert_eq!(prepared, &[1, 2, 3, 4]);
+    let decoded = proto_to_authorization_response(&proto).expect("typed response decodes");
+    let decoded_value = &decoded.vp_token[&QueryId::parse("pid").expect("test query id")][0];
+    assert_eq!(
+        parse_zk_prepared_persona_value(decoded_value)
+            .expect("canonical envelope decodes")
+            .expect("prepared presentation is present")
+            .as_slice(),
+        prepared
+    );
+    let wire = encode_authorization_response(&response).expect("response encodes");
+    let wire_response = decode_authorization_response(&wire).expect("response decodes");
+    assert_eq!(wire_response, response);
+}
+
+#[test]
 fn encodes_zk_presentation_as_typed_proto_oneof() {
     let presentation = ZkPresentation {
         type_: ZK_PRESENTATION_TYPE.to_owned(),
-        profile: ZkPresentationProfile::PrivateClaimV1,
+        profile: ZkPresentationProfile::CredentialSubjectClaimV1,
         proof_suite: ZkPresentationProofSuite::BarretenbergUltraHonkKeccakZkNoIpa,
         stages: zk_presentation_stages(),
         derived_claims: vec![DerivedClaimStatement {
@@ -386,7 +474,7 @@ fn encodes_zk_presentation_as_typed_proto_oneof() {
 
     assert_eq!(
         typed_zk.and_then(|zk| zk.profile.as_known()),
-        Some(pb::ZkPresentationProfile::PrivateClaimV1)
+        Some(pb::ZkPresentationProfile::CredentialSubjectClaimV1)
     );
     assert_eq!(
         typed_zk.and_then(|zk| zk.proof_suite.as_known()),
@@ -476,7 +564,7 @@ fn zk_presentation_stages() -> Vec<ZkPresentationStage> {
         stage,
         circuit_ref: ZkPresentationCircuitRef {
             hash_strategy: "sha256".to_owned(),
-            family: "private_claim_v1".to_owned(),
+            family: "credential_subject_claim_v1".to_owned(),
             stage: stage_name.to_owned(),
             version: 1,
         },
@@ -576,6 +664,12 @@ fn encodes_and_decodes_authorization_request_proto() {
             raw: json!({"jwks_uri": "https://verifier.example/jwks.json"}),
         }),
         client_metadata_uri: Some("https://verifier.example/metadata.json".to_owned()),
+        verifier_info: Some(vec![VerifierInfoEntry::try_new(
+            "registration_cert".to_owned(),
+            json!("eyJhbGciOiJFUzI1NiJ9"),
+            None,
+        )
+        .expect("fixture attestation is valid")]),
         expected_origins: Some(vec!["https://verifier.example".to_owned()]),
         iss: Some("x509_san_dns:verifier.example".to_owned()),
         aud: Some(vec!["wallet".to_owned()]),
@@ -650,91 +744,7 @@ fn maps_problem_details_without_detail_text() {
     );
 }
 
-#[test]
-fn maps_dc_api_request_options() {
-    let request = AuthorizationRequestObject {
-        client_id: None,
-        response_type: ResponseType::VpToken,
-        response_mode: Some(ResponseMode::DcApi),
-        response_uri: None,
-        redirect_uri: None,
-        nonce: "0123456789abcdef".to_owned(),
-        wallet_nonce: None,
-        state: None,
-        dcql_query: dcql_query(),
-        transaction_data: None,
-        client_metadata: None,
-        client_metadata_uri: None,
-        expected_origins: None,
-        iss: None,
-        aud: None,
-        iat: None,
-        exp: None,
-    };
-    let entry =
-        DigitalCredentialGetRequest::new(DcApiProtocol::v1(DcApiRequestKind::Unsigned), request)
-            .expect("test DC API request is valid");
-    let options = DigitalCredentialRequestOptions::new(vec![entry])
-        .expect("test DC API request options are valid");
+include!("verify_codec/dc_api.rs");
 
-    let proto = digital_credential_request_options_to_proto(&options).expect("DC API options map");
-    let mapped =
-        proto_to_digital_credential_request_options(&proto).expect("DC API options map back");
-
-    assert_eq!(mapped, options);
-}
-
-#[test]
-fn rejects_dc_api_protocol_data_mismatch_in_proto() {
-    let request = AuthorizationRequestObject {
-        client_id: None,
-        response_type: ResponseType::VpToken,
-        response_mode: Some(ResponseMode::DcApi),
-        response_uri: None,
-        redirect_uri: None,
-        nonce: "0123456789abcdef".to_owned(),
-        wallet_nonce: None,
-        state: None,
-        dcql_query: dcql_query(),
-        transaction_data: None,
-        client_metadata: None,
-        client_metadata_uri: None,
-        expected_origins: None,
-        iss: None,
-        aud: None,
-        iat: None,
-        exp: None,
-    };
-    let entry =
-        DigitalCredentialGetRequest::new(DcApiProtocol::v1(DcApiRequestKind::Unsigned), request)
-            .expect("test DC API request is valid");
-    let options = DigitalCredentialRequestOptions::new(vec![entry])
-        .expect("test DC API request options are valid");
-    let mut proto =
-        digital_credential_request_options_to_proto(&options).expect("DC API options map");
-    proto.requests[0].protocol = "openid4vp-v1-signed".to_owned();
-
-    proto_to_digital_credential_request_options(&proto)
-        .expect_err("the protocol identifier must agree with the protobuf oneof");
-}
-
-#[test]
-fn maps_multisigned_dc_api_request_options() {
-    let signature = JwsJsonSignature::new("cHJvdGVjdGVk".to_owned(), "c2lnbmF0dXJl".to_owned())
-        .expect("test signature is valid");
-    let request = JwsJsonGeneral::new("cGF5bG9hZA".to_owned(), vec![signature])
-        .expect("test JWS JSON is valid");
-    let entry = DigitalCredentialGetRequest::new_multisigned_request_object(
-        DcApiProtocol::v1(DcApiRequestKind::Multisigned),
-        request,
-    )
-    .expect("test multi-signed DC API request is valid");
-    let options = DigitalCredentialRequestOptions::new(vec![entry])
-        .expect("test DC API request options are valid");
-
-    let proto = digital_credential_request_options_to_proto(&options).expect("DC API options map");
-    let mapped =
-        proto_to_digital_credential_request_options(&proto).expect("DC API options map back");
-
-    assert_eq!(mapped, options);
-}
+#[path = "verify_codec/multisigned.rs"]
+mod multisigned_tests;

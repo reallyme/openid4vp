@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -644,4 +644,21 @@ fn rejects_oversized_direct_post_body() {
 
     assert_eq!(response.status, 400);
     assert_eq!(response.content_type, Some(PROBLEM_JSON_MEDIA_TYPE));
+}
+
+#[test]
+fn direct_post_form_limits_preserve_default_and_bound_host_overrides() {
+    use crate::handle_direct_post::MAX_DIRECT_POST_FORM_BODY_BYTES;
+    use crate::parse_form_urlencoded::DEFAULT_MAX_FORM_VALUE_BYTES;
+
+    let session = session();
+    let default = DirectPostValidationContext::new(&session, 0);
+    assert_eq!(default.large_form_value_limit(), DEFAULT_MAX_FORM_VALUE_BYTES);
+
+    let raised = DirectPostValidationContext::new(&session, 0).with_max_body_bytes(256 * 1024);
+    assert_eq!(raised.large_form_value_limit(), 256 * 1024);
+
+    let bounded = DirectPostValidationContext::new(&session, 0).with_max_body_bytes(usize::MAX);
+    assert_eq!(bounded.accepted_body_limit(), MAX_DIRECT_POST_FORM_BODY_BYTES);
+    assert_eq!(bounded.large_form_value_limit(), MAX_DIRECT_POST_FORM_BODY_BYTES);
 }

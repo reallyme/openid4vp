@@ -1,11 +1,12 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 #![allow(clippy::expect_used)]
 
+use reallyme_codec::base64url::bytes_to_base64url;
 use reallyme_crypto::core::Algorithm;
-use reallyme_crypto::dispatch::generate_keypair;
+use reallyme_crypto::dispatch::{generate_keypair, sign};
 use reallyme_crypto::jwk::{ed25519_public_key_to_jwk, Jwk, JwkOptions};
 use reallyme_jose::jwt::{encode_signed_jwt_with_header_options, JwtHeaderEncodeOptions};
 use reallyme_openid4vp_dcql::{CredentialFormat, CredentialQuery, QueryId};
@@ -22,6 +23,8 @@ use super::{
     SdJwtVerificationKeyMaterial,
 };
 
+#[path = "sd_jwt_debug_tests.rs"]
+mod debug_tests;
 #[path = "sd_jwt_issuer_identity_tests.rs"]
 mod issuer_identity_tests;
 #[path = "sd_jwt_projection_tests.rs"]
@@ -281,13 +284,18 @@ fn rejects_malformed_issuer_temporal_claims() {
     ];
 
     for (issued_at, not_before, expiration) in cases {
-        let compact = presentation_with_issuer_times(
+        let compact = presentation_with_issuer_times_and_type(
             &issuer,
             &holder,
             "nonce-123",
-            issued_at,
-            not_before,
-            expiration,
+            IssuerJwtFixtureOptions {
+                issued_at,
+                not_before,
+                expiration,
+                issuer_type: Some("dc+sd-jwt"),
+                include_confirmation: true,
+                sign_invalid_claims: true,
+            },
         );
         let error = verify_sd_jwt_presentation(
             SdJwtPresentationVerificationInput {
@@ -443,6 +451,7 @@ fn rejects_non_final_or_missing_issuer_type() {
                 expiration: None,
                 issuer_type,
                 include_confirmation: true,
+                sign_invalid_claims: false,
             },
         );
         let error = verify_sd_jwt_presentation(
@@ -525,6 +534,7 @@ fn rejects_missing_issuer_confirmation_when_holder_binding_is_required() {
             expiration: None,
             issuer_type: Some("dc+sd-jwt"),
             include_confirmation: false,
+            sign_invalid_claims: false,
         },
     );
     let provider = provider(&issuer, &holder, Ok(()));
@@ -640,24 +650,6 @@ fn rejects_oversized_binding_values_before_trust_resolution() {
     assert_eq!(error.reason(), SdJwtFormatErrorReason::InvalidPresentation);
 }
 
-#[test]
-fn presentation_input_debug_redacts_compact_and_binding_values() {
-    let query = credential_query(EXAMPLE_VCT);
-    let input = SdJwtPresentationVerificationInput {
-        compact: "issuer~disclosure~holder",
-        expected_audience: "x509_hash:verifier.example",
-        expected_nonce: "secret-nonce",
-        now_unix: 1_700_000_001,
-        credential_query: &query,
-    };
-    let debug = format!("{input:?}");
-
-    assert!(!debug.contains(input.compact));
-    assert!(!debug.contains(input.expected_audience));
-    assert!(!debug.contains(input.expected_nonce));
-    assert!(debug.contains("<redacted>"));
-}
-
 fn provider(
     issuer: &TestKey,
     holder: &TestKey,
@@ -703,6 +695,7 @@ fn presentation_with_issuer_times(
             expiration,
             issuer_type: Some("dc+sd-jwt"),
             include_confirmation: true,
+            sign_invalid_claims: false,
         },
     )
 }
@@ -713,6 +706,7 @@ struct IssuerJwtFixtureOptions<'a> {
     expiration: Option<JsonValue>,
     issuer_type: Option<&'a str>,
     include_confirmation: bool,
+    sign_invalid_claims: bool,
 }
 
 fn presentation_with_issuer_times_and_type(
@@ -738,13 +732,31 @@ fn presentation_with_issuer_times_and_type(
         }
     }
     let issuer_payload = JsonValue::Object(issuer_payload);
-    let issuer_signed_jwt = encode_signed_jwt_with_header_options(
-        &issuer_payload,
-        &issuer.jwk,
-        &issuer.private,
-        &JwtHeaderEncodeOptions::new(options.issuer_type.map(str::to_owned)),
-    )
-    .expect("issuer JWT signs");
+    let issuer_signed_jwt = if options.sign_invalid_claims {
+        // The public JWT signer rejects malformed NumericDate claims before
+        // signing. This test must sign those exact bytes to exercise the
+        // verifier's rejection of a cryptographically valid malformed JWT.
+        let header = bytes_to_base64url(br#"{"alg":"EdDSA","typ":"dc+sd-jwt"}"#);
+        let payload = bytes_to_base64url(
+            &serde_json::to_vec(&issuer_payload).expect("issuer payload serializes"),
+        );
+        let signing_input = format!("{header}.{payload}");
+        let signature = sign(
+            Algorithm::Ed25519,
+            &issuer.private,
+            signing_input.as_bytes(),
+        )
+        .expect("issuer JWT signs");
+        format!("{signing_input}.{}", bytes_to_base64url(&signature))
+    } else {
+        encode_signed_jwt_with_header_options(
+            &issuer_payload,
+            &issuer.jwk,
+            &issuer.private,
+            &JwtHeaderEncodeOptions::new(options.issuer_type.map(str::to_owned)),
+        )
+        .expect("issuer JWT signs")
+    };
     let disclosures = Vec::new();
     let key_binding_jwt = build_key_binding_jwt(
         &issuer_signed_jwt,

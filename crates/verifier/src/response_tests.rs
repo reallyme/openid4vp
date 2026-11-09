@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -36,6 +36,7 @@ fn session() -> SessionRecord {
             redirect_uri: None,
             dc_api_origin: None,
             expiry_unix: 100,
+            request_time_unix: 10,
             transaction_data_bindings: Vec::new(),
         },
         state: Some("fedcba9876543210".to_owned()),
@@ -64,6 +65,14 @@ fn dcql_query(multiple: bool) -> DcqlQuery {
     }
 }
 
+fn zk_session() -> SessionRecord {
+    let mut session = session();
+    session.dcql_query.credentials[0].format =
+        CredentialFormat::new(CredentialFormat::REALLYME_ZK_V1.to_owned())
+            .expect("test ZK format is valid");
+    session
+}
+
 #[test]
 fn holder_binding_context_debug_redacts_session_material() {
     let active_session = session();
@@ -89,14 +98,19 @@ impl HolderBindingVerifier for FixtureHolderBindingVerifier {
     ) -> Result<VerifiedHolderBinding, VerifierError> {
         if context.now_unix() != 10
             || context.session().binding.nonce != "0123456789abcdef"
-            || context.credential_query().format.as_str() != CredentialFormat::DC_SD_JWT
+            || !matches!(
+                context.credential_query().format.as_str(),
+                CredentialFormat::DC_SD_JWT | CredentialFormat::REALLYME_ZK_V1
+            )
             || context.credential_query().id.as_str() != "pid"
         {
             return Err(VerifierError::new(VerifierErrorReason::InvalidBinding));
         }
         Ok(VerifiedHolderBinding::new(
             HolderBindingClaims {
-                audience: vec!["x509_san_dns:verifier.example".to_owned()],
+                audience: vec![crate::holder_binding::expected_holder_binding_audience(
+                    &context.session().binding,
+                )],
                 nonce: "0123456789abcdef".to_owned(),
                 expiration_unix: 100,
                 issued_at_unix: 10,
@@ -330,6 +344,7 @@ fn rejects_multiple_presentations_for_single_query() {
 #[test]
 fn rejects_expired_request_binding_before_response_shape_checks() {
     let mut session = session();
+    session.binding.request_time_unix = 1;
     session.binding.expiry_unix = 9;
     let response = AuthorizationResponse::single(
         QueryId::parse("pid").expect("test query id is valid"),
@@ -370,7 +385,7 @@ fn zk_response_for_binding(
         stage,
         circuit_ref: ZkPresentationCircuitRef {
             hash_strategy: "sha256".to_owned(),
-            family: "private_claim_v1".to_owned(),
+            family: "credential_subject_claim_v1".to_owned(),
             stage: stage_name.to_owned(),
             version: 1,
         },
@@ -381,7 +396,7 @@ fn zk_response_for_binding(
     .collect();
     let presentation = ZkPresentation {
         type_: ZK_PRESENTATION_TYPE.to_owned(),
-        profile: ZkPresentationProfile::PrivateClaimV1,
+        profile: ZkPresentationProfile::CredentialSubjectClaimV1,
         proof_suite: ZkPresentationProofSuite::BarretenbergUltraHonkKeccakZkNoIpa,
         stages,
         derived_claims: Vec::new(),
@@ -404,6 +419,14 @@ fn transaction_bound_session() -> SessionRecord {
         algorithm: TransactionDataHashAlgorithm::Sha256,
         digest: [3; 32],
     }];
+    session
+}
+
+fn transaction_bound_zk_session() -> SessionRecord {
+    let mut session = transaction_bound_session();
+    session.dcql_query.credentials[0].format =
+        CredentialFormat::new(CredentialFormat::REALLYME_ZK_V1.to_owned())
+            .expect("test ZK format is valid");
     session
 }
 
@@ -437,7 +460,7 @@ fn accepts_transaction_binding_extracted_from_verified_holder_proof() {
 
 #[test]
 fn rejects_zk_presentation_without_injected_format_verifier() {
-    let err = diagnose_authorization_response(&session(), &zk_response(), 10)
+    let err = diagnose_authorization_response(&zk_session(), &zk_response(), 10)
         .expect_err("zk presentation requires an injected format verifier");
 
     assert_eq!(err.reason(), VerifierErrorReason::UnsupportedFormat);
@@ -446,7 +469,7 @@ fn rejects_zk_presentation_without_injected_format_verifier() {
 #[test]
 fn accepts_zk_presentation_from_injected_format_verifier() {
     diagnose_authorization_response_with_options(
-        &session(),
+        &zk_session(),
         &zk_response(),
         10,
         ResponseValidationOptions {
@@ -459,7 +482,7 @@ fn accepts_zk_presentation_from_injected_format_verifier() {
 #[test]
 fn accepts_transaction_bound_zk_from_injected_format_verifier() {
     diagnose_authorization_response_with_options(
-        &transaction_bound_session(),
+        &transaction_bound_zk_session(),
         &transaction_bound_zk_response(),
         10,
         ResponseValidationOptions {
@@ -477,7 +500,7 @@ fn rejects_zk_binding_mismatch_before_format_verification() {
         None,
     ));
     let err = diagnose_authorization_response_with_options(
-        &session(),
+        &zk_session(),
         &response,
         10,
         ResponseValidationOptions {
@@ -487,4 +510,75 @@ fn rejects_zk_binding_mismatch_before_format_verification() {
     .expect_err("envelope replay is rejected before the format verifier runs");
 
     assert_eq!(err.reason(), VerifierErrorReason::InvalidZkPresentation);
+}
+
+#[test]
+fn rejects_zk_presentation_for_unrelated_credential_format() {
+    let error = diagnose_authorization_response_with_options(
+        &session(),
+        &zk_response(),
+        10,
+        ResponseValidationOptions {
+            holder_binding_verifier: Some(&FixtureHolderBindingVerifier),
+        },
+    )
+    .expect_err("a ZK proof cannot satisfy an SD-JWT credential query");
+
+    assert_eq!(error.reason(), VerifierErrorReason::VpTokenQueryMismatch);
+}
+
+#[test]
+fn rejects_non_zk_presentation_for_zk_credential_format() {
+    let response = AuthorizationResponse::single(
+        QueryId::parse("pid").expect("test query id is valid"),
+        vec![PresentationValue::Compact("presentation".to_owned())],
+        Some("fedcba9876543210".to_owned()),
+    )
+    .expect("test response is valid");
+    let error = diagnose_authorization_response_with_options(
+        &zk_session(),
+        &response,
+        10,
+        ResponseValidationOptions {
+            holder_binding_verifier: Some(&FixtureHolderBindingVerifier),
+        },
+    )
+    .expect_err("a compact credential cannot satisfy a ZK credential query");
+
+    assert_eq!(error.reason(), VerifierErrorReason::VpTokenQueryMismatch);
+}
+
+#[test]
+fn zk_dc_api_binding_uses_browser_origin_as_audience() {
+    let mut session = zk_session();
+    session.binding.response_uri = None;
+    session.binding.dc_api_origin = Some("https://verifier.example".to_owned());
+    session.response_mode = reallyme_openid4vp_types::ResponseMode::DcApi;
+    let response = zk_response_for_binding(build_zk_presentation_binding(
+        "0123456789abcdef",
+        "origin:https://verifier.example",
+        None,
+    ));
+
+    diagnose_authorization_response_with_options(
+        &session,
+        &response,
+        10,
+        ResponseValidationOptions {
+            holder_binding_verifier: Some(&FixtureHolderBindingVerifier),
+        },
+    )
+    .expect("DC API ZK presentation binds the browser origin");
+
+    let wrong_audience = zk_response();
+    let error = diagnose_authorization_response_with_options(
+        &session,
+        &wrong_audience,
+        10,
+        ResponseValidationOptions {
+            holder_binding_verifier: Some(&FixtureHolderBindingVerifier),
+        },
+    )
+    .expect_err("the client ID is not the DC API holder-proof audience");
+    assert_eq!(error.reason(), VerifierErrorReason::InvalidZkPresentation);
 }

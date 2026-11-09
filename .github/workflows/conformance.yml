@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+# SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -38,7 +38,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
         with:
-          toolchain: 1.98.1
+          toolchain: 1.99.0
 
       - name: Test repository-owned conformance boundaries
         run: cargo test --locked -p reallyme-openid4vp-conformance --all-features

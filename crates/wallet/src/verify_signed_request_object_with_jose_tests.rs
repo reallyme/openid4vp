@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -153,6 +153,7 @@ fn request(exp: u64, iat: u64) -> AuthorizationRequestObject {
         transaction_data: None,
         client_metadata: None,
         client_metadata_uri: None,
+        verifier_info: None,
         expected_origins: Some(vec!["https://rp.example".to_owned()]),
         iss: Some("decentralized_identifier:did:example:verifier".to_owned()),
         aud: Some(vec!["wallet".to_owned()]),
@@ -304,6 +305,10 @@ fn multisigned_request_object_with_one_invalid_signature() -> Vec<u8> {
         "kid": "verifier-key-1",
         "client_id": client_id,
         "x5c": ["dGVzdA=="],
+        "verifier_info": [{
+            "format": "registration_cert",
+            "data": "Y2VydGlmaWNhdGU"
+        }],
     });
     let protected = reallyme_codec::base64url::bytes_to_base64url(
         &serde_json::to_vec(&header).expect("test JOSE header serializes"),
@@ -547,7 +552,13 @@ fn rejects_remote_or_critical_jose_key_selection_headers() {
 
 #[test]
 fn accepts_x509_request_with_x5c_and_matching_certificate_evidence() {
-    let request = x509_hash_request();
+    let mut request = x509_hash_request();
+    request.verifier_info = Some(vec![reallyme_openid4vp_types::VerifierInfoEntry::try_new(
+        "registration_cert".to_owned(),
+        serde_json::json!("signed-registration"),
+        None,
+    )
+    .expect("bounded attestation fixture")]);
     let jwt = signed_request_object_with_x5c_header(&request);
     let mut resolver = key_resolver(&TEST_P256_SECRET);
     resolver.x509_dns_sans = Some(Vec::new());
@@ -557,6 +568,20 @@ fn accepts_x509_request_with_x5c_and_matching_certificate_evidence() {
             .expect("x509 Request Object with matching x5c evidence verifies");
 
     assert_eq!(verified.request().nonce, "0123456789abcdef");
+    assert_eq!(
+        verified.request().verifier_info.as_ref().map(Vec::len),
+        Some(1)
+    );
+    let signer = verified
+        .x509_request_signer()
+        .expect("X.509 signer provenance survives verification");
+    let expected_signer_digest: [u8; 32] = Sha256::digest(TEST_LEAF_CERTIFICATE_DER).into();
+    assert_eq!(signer.leaf_certificate_sha256(), &expected_signer_digest);
+    assert_eq!(
+        signer.certificate_chain().leaf_der(),
+        TEST_LEAF_CERTIFICATE_DER
+    );
+    assert_eq!(signer.certificate_chain().certificates_der().len(), 1);
 }
 
 #[test]
@@ -581,6 +606,15 @@ fn accepts_multisigned_x509_request_when_one_signature_is_valid() {
             .as_ref()
             .map(ClientIdentifier::prefix),
         Some(ClientIdentifierPrefix::X509Hash)
+    );
+    assert_eq!(
+        verified
+            .request()
+            .verifier_info
+            .as_ref()
+            .and_then(|entries| entries.first())
+            .map(reallyme_openid4vp_types::VerifierInfoEntry::format),
+        Some("registration_cert")
     );
 }
 
@@ -760,39 +794,5 @@ fn accepts_verifier_attestation_evidence_from_jose_resolver() {
     );
 }
 
-#[test]
-fn rejects_verifier_attestation_jws_failure_from_jose_resolver() {
-    let jwt = signed_request_object_for(&verifier_attestation_request());
-    let verifier = verifier(key_resolver_with_attestation(Err(
-        WalletErrorReason::InvalidVerifierAttestation,
-    )));
-
-    let err = verify_signed_request_object(
-        &verifier,
-        &jwt,
-        &WalletInvocationContext::ProtocolTransport,
-        11,
-    )
-    .expect_err("attestation JWS validation failure is rejected");
-
-    assert_eq!(err.reason(), WalletErrorReason::InvalidVerifierAttestation);
-}
-
-#[test]
-fn rejects_verifier_attestation_subject_from_jose_resolver() {
-    let jwt = signed_request_object_for(&verifier_attestation_request());
-    let attestation =
-        VerifiedVerifierAttestation::new("other.example".to_owned(), None, test_public_key(), 100)
-            .expect("test attestation evidence is valid");
-    let verifier = verifier(key_resolver_with_attestation(Ok(attestation)));
-
-    let err = verify_signed_request_object(
-        &verifier,
-        &jwt,
-        &WalletInvocationContext::ProtocolTransport,
-        11,
-    )
-    .expect_err("attestation subject binding is rejected");
-
-    assert_eq!(err.reason(), WalletErrorReason::InvalidVerifierAttestation);
-}
+#[path = "verify_signed_request_object_attestation_tests.rs"]
+mod attestation_tests;

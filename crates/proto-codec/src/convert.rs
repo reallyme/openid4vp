@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -12,6 +12,7 @@ use reallyme_openid4vp_dcql::DcqlQuery;
 use reallyme_openid4vp_proto::generated::proto::reallyme::openid4vp::v1 as pb;
 use reallyme_openid4vp_types::{
     AuthorizationRequestObject, ClientMetadata, ResponseMode, ResponseType, TransactionData,
+    VerifierInfoEntry, MAX_VERIFIER_INFO_DATA_BYTES, MAX_VERIFIER_INFO_ENTRIES,
 };
 use serde_json::Value as JsonValue;
 
@@ -37,6 +38,19 @@ pub fn authorization_request_to_proto(
             .map(transaction_data_to_proto)
             .collect::<Result<Vec<_>, _>>()?,
         None => Vec::new(),
+    };
+    let verifier_info = match request.verifier_info.as_ref() {
+        Some(entries) if !entries.is_empty() && entries.len() <= MAX_VERIFIER_INFO_ENTRIES => {
+            MessageField::some(pb::VerifierInfoSet {
+                entries: entries
+                    .iter()
+                    .map(verifier_info_to_proto)
+                    .collect::<Result<Vec<_>, _>>()?,
+                __buffa_unknown_fields: Default::default(),
+            })
+        }
+        Some(_) => return Err(OpenId4VpProtoError::InvalidField),
+        None => MessageField::none(),
     };
     let client_metadata = match request.client_metadata.as_ref() {
         Some(metadata) => MessageField::some(client_metadata_to_proto(metadata)?),
@@ -72,6 +86,7 @@ pub fn authorization_request_to_proto(
         aud,
         iat: request.iat,
         exp: request.exp,
+        verifier_info,
         __buffa_unknown_fields: Default::default(),
     })
 }
@@ -104,6 +119,20 @@ pub fn proto_to_authorization_request(
                 .collect::<Result<Vec<_>, _>>()?,
         )
     };
+    let verifier_info = match request.verifier_info.as_option() {
+        None => None,
+        Some(info) => {
+            if info.entries.is_empty() || info.entries.len() > MAX_VERIFIER_INFO_ENTRIES {
+                return Err(OpenId4VpProtoError::InvalidField);
+            }
+            Some(
+                info.entries
+                    .iter()
+                    .map(proto_to_verifier_info)
+                    .collect::<Result<Vec<_>, _>>()?,
+            )
+        }
+    };
     let client_metadata = match request.client_metadata.as_option() {
         Some(metadata) => Some(proto_to_client_metadata(metadata)?),
         None => None,
@@ -132,6 +161,7 @@ pub fn proto_to_authorization_request(
         transaction_data,
         client_metadata,
         client_metadata_uri: request.client_metadata_uri.clone(),
+        verifier_info,
         expected_origins,
         iss: request.iss.clone(),
         aud,
@@ -155,6 +185,39 @@ fn proto_to_client_metadata(
 ) -> Result<ClientMetadata, OpenId4VpProtoError> {
     let raw = deserialize_sensitive_json(&metadata.json, MAX_CLIENT_METADATA_JSON_BYTES)?;
     Ok(ClientMetadata { raw })
+}
+
+fn verifier_info_to_proto(
+    entry: &VerifierInfoEntry,
+) -> Result<pb::VerifierInfo, OpenId4VpProtoError> {
+    entry.validate()?;
+    Ok(pb::VerifierInfo {
+        format: entry.format().to_owned(),
+        data_json: serialize_sensitive_json(entry.data(), MAX_VERIFIER_INFO_DATA_BYTES)?,
+        credential_ids: entry
+            .credential_ids()
+            .map_or_else(MessageField::none, |ids| {
+                MessageField::some(pb::VerifierInfoCredentialIds {
+                    values: ids.to_vec(),
+                    __buffa_unknown_fields: Default::default(),
+                })
+            }),
+        __buffa_unknown_fields: Default::default(),
+    })
+}
+
+fn proto_to_verifier_info(
+    entry: &pb::VerifierInfo,
+) -> Result<VerifierInfoEntry, OpenId4VpProtoError> {
+    let data: JsonValue =
+        deserialize_sensitive_json(&entry.data_json, MAX_VERIFIER_INFO_DATA_BYTES)?;
+    let credential_ids = match entry.credential_ids.as_option() {
+        None => None,
+        Some(ids) if !ids.values.is_empty() => Some(ids.values.clone()),
+        Some(_) => return Err(OpenId4VpProtoError::InvalidField),
+    };
+    VerifierInfoEntry::try_new(entry.format.clone(), data, credential_ids)
+        .map_err(OpenId4VpProtoError::from)
 }
 
 fn transaction_data_to_proto(

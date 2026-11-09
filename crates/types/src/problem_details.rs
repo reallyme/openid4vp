@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -253,6 +253,7 @@ impl From<OpenId4vpTypeError> for ProblemDetails {
             | OpenId4vpTypeErrorReason::EmptyCollection
             | OpenId4vpTypeErrorReason::InvalidEncoding
             | OpenId4vpTypeErrorReason::InvalidRequestObjectJwt
+            | OpenId4vpTypeErrorReason::InvalidVerifierInfo
             | OpenId4vpTypeErrorReason::JsonDepthExceeded
             | OpenId4vpTypeErrorReason::JsonSizeExceeded
             | OpenId4vpTypeErrorReason::DuplicateJsonKey

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -11,9 +11,10 @@ use reallyme_openid4vp_proto::generated::proto::reallyme::openid4vp::v1 as pb;
 use reallyme_openid4vp_proto::generated::proto::reallyme::openid4vp::v1::__buffa::oneof::decode_dc_api_authorization_response_request::Response as DcApiResponseOneof;
 use reallyme_openid4vp_proto_codec::{
     authorization_request_to_proto, authorization_response_to_proto,
-    dc_api_authorization_response_to_proto, encrypted_dc_api_authorization_response_to_proto,
-    session_record_to_proto,
+    dc_api_authorization_response_to_proto, session_record_to_proto,
 };
+#[cfg(feature = "jose")]
+use reallyme_openid4vp_proto_codec::encrypted_dc_api_authorization_response_to_proto;
 use reallyme_openid4vp_types::{
     AuthorizationRequestObject, AuthorizationResponse, ClientIdentifier, PresentationValue,
     RequestUriMethod, ResponseMode, ResponseType, JSON_MEDIA_TYPE, PROBLEM_JSON_MEDIA_TYPE,
@@ -672,6 +673,7 @@ fn authorization_request() -> AuthorizationRequestObject {
         transaction_data: None,
         client_metadata: None,
         client_metadata_uri: None,
+        verifier_info: None,
         expected_origins: None,
         iss: Some("x509_san_dns:verifier.example".to_owned()),
         aud: Some(vec!["openid4vp://".to_owned()]),
@@ -731,6 +733,7 @@ fn session() -> SessionRecord {
             redirect_uri: None,
             dc_api_origin: None,
             expiry_unix: 100,
+            request_time_unix: 10,
             transaction_data_bindings: Vec::new(),
         },
         state: Some("fedcba9876543210".to_owned()),

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -7,13 +7,14 @@
 use reallyme_openid4vp_dcql::{CredentialFormat, CredentialQuery, DcqlQuery, QueryId};
 use reallyme_openid4vp_types::{
     AuthorizationRequestObject, ClientIdentifier, ResponseMode, ResponseType, TransactionData,
+    VerifierInfoEntry,
 };
 use serde_json::{json, Map as JsonMap};
 
 use super::{
     validate_unsigned_dc_api_request, validate_unsigned_dc_api_request_with_transaction_data_policy,
 };
-use crate::{WalletErrorReason, WalletTransactionDataPolicy};
+use crate::{WalletAuthorizationRequest, WalletErrorReason, WalletTransactionDataPolicy};
 
 fn unsigned_request() -> AuthorizationRequestObject {
     let mut credential_meta = JsonMap::new();
@@ -44,6 +45,7 @@ fn unsigned_request() -> AuthorizationRequestObject {
         transaction_data: None,
         client_metadata: None,
         client_metadata_uri: None,
+        verifier_info: None,
         expected_origins: None,
         iss: None,
         aud: None,
@@ -61,9 +63,40 @@ fn accepts_unsigned_dc_api_request_and_ignores_identity_members() {
     );
     request.expected_origins = Some(vec!["https://wrong.example".to_owned()]);
     request.iss = Some("ignored issuer".to_owned());
+    request.state = Some("ignored state".to_owned());
+    request.verifier_info = Some(vec![VerifierInfoEntry::try_new(
+        "registration_cert".to_owned(),
+        json!("forged-registration"),
+        None,
+    )
+    .expect("test attestation is structurally valid")]);
 
-    validate_unsigned_dc_api_request(&request)
+    let accepted = validate_unsigned_dc_api_request(&request)
         .expect("unsigned browser-origin requests ignore identity request members");
+    assert!(accepted.request().client_id.is_none());
+    assert!(accepted.request().expected_origins.is_none());
+    assert!(accepted.request().verifier_info.is_none());
+    assert!(accepted.request().iss.is_none());
+    assert!(accepted.request().state.is_none());
+}
+
+#[test]
+fn unsigned_dc_api_preserves_only_a_separate_untrusted_time_hint() {
+    let mut request = unsigned_request();
+    request.iat = Some(100);
+    request.exp = Some(200);
+    let accepted = validate_unsigned_dc_api_request(&request)
+        .expect("well-formed unsigned request remains valid");
+    assert_eq!(accepted.request().iat, None);
+    assert_eq!(accepted.request().exp, None);
+    let hint = accepted.untrusted_time_hint().expect("complete time hint");
+    assert_eq!(hint.issued_at_unix(), 100);
+    assert_eq!(hint.expires_at_unix(), 200);
+
+    request.exp = None;
+    let incomplete = validate_unsigned_dc_api_request(&request)
+        .expect("non-ZK unsigned request may omit a time hint");
+    assert!(incomplete.untrusted_time_hint().is_none());
 }
 
 #[test]

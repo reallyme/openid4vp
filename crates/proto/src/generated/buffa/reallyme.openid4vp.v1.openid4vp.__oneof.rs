@@ -9,12 +9,16 @@ pub mod presentation_value {
         Compact(::buffa::alloc::string::String),
         Json(::buffa::alloc::vec::Vec<u8>),
         Zk(::buffa::alloc::boxed::Box<super::super::super::ZkPresentation>),
+        ZkPreparedPersona(::buffa::alloc::vec::Vec<u8>),
     }
     impl ::core::fmt::Debug for Kind {
         fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
             match self {
                 Self::Compact(..) => formatter.write_str("Kind::Compact(<redacted>)"),
                 Self::Json(..) => formatter.write_str("Kind::Json(<redacted>)"),
+                Self::ZkPreparedPersona(..) => {
+                    formatter.write_str("Kind::ZkPreparedPersona(<redacted>)")
+                }
 
                 _ => formatter.write_str("Kind(<non-sensitive>)"),
             }
@@ -25,6 +29,7 @@ pub mod presentation_value {
             match self {
                 Self::Compact(value) => ::zeroize::Zeroize::zeroize(value),
                 Self::Json(value) => ::zeroize::Zeroize::zeroize(value),
+                Self::ZkPreparedPersona(value) => ::zeroize::Zeroize::zeroize(value),
                 _ => {}
             }
         }
@@ -56,6 +61,9 @@ pub mod presentation_value {
                 }
                 Self::Zk(v) => {
                     map.serialize_entry("zk", &**v)?;
+                }
+                Self::ZkPreparedPersona(v) => {
+                    map.serialize_entry("zkPreparedPersona", &::buffa::json_helpers::ProtoJson(v))?;
                 }
             }
             map.end()

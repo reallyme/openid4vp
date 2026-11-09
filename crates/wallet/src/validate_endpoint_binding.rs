@@ -1,17 +1,20 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use core::fmt;
-
 use reallyme_openid4vp_types::{CanonicalDnsName, MAX_DNS_NAME_BYTES};
 use secrecy::ExposeSecret;
 use secrecy::SecretSlice;
-use sha2::{Digest, Sha256};
 use subtle::ConstantTimeEq;
 use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
 
 use crate::{WalletError, WalletErrorReason};
+
+#[path = "endpoint_binding_digest.rs"]
+mod endpoint_binding_digest;
+
+use endpoint_binding_digest::{constant_time_bytes_eq, sha256_array};
 
 /// Maximum number of certificates permitted in a Request Object `x5c` chain.
 pub const MAX_X509_CHAIN_CERTIFICATES: usize = 8;
@@ -138,7 +141,7 @@ impl Drop for X509TrustDecisionContext {
 impl ZeroizeOnDrop for X509TrustDecisionContext {}
 
 /// Structurally validated, bounded `x5c` certificate chain in leaf-first order.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct BoundedX509CertificateChain {
     certificates_der: Vec<Zeroizing<Vec<u8>>>,
 }
@@ -352,6 +355,7 @@ pub enum X509TrustIndeterminateReason {
 /// Opaque signer-bound receipt created only by the Request Object pipeline.
 pub struct VerifiedX509CertificateBinding {
     dns_names: Vec<CanonicalDnsName>,
+    chain: BoundedX509CertificateChain,
     leaf_certificate_sha256: [u8; 32],
     chain_certificate_sha256: Vec<[u8; 32]>,
     context: X509TrustDecisionContext,
@@ -405,6 +409,7 @@ impl VerifiedX509CertificateBinding {
         let chain_certificate_sha256 = signer.chain.fingerprints_sha256();
         Ok(Self {
             dns_names,
+            chain: signer.chain,
             leaf_certificate_sha256,
             chain_certificate_sha256,
             context: signer.context,
@@ -433,6 +438,12 @@ impl VerifiedX509CertificateBinding {
     #[must_use]
     pub fn chain_certificate_sha256(&self) -> &[[u8; 32]] {
         &self.chain_certificate_sha256
+    }
+
+    /// Return the exact leaf-first certificate chain accepted for this signer.
+    #[must_use]
+    pub const fn certificate_chain(&self) -> &BoundedX509CertificateChain {
+        &self.chain
     }
 
     /// Return the accepted trust-purpose and provenance context.
@@ -469,6 +480,7 @@ impl fmt::Debug for VerifiedX509CertificateBinding {
 impl Zeroize for VerifiedX509CertificateBinding {
     fn zeroize(&mut self) {
         self.dns_names.zeroize();
+        self.chain.zeroize();
         self.leaf_certificate_sha256.zeroize();
         self.chain_certificate_sha256.zeroize();
         self.context.zeroize();
@@ -482,18 +494,6 @@ impl Drop for VerifiedX509CertificateBinding {
 }
 
 impl ZeroizeOnDrop for VerifiedX509CertificateBinding {}
-
-#[cfg_attr(not(feature = "jose"), allow(dead_code))]
-fn sha256_array(value: &[u8]) -> [u8; 32] {
-    let digest = Sha256::digest(value);
-    let mut output = [0_u8; 32];
-    output.copy_from_slice(&digest);
-    output
-}
-
-fn constant_time_bytes_eq(left: &[u8], right: &[u8]) -> bool {
-    bool::from(left.ct_eq(right))
-}
 
 #[cfg(test)]
 #[path = "validate_endpoint_binding_tests.rs"]

@@ -4,8 +4,18 @@ Wallet-side OpenID4VP request parsing, Request Object verification boundaries,
 transport validation, and presentation preparation hooks.
 
 Network access, trust resolution, JOSE verification, and ZK proving are owned by
-hosts or higher-level SDK crates. This crate validates the backend-neutral ZK
-envelope before including it in an authorization response.
+hosts or higher-level SDK crates. For a direct or private credential response,
+`prepare_zk_presentation_from_status_qualified_bundle` accepts an API-owned
+four-stage claim bundle and its joined issuer-credential-status proof with a
+verified request receipt and authenticated invocation context. It checks the
+selected ZK DCQL query, claimed claim, nonce, audience, and at most one
+applicable transaction-data digest before encoding the `vp_token` entry.
+`prepare_zk_presentation_from_bundle` encodes claim evidence alone; the
+verifier rejects that four-stage value as a complete credential presentation.
+The lower-level
+`prepare_zk_presentation` validates an externally supplied envelope's wire
+shape; it does not authenticate any proof. Verifiers must check each proof
+stage with an injected backend and deployment issuer policy.
 
 X.509 Request Object resolvers return one atomic key-and-trust result. For the
 X.509 modes, that result contains a typed `Trusted`, `Rejected`, or `Indeterminate` WRPAC

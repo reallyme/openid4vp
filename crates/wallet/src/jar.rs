@@ -1,11 +1,11 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use core::fmt;
 
 use reallyme_openid4vp_types::{
-    AuthorizationRequestObject, ClientIdentifier, ClientIdentifierPrefix,
+    AuthorizationRequestObject, ClientIdentifier, ClientIdentifierPrefix, VerifierInfoEntry,
 };
 use subtle::ConstantTimeEq;
 use zeroize::{Zeroize, ZeroizeOnDrop};
@@ -14,9 +14,9 @@ use crate::WalletTransactionDataPolicy;
 use crate::{
     validate_client_metadata_reference_binding, validate_response_endpoint_binding,
     validate_verifier_attestation_binding,
-    verifier_attestation::validate_verifier_attestation_claim_binding,
+    verifier_attestation::validate_verifier_attestation_claim_binding, BoundedX509CertificateChain,
     VerifiedClientIdentifierBinding, VerifiedClientMetadataReference, VerifiedVerifierAttestation,
-    VerifiedX509CertificateBinding,
+    VerifiedX509CertificateBinding, X509TrustDecisionContext,
 };
 use crate::{
     AuthorizationRequestTransport, WalletError, WalletErrorReason, WalletInvocationContext,
@@ -40,6 +40,69 @@ use crate::{
 pub struct VerifiedWalletRequest {
     /// Parsed Authorization Request Object.
     request: AuthorizationRequestObject,
+    /// Request-signing leaf provenance retained for downstream RP binding.
+    x509_request_signer: Option<VerifiedX509RequestSigner>,
+}
+
+/// Authenticated request signer provenance from the verified X.509 path.
+///
+/// This receipt identifies the party that signed the Request Object. It does
+/// not assert registration scope or authorize any attribute disclosure.
+#[derive(Clone, PartialEq, Eq)]
+pub struct VerifiedX509RequestSigner {
+    leaf_certificate_sha256: [u8; 32],
+    chain: BoundedX509CertificateChain,
+    trust_context: X509TrustDecisionContext,
+}
+
+impl VerifiedX509RequestSigner {
+    /// Digest of the exact verified request-signing leaf certificate.
+    #[must_use]
+    pub const fn leaf_certificate_sha256(&self) -> &[u8; 32] {
+        &self.leaf_certificate_sha256
+    }
+
+    /// Purpose, trust snapshot, and validity of the accepted signer path.
+    #[must_use]
+    pub const fn trust_context(&self) -> &X509TrustDecisionContext {
+        &self.trust_context
+    }
+
+    /// Return the exact certificate chain accepted for the signed Request Object.
+    #[must_use]
+    pub const fn certificate_chain(&self) -> &BoundedX509CertificateChain {
+        &self.chain
+    }
+}
+
+impl fmt::Debug for VerifiedX509RequestSigner {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("VerifiedX509RequestSigner(<redacted>)")
+    }
+}
+
+impl Zeroize for VerifiedX509RequestSigner {
+    fn zeroize(&mut self) {
+        self.leaf_certificate_sha256.zeroize();
+        self.chain.zeroize();
+        self.trust_context.zeroize();
+    }
+}
+
+impl Drop for VerifiedX509RequestSigner {
+    fn drop(&mut self) {
+        self.zeroize();
+    }
+}
+
+impl ZeroizeOnDrop for VerifiedX509RequestSigner {}
+
+impl VerifiedWalletRequest {
+    /// Return authenticated X.509 signer provenance when the request used it.
+    #[must_use]
+    pub const fn x509_request_signer(&self) -> Option<&VerifiedX509RequestSigner> {
+        self.x509_request_signer.as_ref()
+    }
 }
 
 pub(crate) mod sealed {
@@ -135,6 +198,7 @@ impl fmt::Debug for VerifiedWalletRequest {
 impl Zeroize for VerifiedWalletRequest {
     fn zeroize(&mut self) {
         self.request.zeroize();
+        self.x509_request_signer.zeroize();
     }
 }
 
@@ -214,6 +278,20 @@ impl VerifiedRequestObject {
 
     pub(crate) fn client_identifier(&self) -> Option<&ClientIdentifier> {
         self.request.client_id.as_ref()
+    }
+
+    pub(crate) fn project_protected_verifier_info(
+        &mut self,
+        verifier_info: Option<Vec<VerifierInfoEntry>>,
+    ) -> Result<(), WalletError> {
+        // JWS JSON Serialization puts verifier_info in the per-signature
+        // protected header. Accepting it from the shared payload would let
+        // one trust framework's attestation be used with another signer.
+        if self.request.verifier_info.is_some() {
+            return Err(WalletError::new(WalletErrorReason::InvalidRequestObject));
+        }
+        self.request.verifier_info = verifier_info;
+        Ok(())
     }
 }
 
@@ -329,7 +407,19 @@ pub(crate) fn finish_verified_request_object_with_transaction_data_policy(
         temporal_policy,
         transaction_data_policy,
     )?;
-    Ok(VerifiedWalletRequest { request })
+    let x509_request_signer =
+        evidence
+            .x509_certificate_binding
+            .as_ref()
+            .map(|binding| VerifiedX509RequestSigner {
+                leaf_certificate_sha256: *binding.leaf_certificate_sha256(),
+                chain: binding.certificate_chain().clone(),
+                trust_context: binding.trust_context().clone(),
+            });
+    Ok(VerifiedWalletRequest {
+        request,
+        x509_request_signer,
+    })
 }
 
 /// Verify a by-value Request Object transport and enforce transport bindings.
@@ -379,7 +469,19 @@ pub fn verify_request_transport_with_transaction_data_policy(
         temporal_policy,
         transaction_data_policy,
     )?;
-    Ok(VerifiedWalletRequest { request })
+    let x509_request_signer =
+        evidence
+            .x509_certificate_binding
+            .as_ref()
+            .map(|binding| VerifiedX509RequestSigner {
+                leaf_certificate_sha256: *binding.leaf_certificate_sha256(),
+                chain: binding.certificate_chain().clone(),
+                trust_context: binding.trust_context().clone(),
+            });
+    Ok(VerifiedWalletRequest {
+        request,
+        x509_request_signer,
+    })
 }
 
 include!("jar_validation.rs");

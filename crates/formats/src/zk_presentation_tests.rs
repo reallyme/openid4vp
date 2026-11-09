@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -200,7 +200,7 @@ fn presentation_fixture() -> ZkPresentation {
         stage,
         circuit_ref: ZkPresentationCircuitRef {
             hash_strategy: "sha256".to_owned(),
-            family: "private_claim_v1".to_owned(),
+            family: "credential_subject_claim_v1".to_owned(),
             stage: stage_name.to_owned(),
             version: 1,
         },
@@ -211,7 +211,7 @@ fn presentation_fixture() -> ZkPresentation {
     .collect();
     ZkPresentation {
         type_: ZK_PRESENTATION_TYPE.to_owned(),
-        profile: ZkPresentationProfile::PrivateClaimV1,
+        profile: ZkPresentationProfile::CredentialSubjectClaimV1,
         proof_suite: ZkPresentationProofSuite::BarretenbergUltraHonkKeccakZkNoIpa,
         stages,
         derived_claims: vec![DerivedClaimStatement {

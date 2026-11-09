@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -374,6 +374,7 @@ fn session(format: &str) -> SessionRecord {
             redirect_uri: None,
             dc_api_origin: None,
             expiry_unix: 1_800_000_000,
+            request_time_unix: 1_700_000_000,
             transaction_data_bindings: Vec::new(),
         },
         state: Some("fedcba9876543210".to_owned()),

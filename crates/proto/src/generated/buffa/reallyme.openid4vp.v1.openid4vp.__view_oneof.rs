@@ -13,12 +13,16 @@ pub mod presentation_value {
                 super::super::super::super::__buffa::view::ZkPresentationView<'a>,
             >,
         ),
+        ZkPreparedPersona(&'a [u8]),
     }
     impl<'a> ::core::fmt::Debug for Kind<'a> {
         fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
             match self {
                 Self::Compact(..) => formatter.write_str("KindView::Compact(<redacted>)"),
                 Self::Json(..) => formatter.write_str("KindView::Json(<redacted>)"),
+                Self::ZkPreparedPersona(..) => {
+                    formatter.write_str("KindView::ZkPreparedPersona(<redacted>)")
+                }
 
                 _ => formatter.write_str("KindView(<non-sensitive>)"),
             }

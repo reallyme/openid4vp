@@ -41,6 +41,9 @@ pub mod __buffa {
         reg.register_json_any(super::__CLIENT_IDENTIFIER_JSON_ANY);
         reg.register_json_any(super::__CLIENT_METADATA_JSON_ANY);
         reg.register_json_any(super::__TRANSACTION_DATA_JSON_ANY);
+        reg.register_json_any(super::__VERIFIER_INFO_CREDENTIAL_IDS_JSON_ANY);
+        reg.register_json_any(super::__VERIFIER_INFO_JSON_ANY);
+        reg.register_json_any(super::__VERIFIER_INFO_SET_JSON_ANY);
         reg.register_json_any(super::__AUTHORIZATION_REQUEST_JSON_ANY);
         reg.register_json_any(super::__VP_TOKEN_ENTRY_JSON_ANY);
         reg.register_json_any(super::__AUTHORIZATION_RESPONSE_JSON_ANY);
@@ -248,6 +251,18 @@ pub use self::__buffa::view::ValidateAuthorizationResponseRequestView;
 pub use self::__buffa::view::ValidateAuthorizationResponseResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::ValidateAuthorizationResponseResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::VerifierInfoCredentialIdsOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::VerifierInfoCredentialIdsView;
+#[doc(inline)]
+pub use self::__buffa::view::VerifierInfoOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::VerifierInfoSetOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::VerifierInfoSetView;
+#[doc(inline)]
+pub use self::__buffa::view::VerifierInfoView;
 #[doc(inline)]
 pub use self::__buffa::view::VerifyAuthorizationRequestRequestOwnedView;
 #[doc(inline)]

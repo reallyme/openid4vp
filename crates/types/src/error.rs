@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -39,6 +39,8 @@ pub enum OpenId4vpTypeErrorReason {
     UnsupportedTransactionDataHashAlgorithm,
     /// A compact JWT had an invalid Request Object shape.
     InvalidRequestObjectJwt,
+    /// A verifier attestation had an invalid or oversized generic shape.
+    InvalidVerifierInfo,
     /// Deterministic JSON serialization failed.
     SerializationFailed,
     /// A base64url-encoded protocol value was malformed.

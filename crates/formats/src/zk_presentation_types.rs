@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -129,11 +129,13 @@ pub enum ZkPresentationProofSuite {
 #[serde(rename_all = "snake_case")]
 pub enum ZkPresentationProfile {
     /// Private first-person claim proof.
-    PrivateClaimV1,
+    CredentialSubjectClaimV1,
     /// Private same-holder persona proof.
     PrivatePersonaClaimV1,
-    /// Public, intentionally linkable persona proof.
-    PublicPersonaClaimV1,
+    /// Nine-proof private-persona common-credential-root composition proof.
+    CommonCredentialRootPrivatePersonaV1,
+    /// Nine-proof public-persona common-credential-root composition proof.
+    CommonCredentialRootPublicPersonaV1,
 }
 
 /// Required production stage carried in a ZK presentation bundle.
@@ -148,6 +150,24 @@ pub enum ZkPresentationStageKind {
     CredentialRoot,
     /// Holder-bound claim membership proof.
     Claim,
+    /// Common-credential-root root-attestation proof.
+    RootAttestation,
+    /// Common-credential-root active-status proof.
+    RootStatus,
+    /// First credential-role lineage proof.
+    Lineage0,
+    /// Second credential-role lineage proof.
+    Lineage1,
+    /// First selected-claim proof.
+    SelectedClaim0,
+    /// Second selected-claim proof.
+    SelectedClaim1,
+    /// First issuer-signed validity and current credential-status proof.
+    IssuerCredentialStatus0,
+    /// Second issuer-signed validity and current credential-status proof.
+    IssuerCredentialStatus1,
+    /// Issuer-signed validity and current status for a direct/private claim.
+    IssuerCredentialStatus,
 }
 
 /// One exact circuit proof inside the production presentation bundle.
@@ -207,7 +227,7 @@ pub struct ZkPresentation {
     pub profile: ZkPresentationProfile,
     /// Exact proof-system suite claimed by the presentation.
     pub proof_suite: ZkPresentationProofSuite,
-    /// Complete four-stage production proof bundle.
+    /// Complete production proof bundle or common-credential-root proof set.
     pub stages: Vec<ZkPresentationStage>,
     /// Derived claims asserted by this proof.
     pub derived_claims: Vec<DerivedClaimStatement>,

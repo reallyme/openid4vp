@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 ReallyMe LLC
+// SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -7,9 +7,10 @@ use std::collections::BTreeMap;
 use buffa::MessageField;
 use reallyme_openid4vp_dcql::QueryId;
 use reallyme_openid4vp_formats::{
-    parse_zk_presentation_value, validate_zk_presentation_shape, DerivedClaimStatement,
-    ZkPresentation, ZkPresentationBinding, ZkPresentationCircuitRef, ZkPresentationProfile,
-    ZkPresentationProofSuite, ZkPresentationStage, ZkPresentationStageKind,
+    encode_zk_prepared_persona_value, parse_zk_prepared_persona_value, parse_zk_presentation_value,
+    validate_zk_presentation_shape, DerivedClaimStatement, ZkPresentation, ZkPresentationBinding,
+    ZkPresentationCircuitRef, ZkPresentationProfile, ZkPresentationProofSuite, ZkPresentationStage,
+    ZkPresentationStageKind,
 };
 use reallyme_openid4vp_proto::generated::proto::reallyme::openid4vp::v1 as pb;
 use reallyme_openid4vp_types::{AuthorizationResponse, PresentationValue, VpToken};
@@ -85,6 +86,16 @@ fn presentation_value_to_proto(
             Some(pb::presentation_value::Kind::Compact(value.clone()))
         }
         PresentationValue::Json(json) => {
+            if let Some(prepared) = parse_zk_prepared_persona_value(value)
+                .map_err(|_| OpenId4VpProtoError::InvalidField)?
+            {
+                return Ok(pb::PresentationValue {
+                    kind: Some(pb::presentation_value::Kind::ZkPreparedPersona(
+                        prepared.to_vec(),
+                    )),
+                    __buffa_unknown_fields: Default::default(),
+                });
+            }
             let presentation = parse_zk_presentation_value(value)
                 .map_err(|_| OpenId4VpProtoError::InvalidField)?;
             if let Some(presentation) = presentation {
@@ -123,6 +134,9 @@ fn proto_to_presentation_value(
             let presentation = proto_to_zk_presentation(value.as_ref())?;
             serialize_sensitive_json_value(&presentation, MAX_PRESENTATION_JSON_BYTES)
                 .map(PresentationValue::Json)
+        }
+        pb::presentation_value::Kind::ZkPreparedPersona(value) => {
+            encode_zk_prepared_persona_value(value).map_err(|_| OpenId4VpProtoError::InvalidField)
         }
     }
 }
@@ -177,12 +191,17 @@ fn proto_to_zk_presentation(
 
 fn zk_presentation_profile_to_proto(profile: ZkPresentationProfile) -> pb::ZkPresentationProfile {
     match profile {
-        ZkPresentationProfile::PrivateClaimV1 => pb::ZkPresentationProfile::PrivateClaimV1,
+        ZkPresentationProfile::CredentialSubjectClaimV1 => {
+            pb::ZkPresentationProfile::CredentialSubjectClaimV1
+        }
         ZkPresentationProfile::PrivatePersonaClaimV1 => {
             pb::ZkPresentationProfile::PrivatePersonaClaimV1
         }
-        ZkPresentationProfile::PublicPersonaClaimV1 => {
-            pb::ZkPresentationProfile::PublicPersonaClaimV1
+        ZkPresentationProfile::CommonCredentialRootPrivatePersonaV1 => {
+            pb::ZkPresentationProfile::CommonCredentialRootPrivatePersonaV1
+        }
+        ZkPresentationProfile::CommonCredentialRootPublicPersonaV1 => {
+            pb::ZkPresentationProfile::CommonCredentialRootPublicPersonaV1
         }
     }
 }
@@ -191,14 +210,17 @@ fn proto_to_zk_presentation_profile(
     profile: &buffa::EnumValue<pb::ZkPresentationProfile>,
 ) -> Result<ZkPresentationProfile, OpenId4VpProtoError> {
     match profile.as_known() {
-        Some(pb::ZkPresentationProfile::PrivateClaimV1) => {
-            Ok(ZkPresentationProfile::PrivateClaimV1)
+        Some(pb::ZkPresentationProfile::CredentialSubjectClaimV1) => {
+            Ok(ZkPresentationProfile::CredentialSubjectClaimV1)
         }
         Some(pb::ZkPresentationProfile::PrivatePersonaClaimV1) => {
             Ok(ZkPresentationProfile::PrivatePersonaClaimV1)
         }
-        Some(pb::ZkPresentationProfile::PublicPersonaClaimV1) => {
-            Ok(ZkPresentationProfile::PublicPersonaClaimV1)
+        Some(pb::ZkPresentationProfile::CommonCredentialRootPrivatePersonaV1) => {
+            Ok(ZkPresentationProfile::CommonCredentialRootPrivatePersonaV1)
+        }
+        Some(pb::ZkPresentationProfile::CommonCredentialRootPublicPersonaV1) => {
+            Ok(ZkPresentationProfile::CommonCredentialRootPublicPersonaV1)
         }
         Some(pb::ZkPresentationProfile::Unspecified) | None => {
             Err(OpenId4VpProtoError::InvalidEnumValue)
@@ -242,6 +264,21 @@ fn zk_presentation_stage_kind_to_proto(
         }
         ZkPresentationStageKind::CredentialRoot => pb::ZkPresentationStageKind::CredentialRoot,
         ZkPresentationStageKind::Claim => pb::ZkPresentationStageKind::Claim,
+        ZkPresentationStageKind::RootAttestation => pb::ZkPresentationStageKind::RootAttestation,
+        ZkPresentationStageKind::RootStatus => pb::ZkPresentationStageKind::RootStatus,
+        ZkPresentationStageKind::Lineage0 => pb::ZkPresentationStageKind::Lineage0,
+        ZkPresentationStageKind::Lineage1 => pb::ZkPresentationStageKind::Lineage1,
+        ZkPresentationStageKind::SelectedClaim0 => pb::ZkPresentationStageKind::SelectedClaim0,
+        ZkPresentationStageKind::SelectedClaim1 => pb::ZkPresentationStageKind::SelectedClaim1,
+        ZkPresentationStageKind::IssuerCredentialStatus0 => {
+            pb::ZkPresentationStageKind::IssuerCredentialStatus0
+        }
+        ZkPresentationStageKind::IssuerCredentialStatus1 => {
+            pb::ZkPresentationStageKind::IssuerCredentialStatus1
+        }
+        ZkPresentationStageKind::IssuerCredentialStatus => {
+            pb::ZkPresentationStageKind::IssuerCredentialStatus
+        }
     }
 }
 
@@ -257,6 +294,27 @@ fn proto_to_zk_presentation_stage_kind(
             Ok(ZkPresentationStageKind::CredentialRoot)
         }
         Some(pb::ZkPresentationStageKind::Claim) => Ok(ZkPresentationStageKind::Claim),
+        Some(pb::ZkPresentationStageKind::RootAttestation) => {
+            Ok(ZkPresentationStageKind::RootAttestation)
+        }
+        Some(pb::ZkPresentationStageKind::RootStatus) => Ok(ZkPresentationStageKind::RootStatus),
+        Some(pb::ZkPresentationStageKind::Lineage0) => Ok(ZkPresentationStageKind::Lineage0),
+        Some(pb::ZkPresentationStageKind::Lineage1) => Ok(ZkPresentationStageKind::Lineage1),
+        Some(pb::ZkPresentationStageKind::SelectedClaim0) => {
+            Ok(ZkPresentationStageKind::SelectedClaim0)
+        }
+        Some(pb::ZkPresentationStageKind::SelectedClaim1) => {
+            Ok(ZkPresentationStageKind::SelectedClaim1)
+        }
+        Some(pb::ZkPresentationStageKind::IssuerCredentialStatus0) => {
+            Ok(ZkPresentationStageKind::IssuerCredentialStatus0)
+        }
+        Some(pb::ZkPresentationStageKind::IssuerCredentialStatus1) => {
+            Ok(ZkPresentationStageKind::IssuerCredentialStatus1)
+        }
+        Some(pb::ZkPresentationStageKind::IssuerCredentialStatus) => {
+            Ok(ZkPresentationStageKind::IssuerCredentialStatus)
+        }
         Some(pb::ZkPresentationStageKind::Unspecified) | None => {
             Err(OpenId4VpProtoError::InvalidEnumValue)
         }

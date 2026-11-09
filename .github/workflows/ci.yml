@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2026 ReallyMe LLC
+# SPDX-FileCopyrightText: 2026 ReallyMe Technologies Limited
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -51,7 +51,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
         with:
-          toolchain: 1.98.1
+          toolchain: 1.99.0
 
       - name: Cache Cargo
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
@@ -128,7 +128,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
         with:
-          toolchain: 1.98.1
+          toolchain: 1.99.0
           components: rustfmt, clippy
 
       - name: Install ripgrep
@@ -146,7 +146,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: reallyme/release-readiness
-          ref: bdedc88f3f25fcc14242730d4dec6ce6a0c75531
+          ref: 9cf40c7da1def8a8d809af51789284097c572dd5
           path: openid4vp/.release-readiness
           persist-credentials: false
 
@@ -156,8 +156,8 @@ jobs:
       - name: Rust source policy
         run: scripts/check-rust-source-policy.sh
 
-      - name: SSI remote dependency graph
-        run: node scripts/check-ssi-remote-resolution.mjs
+      - name: Published dependency graph
+        run: node scripts/check-published-dependency-resolution.mjs
 
       - name: SDK facade inventory
         run: node scripts/check-sdk-facade-inventory.mjs
@@ -216,13 +216,13 @@ jobs:
         run: scripts/audit_committed_lockfiles.sh
 
   public-msrv:
-    name: Public crates MSRV 1.96
+    name: Public crates MSRV 1.99
     runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: openid4vp
     env:
-      RUSTUP_TOOLCHAIN: 1.96.0
+      RUSTUP_TOOLCHAIN: 1.99.0
     steps:
       - name: Checkout OpenID4VP
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -233,19 +233,19 @@ jobs:
       - name: Install Rust MSRV toolchain
         uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
         with:
-          toolchain: 1.96.0
+          toolchain: 1.99.0
 
       - name: Cache public-crate MSRV build
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           workspaces: openid4vp
-          key: public-msrv-1.96
+          key: public-msrv-1.99
           cache-bin: false
 
       - name: Check the exact crates.io publish set at MSRV
         run: |
           set -euo pipefail
-          rustc --version | grep -F 'rustc 1.96.0 '
+          rustc --version | grep -F 'rustc 1.99.0 '
           cargo check --locked --all-features \
             -p reallyme-openid4vp-proto \
             -p reallyme-openid4vp-dcql \
@@ -276,7 +276,7 @@ jobs:
       - name: Install Rust toolchain and Wasm target
         uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
         with:
-          toolchain: 1.98.1
+          toolchain: 1.99.0
           targets: wasm32-unknown-unknown
 
       - name: Cache composed-Wasm inputs
@@ -327,7 +327,7 @@ jobs:
       - name: Install Rust toolchain and mobile target
         uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
         with:
-          toolchain: 1.98.1
+          toolchain: 1.99.0
           targets: ${{ matrix.target }}
 
       - name: Check native facade for the mobile target
