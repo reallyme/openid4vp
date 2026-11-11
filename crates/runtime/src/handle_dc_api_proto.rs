@@ -77,8 +77,8 @@ impl VerifierRuntimeService {
         // authenticated browser origin, negotiated response mode, or one-time
         // consumption boundary. Returning decrypted presentation data here
         // would invite callers to treat normalization as authorization. Both
-        // plaintext and encrypted variants therefore fail closed until the
-        // operation is replaced by a session-owned DC API endpoint.
+        // plaintext and encrypted variants therefore return UnsupportedFeature.
+        // This operation cannot authorize a DC API response.
         Err(runtime_error_to_problem_proto(RuntimeError::new(
             RuntimeErrorReason::UnsupportedFeature,
         )))

@@ -15,12 +15,20 @@ use reallyme_openid4vp_types::{
     TransactionDataHash,
 };
 use reallyme_zk_api::{
-    ZkArtifactManifestDigest, ZkCircuitFamily, ZkCircuitRef, ZkCircuitStage,
-    ZkCommonCredentialRootProofSlot, ZkCommonCredentialRootRawPublicInputs,
-    ZkCommonCredentialRootV1Profile, ZkHashStrategy, ZkIssuerCredentialStatusProof,
-    ZkProductionStage, ZkProof, ZkProofBundle, ZkProofBytes, ZkProofProfile, ZkProofSuite,
-    ZkPublicInputDescriptor, ZkPublicInputName, ZkPublicInputs, ZkSessionBinding, ZkStageProof,
-    ZkStatusQualifiedBundle,
+    artifacts::ZkArtifactManifestDigest,
+    circuits::ZkCredentialHashAlgorithm,
+    circuits::{ZkCircuitFamily, ZkCircuitRef, ZkCircuitStage},
+    claim_bundle::{
+        ZkClaimProofBundle, ZkClaimProofBundleKind, ZkClaimProofBundleStage,
+        ZkClaimProofBundleStageProof, ZkStatusQualifiedClaimProofBundle,
+    },
+    common_root::ZkCommonCredentialRootPersonaMode,
+    common_root::{ZkCommonCredentialRootProofSlot, ZkCommonCredentialRootRawPublicInputs},
+    issuer_status::ZkIssuerCredentialStatusProof,
+    proofs::{
+        ZkProof, ZkProofBytes, ZkProofSuite, ZkPublicInputDescriptor, ZkPublicInputName,
+        ZkPublicInputs, ZkSessionBinding,
+    },
 };
 use serde_json::json;
 
@@ -72,7 +80,9 @@ fn presentation_fixture() -> ZkPresentation {
             stage: stage_name.to_owned(),
             version: 1,
         },
-        artifact_manifest_sha256: [3_u8; 32],
+        artifact_identity: reallyme_openid4vp_formats::ZkPresentationArtifactIdentity::Manifest(
+            [3_u8; 32],
+        ),
         proof: vec![4_u8],
         public_inputs: vec![5_u8],
     })
@@ -261,11 +271,11 @@ fn fixture_public_inputs(circuit: ZkCircuitRef, binding: ZkSessionBinding) -> Zk
     ZkPublicInputs::try_from_bytes(bytes).expect("test public inputs are bounded")
 }
 
-fn bundle(transaction_data_hash: Option<[u8; 32]>) -> ZkProofBundle {
+fn bundle(transaction_data_hash: Option<[u8; 32]>) -> ZkClaimProofBundle {
     bundle_for("x509_san_dns:verifier.example", transaction_data_hash)
 }
 
-fn bundle_for(audience: &str, transaction_data_hash: Option<[u8; 32]>) -> ZkProofBundle {
+fn bundle_for(audience: &str, transaction_data_hash: Option<[u8; 32]>) -> ZkClaimProofBundle {
     let expected =
         build_zk_presentation_binding("0123456789abcdef", audience, transaction_data_hash);
     let binding = ZkSessionBinding {
@@ -273,13 +283,13 @@ fn bundle_for(audience: &str, transaction_data_hash: Option<[u8; 32]>) -> ZkProo
         audience_hash: expected.audience_hash,
         transaction_data_hash,
     };
-    let stages = ZkProductionStage::ALL
+    let stages = ZkClaimProofBundleStage::ALL
         .iter()
         .map(|stage| {
-            let circuit =
-                ZkProofProfile::CredentialSubjectClaimV1.source_ref(ZkHashStrategy::Sha256, *stage);
+            let circuit = ZkClaimProofBundleKind::CredentialSubjectClaimV1
+                .source_ref(ZkCredentialHashAlgorithm::Sha256, *stage);
             let proof = ZkProof::try_from_exact_parts(
-                ZkProofProfile::CredentialSubjectClaimV1.circuit_id(),
+                ZkClaimProofBundleKind::CredentialSubjectClaimV1.circuit_id(),
                 circuit,
                 ZkProofSuite::PRODUCTION,
                 ZkArtifactManifestDigest::from_bytes([7_u8; 32]),
@@ -287,22 +297,30 @@ fn bundle_for(audience: &str, transaction_data_hash: Option<[u8; 32]>) -> ZkProo
                 fixture_public_inputs(circuit, binding),
             )
             .expect("test stage proof is well formed");
-            ZkStageProof::try_from_parts(ZkProofProfile::CredentialSubjectClaimV1, *stage, proof)
-                .expect("test stage matches profile")
+            ZkClaimProofBundleStageProof::try_from_parts(
+                ZkClaimProofBundleKind::CredentialSubjectClaimV1,
+                *stage,
+                proof,
+            )
+            .expect("test stage matches profile")
         })
         .collect();
-    ZkProofBundle::try_from_stage_proofs(ZkProofProfile::CredentialSubjectClaimV1, binding, stages)
-        .expect("test bundle is structurally complete")
+    ZkClaimProofBundle::try_from_stage_proofs(
+        ZkClaimProofBundleKind::CredentialSubjectClaimV1,
+        binding,
+        stages,
+    )
+    .expect("test bundle is structurally complete")
 }
 
-fn status_qualified_bundle() -> ZkStatusQualifiedBundle {
+fn status_qualified_bundle() -> ZkStatusQualifiedClaimProofBundle {
     let claim_bundle = bundle(None);
     let statement = claim_bundle
         .decode_claimed_statement()
         .expect("test bundle has a claim");
     let binding = claim_bundle.session_binding();
     let circuit_ref = ZkCircuitRef::new(
-        ZkHashStrategy::Sha256,
+        ZkCredentialHashAlgorithm::Sha256,
         ZkCircuitFamily::CommonCredentialRootV1,
         ZkCircuitStage::IssuerCredentialStatus,
     );
@@ -322,12 +340,12 @@ fn status_qualified_bundle() -> ZkStatusQualifiedBundle {
         .expect("status proof follows the source ABI");
     let status = ZkIssuerCredentialStatusProof::try_from_parts(
         ZkProofSuite::PRODUCTION,
-        ZkArtifactManifestDigest::from_bytes([7; 32]),
+        reallyme_zk_api::artifacts::ZkArtifactSetIdentity::from_bytes([7; 32]),
         ZkProofBytes::try_copy_from_slice(&[5]).expect("fixture proof bytes are bounded"),
         inputs,
     )
     .expect("status proof has the pinned source");
-    ZkStatusQualifiedBundle::try_from_parts(claim_bundle, status)
+    ZkStatusQualifiedClaimProofBundle::try_from_parts(claim_bundle, status)
         .expect("status joins to the selected credential")
 }
 
@@ -349,11 +367,15 @@ fn serializes_status_qualified_claim_for_verified_request() {
         parsed.stages[4].stage,
         ZkPresentationStageKind::IssuerCredentialStatus,
     );
+    assert_eq!(
+        parsed.stages[4].artifact_identity,
+        reallyme_openid4vp_formats::ZkPresentationArtifactIdentity::ArtifactSet([7; 32]),
+    );
 }
 
 struct CommonCredentialRootProofFixture {
     slot: ZkCommonCredentialRootProofSlot,
-    artifact_manifest_sha256: ZkArtifactManifestDigest,
+    artifact_identity: reallyme_zk_api::artifacts::ZkArtifactIdentity,
     proof_bytes: ZkProofBytes,
     public_inputs: ZkCommonCredentialRootRawPublicInputs,
 }
@@ -363,8 +385,8 @@ impl WalletCommonCredentialRootProof for CommonCredentialRootProofFixture {
         self.slot
     }
 
-    fn artifact_manifest_sha256(&self) -> ZkArtifactManifestDigest {
-        self.artifact_manifest_sha256
+    fn artifact_identity(&self) -> reallyme_zk_api::artifacts::ZkArtifactIdentity {
+        self.artifact_identity
     }
 
     fn proof_bytes(&self) -> &ZkProofBytes {
@@ -377,8 +399,8 @@ impl WalletCommonCredentialRootProof for CommonCredentialRootProofFixture {
 }
 
 struct CommonCredentialRootPresentationFixture {
-    profile: ZkCommonCredentialRootV1Profile,
-    hash_strategy: ZkHashStrategy,
+    persona_mode: ZkCommonCredentialRootPersonaMode,
+    hash_strategy: ZkCredentialHashAlgorithm,
     proof_suite: ZkProofSuite,
     binding: ZkSessionBinding,
     proofs: Vec<CommonCredentialRootProofFixture>,
@@ -387,11 +409,11 @@ struct CommonCredentialRootPresentationFixture {
 impl WalletCommonCredentialRootPresentation for CommonCredentialRootPresentationFixture {
     type Proof = CommonCredentialRootProofFixture;
 
-    fn profile(&self) -> ZkCommonCredentialRootV1Profile {
-        self.profile
+    fn persona_mode(&self) -> ZkCommonCredentialRootPersonaMode {
+        self.persona_mode
     }
 
-    fn hash_strategy(&self) -> ZkHashStrategy {
+    fn credential_hash_algorithm(&self) -> ZkCredentialHashAlgorithm {
         self.hash_strategy
     }
 
@@ -425,15 +447,15 @@ fn common_credential_root_presentation_for(
         audience_hash: expected.audience_hash,
         transaction_data_hash,
     };
-    let profile = ZkCommonCredentialRootV1Profile::PrivatePersona;
-    let hash_strategy = ZkHashStrategy::Sha256;
+    let profile = ZkCommonCredentialRootPersonaMode::PrivatePersona;
+    let hash_strategy = ZkCredentialHashAlgorithm::Sha256;
     let proofs = ZkCommonCredentialRootProofSlot::ALL
         .iter()
         .map(|slot| {
             let circuit_ref = profile.source_ref(hash_strategy, *slot);
             CommonCredentialRootProofFixture {
                 slot: *slot,
-                artifact_manifest_sha256: ZkArtifactManifestDigest::from_bytes([0x77; 32]),
+                artifact_identity: ZkArtifactManifestDigest::from_bytes([0x77; 32]).into(),
                 proof_bytes: ZkProofBytes::try_copy_from_slice(&[slot.index() + 1])
                     .expect("test proof bytes are bounded"),
                 public_inputs: ZkCommonCredentialRootRawPublicInputs::try_from_bytes(
@@ -445,7 +467,7 @@ fn common_credential_root_presentation_for(
         })
         .collect();
     CommonCredentialRootPresentationFixture {
-        profile,
+        persona_mode: profile,
         hash_strategy,
         proof_suite: ZkProofSuite::PRODUCTION,
         binding,

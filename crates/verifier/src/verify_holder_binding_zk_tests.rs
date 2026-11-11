@@ -3,13 +3,16 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::VerifiedZkClaim;
-use reallyme_zk_api::{ZkHashStrategy, ZkIssuerPublicKey, ZkProofProfile};
+use reallyme_zk_api::{
+    circuits::ZkCredentialHashAlgorithm, claim_bundle::ZkClaimProofBundleKind,
+    keys::ZkIssuerPublicKey,
+};
 use zeroize::Zeroizing;
 
 fn claim() -> VerifiedZkClaim {
     VerifiedZkClaim {
-        profile: ZkProofProfile::PrivatePersonaClaimV1,
-        hash_strategy: ZkHashStrategy::Sha256,
+        bundle_kind: ZkClaimProofBundleKind::PrivatePersonaClaimV1,
+        hash_strategy: ZkCredentialHashAlgorithm::Sha256,
         issuer: ZkIssuerPublicKey {
             x: [1_u8; 32],
             y: [2_u8; 32],
@@ -36,10 +39,10 @@ fn compatible_verified_claims_can_share_a_presenting_key() {
 fn changed_profile_lane_or_session_commitment_is_inconclusive() {
     let first = claim();
     let mut second = claim();
-    second.profile = ZkProofProfile::CredentialSubjectClaimV1;
+    second.bundle_kind = ZkClaimProofBundleKind::CredentialSubjectClaimV1;
     assert!(!first.same_presenting_key_in_session(&second));
-    second.profile = first.profile;
-    second.hash_strategy = ZkHashStrategy::Poseidon2;
+    second.bundle_kind = first.bundle_kind;
+    second.hash_strategy = ZkCredentialHashAlgorithm::Poseidon2;
     assert!(!first.same_presenting_key_in_session(&second));
     second.hash_strategy = first.hash_strategy;
     second.session_link_commitment = [10_u8; 32];

@@ -32,29 +32,27 @@ application-facing SDK facades—including the `@reallyme/identity`
 TypeScript/Wasm package—belong to `reallyme/identity`; they consume this
 repository's generated contract and must not redefine its DTOs.
 
-The service schema and future `reallyme-openid4vp-connect` transport crate are
-owned here beside the message schema. Platform-facing Connect clients and SDK
-facades remain owned by `reallyme/identity`. The Connect crate must begin
-with `publish = false` and cannot be created or published until the dependency
-uses the workspace's compatible Buffa version and the adapter gates in
-the repository's protobuf-first boundary checks pass.
+The transport-neutral service declarations live beside the message schema.
+This workspace contains no Connect transport implementation. Platform-facing
+clients and SDK facades consume the generated messages without redefining their
+fields or JSON representation.
 
 ## Release Order
 
 The exact release order is enforced by release tooling:
 
-1. `reallyme-openid4vp-proto` 0.2.1
-2. `reallyme-openid4vp-dcql` 0.2.1
-3. `reallyme-openid4vp-types` 0.2.1
-4. `reallyme-openid4vp-dc-api` 0.2.1
-5. `reallyme-openid4vp-formats` 0.2.1
-6. `reallyme-openid4vp-wallet` 0.2.1
-7. `reallyme-openid4vp-profiles` 0.2.1
-8. `reallyme-openid4vp-verifier` 0.2.1
-9. `reallyme-openid4vp-http` 0.2.1
-10. `reallyme-openid4vp-proto-codec` 0.2.1
-11. `reallyme-openid4vp-runtime` 0.2.1
-12. `reallyme-openid4vp` 0.2.1
+1. `reallyme-openid4vp-proto` 0.3.0
+2. `reallyme-openid4vp-dcql` 0.3.0
+3. `reallyme-openid4vp-types` 0.3.0
+4. `reallyme-openid4vp-dc-api` 0.3.0
+5. `reallyme-openid4vp-formats` 0.3.0
+6. `reallyme-openid4vp-wallet` 0.3.0
+7. `reallyme-openid4vp-profiles` 0.3.0
+8. `reallyme-openid4vp-verifier` 0.3.0
+9. `reallyme-openid4vp-http` 0.3.0
+10. `reallyme-openid4vp-proto-codec` 0.3.0
+11. `reallyme-openid4vp-runtime` 0.3.0
+12. `reallyme-openid4vp` 0.3.0
 
 Adding or publishing any other crate requires a separately reviewed policy and
 release-tooling change. Cargo metadata alone cannot expand the publish set.
@@ -66,10 +64,9 @@ inspection, generated-source freshness where applicable, and locked dry-run
 verification. Open sourcing the repository does not itself upload or release a
 crate.
 
-The 0.2.1 graph also requires the independently owned lockstep SSI 0.5.1 and
-`reallyme-zk-api 0.2.1` registry releases. Every exact dependency version
-must be visible in the crates.io index before the OpenID4VP package preflight is
-run; source-checkout or Git substitutions are not accepted by the release gate.
+Every exact external dependency version in the package manifests must be
+available in the crates.io index before package preflight. Source-checkout,
+local patch, and Git substitutions are rejected by the release gate.
 
 The conformance and fuzz packages retain `publish = false`. The release inspector rejects
 an unexpected publishable package, an unapproved version, a public crate whose
@@ -85,7 +82,7 @@ node scripts/check-proto-first-boundaries.mjs
 # v0.6.9: https://github.com/reallyme/release-readiness/releases/tag/v0.6.9
 npm exec --yes --package=github:reallyme/release-readiness#9cf40c7da1def8a8d809af51789284097c572dd5 -- \
   reallyme-release-readiness
-RELEASE_VERSION=0.2.1 node scripts/publish-crates-in-order.mjs inspect --allow-dirty
+RELEASE_VERSION=0.3.0 node scripts/publish-crates-in-order.mjs inspect --allow-dirty
 ```
 
 The inspector derives dependency order from Cargo metadata, constructs the
@@ -95,8 +92,8 @@ uploading. CI runs the same command without `--allow-dirty`.
 
 ## Publication
 
-OpenID4VP uses the same reviewed two-workflow release process as
-`reallyme/cose`:
+The two-workflow release process binds publication to reviewed source and
+package bytes:
 
 1. Commit the release version to every workspace package manifest, all internal
    dependency requirements, both lockfiles, and the default version displayed
@@ -107,7 +104,7 @@ OpenID4VP uses the same reviewed two-workflow release process as
 4. Review the successful package summary, the exact archived `.crate` files,
    their SHA-256 hashes, and the GitHub provenance attestations. The preflight
    also records the exact first-attempt CI, protobuf, fuzz, and secret-scan run
-   IDs that certified the release commit.
+   IDs that validated the release commit.
 5. Dispatch **Crates.io Release** at the same `main` commit.
 6. The release verifies provenance and archive bytes, creates or verifies the
    immutable `reallyme-openid4vp-v<version>` tag and a draft GitHub release,
@@ -131,8 +128,8 @@ release artifacts.
 For local review only:
 
 ```sh
-RELEASE_VERSION=0.2.1 node scripts/publish-crates-in-order.mjs order
-RELEASE_VERSION=0.2.1 node scripts/publish-crates-in-order.mjs inspect --allow-dirty
+RELEASE_VERSION=0.3.0 node scripts/publish-crates-in-order.mjs order
+RELEASE_VERSION=0.3.0 node scripts/publish-crates-in-order.mjs inspect --allow-dirty
 node --test scripts/*.test.mjs
 ```
 

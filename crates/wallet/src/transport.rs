@@ -134,9 +134,9 @@ impl Default for RequestTransportPolicy {
 
 /// Parse an OpenID4VP authorization request into a transport classification.
 ///
-/// This ports the good meproto boundary: parsing is pure and network-free,
-/// while `request_uri` resolution is delegated to transport adapters. The
-/// parser accepts full URIs or raw query strings.
+/// Parsing is pure and network-free; transport adapters resolve `request_uri`.
+/// The parser accepts full URIs or raw query strings and applies the supplied
+/// transport policy before network access or signature verification.
 pub fn parse_authorization_request_transport(
     input: &str,
     policy: RequestTransportPolicy,

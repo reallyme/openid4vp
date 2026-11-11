@@ -346,6 +346,9 @@ message ZkPresentationStage {
   bytes artifact_manifest_sha256 = 3;
   bytes proof = 4;
   bytes public_inputs = 5;
+  // The codec requires exactly one artifact digest. Separate fields keep the
+  // manifest tag and its generated representation compatible with v1 readers.
+  optional bytes artifact_set_identity_sha256 = 6;
 }
 
 // ZkPresentationCircuitRef names the exact imported circuit source used by
@@ -777,8 +780,8 @@ message DecodeDcApiAuthorizationResponseRequest {
 }
 
 // DecodeDcApiAuthorizationResponseResponse is retained for wire compatibility.
-// Runtime implementations fail closed until a server-owned session and
-// authenticated browser-origin context are supplied by a replacement endpoint.
+// Runtime implementations return UnsupportedFeature because this operation
+// has no server-owned session or authenticated browser-origin context.
 message DecodeDcApiAuthorizationResponseResponse {
   optional AuthorizationResponse response = 1;
   optional ProblemDetails problem = 2;

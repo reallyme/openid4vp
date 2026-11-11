@@ -4,8 +4,8 @@
 
 fn validate_common_credential_root_query(
     query: &reallyme_openid4vp_dcql::CredentialQuery,
-    profile: ZkCommonCredentialRootV1Profile,
-    hash_strategy: ZkHashStrategy,
+    profile: ZkCommonCredentialRootPersonaMode,
+    hash_strategy: ZkCredentialHashAlgorithm,
 ) -> Result<[RequestedCommonCredentialRootClaim; 2], WalletError> {
     let meta = &query.meta;
     if meta.len() != COMMON_CREDENTIAL_ROOT_META_FIELDS
@@ -63,16 +63,15 @@ fn validate_common_credential_root_claim_meta(
     })
 }
 const fn common_credential_root_presentation_profile(
-    profile: ZkCommonCredentialRootV1Profile,
+    profile: ZkCommonCredentialRootPersonaMode,
 ) -> Result<ZkPresentationProfile, WalletError> {
     match profile {
-        ZkCommonCredentialRootV1Profile::PrivatePersona => {
+        ZkCommonCredentialRootPersonaMode::PrivatePersona => {
             Ok(ZkPresentationProfile::CommonCredentialRootPrivatePersonaV1)
         }
-        ZkCommonCredentialRootV1Profile::PublicPersona => {
+        ZkCommonCredentialRootPersonaMode::PublicPersona => {
             Ok(ZkPresentationProfile::CommonCredentialRootPublicPersonaV1)
         }
-        _ => Err(zk_error()),
     }
 }
 const fn common_credential_root_stage_kind(

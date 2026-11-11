@@ -12,12 +12,18 @@ use reallyme_credential_status::{
 };
 #[cfg(any(feature = "native", feature = "wasm"))]
 use reallyme_zk_api::{
-    common_credential_root_issuer_status_root, verify_root_status_snapshot,
-    ZkCommonCredentialRootIssuerStatusPurpose, ZkRootStatusSnapshot,
+    common_root::{
+        common_credential_root_issuer_status_root, verify_root_status_snapshot,
+        ZkRootStatusSnapshot,
+    },
+    issuer_status::ZkIssuerStatusPurpose,
 };
 use reallyme_zk_api::{
-    ZkCommonCredentialRootIssuerStatusExpectation, ZkCommonCredentialRootVerifier,
-    ZkIssuerPublicKey, ZkRootStatusTrustPolicy, ZkVerifiedRootStatusSnapshot,
+    common_root::{
+        ZkCommonCredentialRootIssuerStatusExpectation, ZkCommonCredentialRootVerifier,
+        ZkRootStatusTrustPolicy, ZkVerifiedRootStatusSnapshot,
+    },
+    keys::{ZkAttestationPublicKey, ZkIssuerPublicKey},
 };
 #[cfg(any(feature = "native", feature = "wasm"))]
 use sha2::{Digest, Sha256};
@@ -28,7 +34,7 @@ use crate::{VerifierError, VerifierErrorReason};
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ZkCommonCredentialRootTrustPolicy {
     /// Trusted ReallyMe root-attestation signing key.
-    pub attestation_signer: ZkIssuerPublicKey,
+    pub attestation_signer: ZkAttestationPublicKey,
     /// Accepted ReallyMe root-assurance policy identifier.
     pub assurance_policy_id: [u8; 32],
     /// Trusted issuer key for each requested credential role.
@@ -45,7 +51,7 @@ pub struct ZkCommonCredentialRootTrustPolicy {
 #[derive(Clone, Copy)]
 pub struct ZkCommonCredentialRootVerificationPolicy<'a> {
     /// Trusted ReallyMe attestation signing key.
-    pub(super) attestation_signer: ZkIssuerPublicKey,
+    pub(super) attestation_signer: ZkAttestationPublicKey,
     /// Accepted root-assurance policy identifier.
     pub(super) assurance_policy_id: [u8; 32],
     /// Root authenticated by the deployment-pinned status authority.
@@ -268,8 +274,8 @@ pub(super) fn verify_issuer_status(
         .admit_verified(list_key, list.issued_at, payload_sha256)?;
     let url_hash: [u8; 32] = Sha256::digest(trust.url.as_bytes()).into();
     let purpose = match trust.purpose {
-        StatusPurpose::Revocation => ZkCommonCredentialRootIssuerStatusPurpose::Revocation,
-        StatusPurpose::Suspension => ZkCommonCredentialRootIssuerStatusPurpose::Suspension,
+        StatusPurpose::Revocation => ZkIssuerStatusPurpose::Revocation,
+        StatusPurpose::Suspension => ZkIssuerStatusPurpose::Suspension,
         _ => {
             return Err(VerifierError::new(
                 VerifierErrorReason::InvalidCredentialStatus,

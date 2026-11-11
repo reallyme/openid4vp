@@ -170,15 +170,40 @@ pub enum ZkPresentationStageKind {
     IssuerCredentialStatus,
 }
 
+/// Explicit artifact construction carried by a presentation stage.
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Zeroize, ZeroizeOnDrop)]
+#[serde(
+    tag = "kind",
+    content = "sha256",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
+pub enum ZkPresentationArtifactIdentity {
+    /// SHA-256 of the canonical artifact manifest.
+    Manifest([u8; 32]),
+    /// Domain-separated exact source, bytecode, and verification-key identity.
+    ArtifactSet([u8; 32]),
+}
+
+impl fmt::Debug for ZkPresentationArtifactIdentity {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Manifest(_) => formatter.write_str("Manifest(<redacted>)"),
+            Self::ArtifactSet(_) => formatter.write_str("ArtifactSet(<redacted>)"),
+        }
+    }
+}
+
 /// One exact circuit proof inside the production presentation bundle.
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ZkPresentationStage {
     /// Stable production stage identity.
     pub stage: ZkPresentationStageKind,
     /// Exact imported circuit source and semantic version.
     pub circuit_ref: ZkPresentationCircuitRef,
-    /// SHA-256 identity of the canonical artifact manifest.
-    pub artifact_manifest_sha256: [u8; 32],
+    /// Artifact identity including its construction.
+    pub artifact_identity: ZkPresentationArtifactIdentity,
     /// Opaque proof bytes owned by the injected backend.
     pub proof: Vec<u8>,
     /// Serialized public inputs for this exact stage ABI.
@@ -191,7 +216,7 @@ impl fmt::Debug for ZkPresentationStage {
             .debug_struct("ZkPresentationStage")
             .field("stage", &self.stage)
             .field("circuit_ref", &self.circuit_ref)
-            .field("artifact_manifest_sha256", &"<redacted>")
+            .field("artifact_identity", &"<redacted>")
             .field("proof_len", &self.proof.len())
             .field("proof", &"<redacted>")
             .field("public_inputs_len", &self.public_inputs.len())
@@ -203,7 +228,7 @@ impl fmt::Debug for ZkPresentationStage {
 impl Zeroize for ZkPresentationStage {
     fn zeroize(&mut self) {
         self.circuit_ref.zeroize();
-        self.artifact_manifest_sha256.zeroize();
+        self.artifact_identity.zeroize();
         self.proof.zeroize();
         self.public_inputs.zeroize();
     }

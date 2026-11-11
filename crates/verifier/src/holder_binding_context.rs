@@ -164,7 +164,7 @@ impl fmt::Debug for HolderBindingVerificationContext<'_> {
 ///   DeviceAuth verification with the MSO device key over the exact session
 ///   transcript, document type, and device namespaces.
 /// - For a typed ZK presentation, the implementation must verify every stage
-///   against the claimed proof suite, circuit reference, artifact manifest,
+///   against the claimed proof suite, circuit reference, typed artifact identity,
 ///   and exact envelope binding. It must also establish issuer trust, current
 ///   credential status, and the projection from verified statements to the
 ///   supplied DCQL credential query. A backend success bit alone is not an

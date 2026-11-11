@@ -3,15 +3,25 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use reallyme_codec::base64url::{base64url_to_bytes, bytes_to_base64url};
-use reallyme_openid4vp_formats::{ZkPresentation, ZkPresentationProfile, ZkPresentationStageKind};
+use reallyme_openid4vp_formats::{
+    ZkPresentation, ZkPresentationArtifactIdentity, ZkPresentationProfile, ZkPresentationStageKind,
+};
 use reallyme_openid4vp_types::TransactionDataHashAlgorithm;
 use reallyme_zk_api::{
-    ZkArtifactManifestDigest, ZkCircuitFamily, ZkCircuitRef, ZkCircuitStage,
-    ZkCommonCredentialRootPersonaMode, ZkCommonCredentialRootProof,
-    ZkCommonCredentialRootProofSlot, ZkCommonCredentialRootRawPublicInputs,
-    ZkCommonCredentialRootV1Profile, ZkHashStrategy, ZkIssuerCredentialStatusProof,
-    ZkPersonaCredentialEvidenceProfile, ZkProductionStage, ZkProof, ZkProofBundle, ZkProofBytes,
-    ZkProofProfile, ZkProofSuite, ZkPublicInputs, ZkSessionBinding, ZkStageProof,
+    artifacts::{ZkArtifactIdentity, ZkArtifactManifestDigest, ZkArtifactSetIdentity},
+    circuits::ZkCredentialHashAlgorithm,
+    circuits::{ZkCircuitFamily, ZkCircuitRef, ZkCircuitStage},
+    claim_bundle::{
+        ZkClaimProofBundle, ZkClaimProofBundleKind, ZkClaimProofBundleStage,
+        ZkClaimProofBundleStageProof,
+    },
+    common_root::{
+        ZkCommonCredentialRootPersonaMode, ZkCommonCredentialRootProof,
+        ZkCommonCredentialRootProofSlot, ZkCommonCredentialRootRawPublicInputs,
+    },
+    issuer_status::ZkIssuerCredentialStatusProof,
+    persona_evidence::ZkPersonaCredentialEvidenceMode,
+    proofs::{ZkProof, ZkProofBytes, ZkProofSuite, ZkPublicInputs, ZkSessionBinding},
 };
 use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
 
@@ -25,8 +35,8 @@ const COMMON_CREDENTIAL_ROOT_QUERY_REQUIRED_META_FIELDS: usize = 6;
 const PREPARED_QUERY_REQUIRED_META_FIELDS: usize = 4;
 
 pub(super) struct ZkPersonaCredentialEvidenceQueryPolicy {
-    pub(super) profile: ZkPersonaCredentialEvidenceProfile,
-    pub(super) hash_strategy: ZkHashStrategy,
+    pub(super) mode: ZkPersonaCredentialEvidenceMode,
+    pub(super) hash_strategy: ZkCredentialHashAlgorithm,
     pub(super) claim_name_hash: [u8; CLAIM_NAME_HASH_BYTES],
     pub(super) claim_value: Zeroizing<Vec<u8>>,
 }
@@ -39,12 +49,12 @@ impl Drop for ZkPersonaCredentialEvidenceQueryPolicy {
 
 impl ZeroizeOnDrop for ZkPersonaCredentialEvidenceQueryPolicy {}
 
-pub(super) fn prepared_profile_from_meta(
+pub(super) fn evidence_mode_from_meta(
     meta: &serde_json::Map<String, serde_json::Value>,
-) -> Option<ZkPersonaCredentialEvidenceProfile> {
+) -> Option<ZkPersonaCredentialEvidenceMode> {
     meta.get("profile")
         .and_then(serde_json::Value::as_str)
-        .and_then(ZkPersonaCredentialEvidenceProfile::from_identifier)
+        .and_then(ZkPersonaCredentialEvidenceMode::from_identifier)
 }
 
 pub(super) fn parse_prepared_query_policy(
@@ -62,10 +72,10 @@ pub(super) fn parse_prepared_query_policy(
             VerifierErrorReason::VpTokenQueryMismatch,
         ));
     }
-    let profile = prepared_profile_from_meta(meta)
+    let profile = evidence_mode_from_meta(meta)
         .ok_or_else(|| VerifierError::new(VerifierErrorReason::VpTokenQueryMismatch))?;
     Ok(ZkPersonaCredentialEvidenceQueryPolicy {
-        profile,
+        mode: profile,
         hash_strategy: parse_hash_strategy(meta)?,
         claim_name_hash: parse_lower_hex_hash(
             meta.get("claim_name_hash")
@@ -77,17 +87,17 @@ pub(super) fn parse_prepared_query_policy(
 }
 
 pub(super) struct ZkQueryPolicy {
-    pub(super) profile: ZkProofProfile,
+    pub(super) bundle_kind: ZkClaimProofBundleKind,
     pub(super) presentation_profile: ZkPresentationProfile,
-    pub(super) hash_strategy: ZkHashStrategy,
+    pub(super) hash_strategy: ZkCredentialHashAlgorithm,
     pub(super) claim_name_hash: [u8; CLAIM_NAME_HASH_BYTES],
     pub(super) claim_value: Option<Zeroizing<Vec<u8>>>,
 }
 
 pub(super) struct ZkCommonCredentialRootQueryPolicy {
-    pub(super) profile: ZkCommonCredentialRootV1Profile,
+    pub(super) persona_mode: ZkCommonCredentialRootPersonaMode,
     pub(super) presentation_profile: ZkPresentationProfile,
-    pub(super) hash_strategy: ZkHashStrategy,
+    pub(super) hash_strategy: ZkCredentialHashAlgorithm,
     pub(super) first_claim_name_hash: [u8; CLAIM_NAME_HASH_BYTES],
     pub(super) second_claim_name_hash: [u8; CLAIM_NAME_HASH_BYTES],
     pub(super) first_claim_value: Zeroizing<Vec<u8>>,
@@ -111,49 +121,30 @@ impl Drop for ZkCommonCredentialRootQueryPolicy {
 
 impl ZeroizeOnDrop for ZkCommonCredentialRootQueryPolicy {}
 
-pub(super) fn common_credential_root_profile_from_meta(
+pub(super) fn common_credential_root_persona_mode_from_meta(
     meta: &serde_json::Map<String, serde_json::Value>,
-) -> Option<ZkCommonCredentialRootV1Profile> {
+) -> Option<ZkCommonCredentialRootPersonaMode> {
     match meta.get("profile").and_then(serde_json::Value::as_str) {
         Some("common_credential_root_v1_private_persona") => {
-            Some(ZkCommonCredentialRootV1Profile::PrivatePersona)
+            Some(ZkCommonCredentialRootPersonaMode::PrivatePersona)
         }
         Some("common_credential_root_v1_public_persona") => {
-            Some(ZkCommonCredentialRootV1Profile::PublicPersona)
+            Some(ZkCommonCredentialRootPersonaMode::PublicPersona)
         }
         _ => None,
     }
 }
 
 fn common_credential_root_presentation_profile(
-    profile: ZkCommonCredentialRootV1Profile,
+    profile: ZkCommonCredentialRootPersonaMode,
 ) -> Result<ZkPresentationProfile, VerifierError> {
     match profile {
-        ZkCommonCredentialRootV1Profile::PrivatePersona => {
+        ZkCommonCredentialRootPersonaMode::PrivatePersona => {
             Ok(ZkPresentationProfile::CommonCredentialRootPrivatePersonaV1)
         }
-        ZkCommonCredentialRootV1Profile::PublicPersona => {
+        ZkCommonCredentialRootPersonaMode::PublicPersona => {
             Ok(ZkPresentationProfile::CommonCredentialRootPublicPersonaV1)
         }
-        _ => Err(VerifierError::new(
-            VerifierErrorReason::VpTokenQueryMismatch,
-        )),
-    }
-}
-
-pub(super) fn common_credential_root_persona_mode(
-    profile: ZkCommonCredentialRootV1Profile,
-) -> Result<ZkCommonCredentialRootPersonaMode, VerifierError> {
-    match profile {
-        ZkCommonCredentialRootV1Profile::PrivatePersona => {
-            Ok(ZkCommonCredentialRootPersonaMode::Private)
-        }
-        ZkCommonCredentialRootV1Profile::PublicPersona => {
-            Ok(ZkCommonCredentialRootPersonaMode::Public)
-        }
-        _ => Err(VerifierError::new(
-            VerifierErrorReason::VpTokenQueryMismatch,
-        )),
     }
 }
 
@@ -177,11 +168,11 @@ pub(super) fn parse_common_credential_root_query_policy(
             VerifierErrorReason::VpTokenQueryMismatch,
         ));
     }
-    let profile = common_credential_root_profile_from_meta(meta)
+    let profile = common_credential_root_persona_mode_from_meta(meta)
         .ok_or_else(|| VerifierError::new(VerifierErrorReason::VpTokenQueryMismatch))?;
     let hash_strategy = parse_hash_strategy(meta)?;
     Ok(ZkCommonCredentialRootQueryPolicy {
-        profile,
+        persona_mode: profile,
         presentation_profile: common_credential_root_presentation_profile(profile)?,
         hash_strategy,
         first_claim_name_hash: parse_lower_hex_hash(
@@ -201,13 +192,13 @@ pub(super) fn parse_common_credential_root_query_policy(
 
 fn parse_hash_strategy(
     meta: &serde_json::Map<String, serde_json::Value>,
-) -> Result<ZkHashStrategy, VerifierError> {
+) -> Result<ZkCredentialHashAlgorithm, VerifierError> {
     match meta
         .get("hash_strategy")
         .and_then(serde_json::Value::as_str)
     {
-        Some("sha256") => Ok(ZkHashStrategy::Sha256),
-        Some("poseidon2") => Ok(ZkHashStrategy::Poseidon2),
+        Some("sha256") => Ok(ZkCredentialHashAlgorithm::Sha256),
+        Some("poseidon2") => Ok(ZkCredentialHashAlgorithm::Poseidon2),
         _ => Err(VerifierError::new(
             VerifierErrorReason::VpTokenQueryMismatch,
         )),
@@ -261,11 +252,11 @@ pub(super) fn parse_query_policy(
     let (profile, presentation_profile) =
         match meta.get("profile").and_then(serde_json::Value::as_str) {
             Some("credential_subject_claim_v1") => (
-                ZkProofProfile::CredentialSubjectClaimV1,
+                ZkClaimProofBundleKind::CredentialSubjectClaimV1,
                 ZkPresentationProfile::CredentialSubjectClaimV1,
             ),
             Some("private_persona_claim_v1") => (
-                ZkProofProfile::PrivatePersonaClaimV1,
+                ZkClaimProofBundleKind::PrivatePersonaClaimV1,
                 ZkPresentationProfile::PrivatePersonaClaimV1,
             ),
             _ => {
@@ -307,7 +298,7 @@ pub(super) fn parse_query_policy(
         })
         .transpose()?;
     Ok(ZkQueryPolicy {
-        profile,
+        bundle_kind: profile,
         presentation_profile,
         hash_strategy,
         claim_name_hash,
@@ -364,8 +355,8 @@ pub(super) fn transaction_data_hash(
 
 pub(super) fn build_common_credential_root_proofs(
     presentation: &ZkPresentation,
-    profile: ZkCommonCredentialRootV1Profile,
-    hash_strategy: ZkHashStrategy,
+    profile: ZkCommonCredentialRootPersonaMode,
+    hash_strategy: ZkCredentialHashAlgorithm,
 ) -> Result<Vec<ZkCommonCredentialRootProof>, VerifierError> {
     let mut proofs = Vec::new();
     proofs
@@ -391,7 +382,7 @@ pub(super) fn build_common_credential_root_proofs(
                 profile,
                 *expected_slot,
                 ZkProofSuite::PRODUCTION,
-                ZkArtifactManifestDigest::from_bytes(stage.artifact_manifest_sha256),
+                artifact_identity_from_wire(&stage.artifact_identity),
                 ZkProofBytes::try_copy_from_slice(&stage.proof).map_err(|_| invalid_zk())?,
                 public_inputs,
             )

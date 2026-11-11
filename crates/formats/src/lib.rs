@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-//! Format-specific presentation glue for SD-JWT VC, mdoc, and W3C VC.
+//! Format-specific presentation adapters for SD-JWT VC, mdoc, and ZK proofs.
 //!
 //! Serde implementations in this crate exist only for bounded internal
 //! protocol parsing of format-native presentation values. They are not stable
@@ -38,9 +38,9 @@ pub use zk_presentation::{
     build_zk_presentation_binding, encode_zk_presentation_value, hash_openid4vp_audience,
     hash_openid4vp_nonce, is_zk_presentation_value, parse_zk_presentation_value,
     validate_zk_presentation_binding, validate_zk_presentation_shape, DerivedClaimStatement,
-    ZkPresentation, ZkPresentationBinding, ZkPresentationCircuitRef, ZkPresentationProfile,
-    ZkPresentationProofSuite, ZkPresentationStage, ZkPresentationStageKind,
-    MAX_ZK_CIRCUIT_LABEL_BYTES, MAX_ZK_PRESENTATION_DERIVED_CLAIMS,
+    ZkPresentation, ZkPresentationArtifactIdentity, ZkPresentationBinding,
+    ZkPresentationCircuitRef, ZkPresentationProfile, ZkPresentationProofSuite, ZkPresentationStage,
+    ZkPresentationStageKind, MAX_ZK_CIRCUIT_LABEL_BYTES, MAX_ZK_PRESENTATION_DERIVED_CLAIMS,
     MAX_ZK_PRESENTATION_PROOF_BYTES, MAX_ZK_PRESENTATION_PUBLIC_INPUT_BYTES,
     MAX_ZK_STATEMENT_BYTES, MAX_ZK_STATEMENT_ID_BYTES,
     ZK_COMMON_CREDENTIAL_ROOT_PRESENTATION_STAGE_COUNT, ZK_PRESENTATION_STAGE_COUNT,

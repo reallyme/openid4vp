@@ -128,7 +128,7 @@ fn common_credential_root_policy_for_window(
     let (snapshot, status_signer) = signed_status_snapshot(status_root, issued_unix, expires_unix);
     let mut policy = ZkCommonCredentialRootVerificationPolicy::try_from_signed_snapshot(
         ZkCommonCredentialRootTrustPolicy {
-            attestation_signer: issuer_key(0xa0),
+            attestation_signer: attestation_key(0xa0),
             assurance_policy_id: COMMON_CREDENTIAL_ROOT_POLICY_ID,
             credential_issuers: [issuer_key(0xc0), issuer_key(0xc2)],
             status_feed_id: [0x5a; 32],
@@ -150,7 +150,7 @@ fn common_credential_root_policy_for_window(
             length: 256,
             list_id: [0xa2; 32],
             url_hash: [0xa3; 32],
-            purpose: ZkCommonCredentialRootIssuerStatusPurpose::Revocation,
+            purpose: ZkIssuerStatusPurpose::Revocation,
         },
         list_key: [0_u8; 32],
         payload_sha256: [0_u8; 32],
@@ -168,7 +168,7 @@ fn signed_status_snapshot(
     status_root: [u8; 32],
     issued_unix: u64,
     expires_unix: u64,
-) -> (ZkRootStatusSnapshot, ZkIssuerPublicKey) {
+) -> (ZkRootStatusSnapshot, reallyme_zk_api::keys::ZkStatusAuthorityPublicKey) {
     signed_status_snapshot_at_sequence(status_root, issued_unix, expires_unix, 2)
 }
 
@@ -177,7 +177,7 @@ fn signed_status_snapshot_at_sequence(
     issued_unix: u64,
     expires_unix: u64,
     sequence: u64,
-) -> (ZkRootStatusSnapshot, ZkIssuerPublicKey) {
+) -> (ZkRootStatusSnapshot, reallyme_zk_api::keys::ZkStatusAuthorityPublicKey) {
     signed_status_snapshot_at_sequence_with_signer(
         status_root,
         issued_unix,
@@ -193,7 +193,7 @@ fn signed_status_snapshot_at_sequence_with_signer(
     expires_unix: u64,
     sequence: u64,
     signer_secret_byte: u8,
-) -> (ZkRootStatusSnapshot, ZkIssuerPublicKey) {
+) -> (ZkRootStatusSnapshot, reallyme_zk_api::keys::ZkStatusAuthorityPublicKey) {
     let mut secret = zeroize::Zeroizing::new([0_u8; 32]);
     secret[31] = signer_secret_byte;
     let (compressed, _owned_secret) =
@@ -205,7 +205,7 @@ fn signed_status_snapshot_at_sequence_with_signer(
     let mut y = [0_u8; 32];
     x.copy_from_slice(&uncompressed[1..33]);
     y.copy_from_slice(&uncompressed[33..65]);
-    let status_signer = ZkIssuerPublicKey { x, y };
+    let status_signer = reallyme_zk_api::keys::ZkStatusAuthorityPublicKey { x, y };
     let digest = ZkRootStatusSnapshot::signing_digest_for_fields(
         status_root,
         issued_unix,
@@ -402,16 +402,16 @@ fn common_credential_root_stages(
         .iter()
         .map(|slot| {
             let circuit_ref =
-                ZkCommonCredentialRootV1Profile::PrivatePersona.source_ref(ZkHashStrategy::Sha256, *slot);
+                ZkCommonCredentialRootPersonaMode::PrivatePersona.source_ref(ZkCredentialHashAlgorithm::Sha256, *slot);
             ZkPresentationStage {
                 stage: common_credential_root_stage_kind(*slot),
                 circuit_ref: ZkPresentationCircuitRef {
-                    hash_strategy: circuit_ref.hash_strategy.as_str().to_owned(),
+                    hash_strategy: circuit_ref.credential_hash_algorithm.as_str().to_owned(),
                     family: circuit_ref.family.as_str().to_owned(),
                     stage: circuit_ref.stage.as_str().to_owned(),
-                    version: circuit_ref.version,
+                    version: circuit_ref.revision,
                 },
-                artifact_manifest_sha256: [7_u8; 32],
+                artifact_identity: reallyme_openid4vp_formats::ZkPresentationArtifactIdentity::Manifest([7_u8; 32]),
                 proof: vec![slot.index() + 1],
                 public_inputs: common_credential_root_public_inputs(
                     *slot,
@@ -597,7 +597,7 @@ fn set_request(
         binding
             .transaction_data_hash
             .as_ref()
-            .unwrap_or(&reallyme_zk_api::ABSENT_TRANSACTION_DATA_HASH),
+            .unwrap_or(&reallyme_zk_api::proofs::ABSENT_TRANSACTION_DATA_HASH),
     );
 }
 
@@ -621,4 +621,14 @@ fn set_u64(fields: &mut [u8], index: usize, value: u64) {
 fn set_u32(fields: &mut [u8], index: usize, value: u32) {
     let start = index * FIELD_BYTES + FIELD_BYTES - 4;
     fields[start..start + 4].copy_from_slice(&value.to_be_bytes());
+}
+
+fn attestation_key(marker: u8) -> reallyme_zk_api::keys::ZkAttestationPublicKey {
+    let key = issuer_key(marker);
+    reallyme_zk_api::keys::ZkAttestationPublicKey { x: key.x, y: key.y }
+}
+
+fn status_authority_key(marker: u8) -> reallyme_zk_api::keys::ZkStatusAuthorityPublicKey {
+    let key = issuer_key(marker);
+    reallyme_zk_api::keys::ZkStatusAuthorityPublicKey { x: key.x, y: key.y }
 }

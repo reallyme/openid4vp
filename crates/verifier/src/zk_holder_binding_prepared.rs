@@ -10,7 +10,9 @@ use reallyme_openid4vp_formats::{
 };
 use reallyme_openid4vp_types::{PresentationValue, ResponseMode, TransactionDataHashAlgorithm};
 use reallyme_zk_api::{
-    ZkHashStrategy, ZkPersonaCredentialEvidenceProfile, ZkVerifiedPersonaCredentialEvidence,
+    circuits::ZkCredentialHashAlgorithm,
+    persona_evidence::{ZkPersonaCredentialEvidenceMode, ZkVerifiedPersonaCredentialEvidence},
+    proofs::ZkProofSuite,
 };
 
 use crate::holder_binding::expected_holder_binding_audience;
@@ -23,16 +25,16 @@ use crate::{
 use super::query::parse_prepared_query_policy;
 
 /// All verifier-owned inputs required by the core prepared acceptance check.
-/// The implementation must verify both exact proofs, issuer trust, current
+/// The implementation must verify all five evidence proofs, issuer trust, current
 /// signed status with rollback protection, live holder signature, the exact
 /// `PreparedVerifierRequest`, and durable nonce consumption before success.
 pub struct ZkPersonaCredentialEvidenceVerifyRequest<'a> {
     /// Canonical ZK prepared-presentation protobuf from the response.
     pub presentation_bytes: &'a [u8],
     /// Profile selected by the authenticated DCQL query.
-    pub profile: ZkPersonaCredentialEvidenceProfile,
+    pub mode: ZkPersonaCredentialEvidenceMode,
     /// Hash lane selected by the authenticated DCQL query.
-    pub hash_strategy: ZkHashStrategy,
+    pub hash_strategy: ZkCredentialHashAlgorithm,
     /// Exact selected claim-name hash.
     pub claim_name_hash: &'a [u8; 32],
     /// Exact value required by the verifier.
@@ -97,7 +99,7 @@ impl ZkHolderBindingVerifier<'_> {
         let verified = verifier.verify_persona_credential_evidence(
             ZkPersonaCredentialEvidenceVerifyRequest {
                 presentation_bytes: &bytes,
-                profile: policy.profile,
+                mode: policy.mode,
                 hash_strategy: policy.hash_strategy,
                 claim_name_hash: &policy.claim_name_hash,
                 claim_value: &policy.claim_value,
@@ -108,8 +110,9 @@ impl ZkHolderBindingVerifier<'_> {
                 now_unix: context.now_unix(),
             },
         )?;
-        if verified.profile() != policy.profile
-            || verified.hash_strategy() != policy.hash_strategy
+        if verified.mode() != policy.mode
+            || verified.credential_hash_algorithm() != policy.hash_strategy
+            || verified.proof_suite() != ZkProofSuite::PRODUCTION
             || verified
                 .proof_window()
                 .validate_at(context.now_unix())
@@ -136,7 +139,7 @@ impl ZkHolderBindingVerifier<'_> {
             },
             VerifiedDisclosureSet::ZkPersonaCredentialEvidence(Box::new(
                 VerifiedZkPersonaCredentialEvidenceClaim::from_verified(
-                    policy.profile,
+                    policy.mode,
                     policy.hash_strategy,
                     verified.holder_key(),
                     policy.claim_name_hash,

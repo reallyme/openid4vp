@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import signal
 import subprocess
 import sys
 import tempfile
@@ -320,7 +321,18 @@ class DriveOidfWalletFlowTests(unittest.TestCase):
                 "https://suite.example.test/callback#secret",
             )
 
-        killpg.assert_called_once_with(1234, drive_oidf_wallet_flow.signal.SIGTERM)
+        killpg.assert_called_once_with(1234, signal.SIGTERM)
+
+    def test_handoff_preserves_live_child_cleanup_failure(self) -> None:
+        with mock.patch.object(
+            drive_oidf_wallet_flow.oidf_wallet_error_evidence,
+            "stop_browser_process",
+            side_effect=drive_oidf_wallet_flow.oidf_wallet_error_evidence.EvidenceFailure(
+                "wallet_error_screen_process_cleanup_failed"
+            ),
+        ), self.assertRaises(drive_oidf_wallet_flow.DriverFailure) as caught:
+            drive_oidf_wallet_flow.stop_handoff_browser(mock.Mock())
+        self.assertEqual(caught.exception.reason, "wallet_browser_handoff_cleanup_failed")
 
     def test_rejects_browser_api_forwarding_over_get(self) -> None:
         launch = drive_oidf_wallet_flow.WalletLaunch(

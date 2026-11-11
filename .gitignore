@@ -49,12 +49,6 @@ proptest-regressions/
 **/generated/**
 **/src/generated
 **/src/generated/**
-!crates/proto/crypto/src/generated/
-!crates/proto/crypto/src/generated/**
-!packages/ts/src/proto/generated/
-!packages/ts/src/proto/generated/**
-!crates/proto/did/src/generated/
-!crates/proto/did/src/generated/**
 !crates/proto/src/generated/
 !crates/proto/src/generated/**
 **/src/pb
@@ -94,7 +88,6 @@ pnpm-debug.log*
 .vite/
 dist/
 coverage/
-packages/ts/wasm/
 
 # Swift Package Manager
 .build/

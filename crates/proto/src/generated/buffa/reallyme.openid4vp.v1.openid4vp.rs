@@ -5791,6 +5791,17 @@ pub struct ZkPresentationStage {
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_bytes"
     )]
     pub public_inputs: ::buffa::alloc::vec::Vec<u8>,
+    /// The codec requires exactly one artifact digest. Separate fields keep the
+    /// manifest tag and its generated representation compatible with v1 readers.
+    ///
+    /// Field 6: `artifact_set_identity_sha256`
+    #[serde(
+        rename = "artifactSetIdentitySha256",
+        alias = "artifact_set_identity_sha256",
+        with = "::buffa::json_helpers::opt_bytes",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub artifact_set_identity_sha256: ::core::option::Option<::buffa::alloc::vec::Vec<u8>>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -5803,6 +5814,7 @@ impl ::core::fmt::Debug for ZkPresentationStage {
             .field("artifact_manifest_sha256", &"<redacted>")
             .field("proof", &"<redacted>")
             .field("public_inputs", &"<redacted>")
+            .field("artifact_set_identity_sha256", &"<redacted>")
             .finish()
     }
 }
@@ -5818,6 +5830,13 @@ impl<'de> ::serde::Deserialize<'de> for ZkPresentationStage {
             D: ::serde::Deserializer<'de>,
         {
             ::buffa::json_helpers::bytes::deserialize(deserializer).map(::zeroize::Zeroizing::new)
+        }
+
+        #[derive(::serde::Deserialize)]
+        #[serde(transparent)]
+        struct ArtifactSetIdentitySha256SensitiveValue {
+            #[serde(deserialize_with = "deserialize_zeroizing_bytes")]
+            artifact_set_identity_sha256: ::zeroize::Zeroizing<::buffa::alloc::vec::Vec<u8>>,
         }
 
         #[derive(Default, ::serde::Deserialize)]
@@ -5858,6 +5877,13 @@ impl<'de> ::serde::Deserialize<'de> for ZkPresentationStage {
                 skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_bytes"
             )]
             public_inputs: ::zeroize::Zeroizing<::buffa::alloc::vec::Vec<u8>>,
+            #[serde(
+                rename = "artifactSetIdentitySha256",
+                alias = "artifact_set_identity_sha256",
+                skip_serializing_if = "::core::option::Option::is_none"
+            )]
+            artifact_set_identity_sha256:
+                ::core::option::Option<ArtifactSetIdentitySha256SensitiveValue>,
         }
 
         let mut wire = Wire::deserialize(deserializer)?;
@@ -5867,6 +5893,10 @@ impl<'de> ::serde::Deserialize<'de> for ZkPresentationStage {
             artifact_manifest_sha256: ::core::mem::take(&mut *wire.artifact_manifest_sha256),
             proof: ::core::mem::take(&mut *wire.proof),
             public_inputs: ::core::mem::take(&mut *wire.public_inputs),
+            artifact_set_identity_sha256: wire
+                .artifact_set_identity_sha256
+                .take()
+                .map(|mut value| ::core::mem::take(&mut *value.artifact_set_identity_sha256)),
             __buffa_unknown_fields: Default::default(),
         })
     }
@@ -5876,6 +5906,7 @@ impl ::core::ops::Drop for ZkPresentationStage {
         ::zeroize::Zeroize::zeroize(&mut self.artifact_manifest_sha256);
         ::zeroize::Zeroize::zeroize(&mut self.proof);
         ::zeroize::Zeroize::zeroize(&mut self.public_inputs);
+        ::zeroize::Zeroize::zeroize(&mut self.artifact_set_identity_sha256);
         __reallyme_zeroize_unknown_fields(&mut self.__buffa_unknown_fields);
     }
 }
@@ -5886,6 +5917,18 @@ impl ZkPresentationStage {
     /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
     pub const TYPE_URL: &'static str =
         "type.googleapis.com/reallyme.openid4vp.v1.ZkPresentationStage";
+}
+impl ZkPresentationStage {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::artifact_set_identity_sha256`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_artifact_set_identity_sha256(
+        mut self,
+        value: impl Into<::buffa::alloc::vec::Vec<u8>>,
+    ) -> Self {
+        self.artifact_set_identity_sha256 = Some(value.into());
+        self
+    }
 }
 ::buffa::impl_default_instance!(ZkPresentationStage);
 impl ::buffa::MessageName for ZkPresentationStage {
@@ -5929,6 +5972,9 @@ impl ::buffa::Message for ZkPresentationStage {
         if !self.public_inputs.is_empty() {
             size += 1u64 + ::buffa::types::bytes_encoded_len(&self.public_inputs) as u64;
         }
+        if let Some(ref v) = self.artifact_set_identity_sha256 {
+            size += 1u64 + ::buffa::types::bytes_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -5953,6 +5999,9 @@ impl ::buffa::Message for ZkPresentationStage {
         }
         if !self.public_inputs.is_empty() {
             ::buffa::types::put_shared_bytes_field(5u32, &self.public_inputs, buf);
+        }
+        if let Some(ref v) = self.artifact_set_identity_sha256 {
+            ::buffa::types::put_shared_bytes_field(6u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -6003,6 +6052,17 @@ impl ::buffa::Message for ZkPresentationStage {
                 )?;
                 ::buffa::types::merge_bytes(&mut self.public_inputs, buf)?;
             }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_bytes(
+                    self.artifact_set_identity_sha256
+                        .get_or_insert_with(::buffa::alloc::vec::Vec::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -6016,6 +6076,8 @@ impl ::buffa::Message for ZkPresentationStage {
         ::zeroize::Zeroize::zeroize(&mut self.artifact_manifest_sha256);
         ::zeroize::Zeroize::zeroize(&mut self.proof);
         ::zeroize::Zeroize::zeroize(&mut self.public_inputs);
+        ::zeroize::Zeroize::zeroize(&mut self.artifact_set_identity_sha256);
+        self.artifact_set_identity_sha256 = ::core::option::Option::None;
         __reallyme_zeroize_unknown_fields(&mut self.__buffa_unknown_fields);
     }
 }
@@ -17710,8 +17772,8 @@ pub mod decode_dc_api_authorization_response_request {
     use super::*;
 }
 /// DecodeDcApiAuthorizationResponseResponse is retained for wire compatibility.
-/// Runtime implementations fail closed until a server-owned session and
-/// authenticated browser-origin context are supplied by a replacement endpoint.
+/// Runtime implementations return UnsupportedFeature because this operation
+/// has no server-owned session or authenticated browser-origin context.
 #[derive(Clone, PartialEq, Default, ::serde::Serialize, ::serde::Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct DecodeDcApiAuthorizationResponseResponse {

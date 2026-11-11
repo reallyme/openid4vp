@@ -102,8 +102,8 @@ pub trait MdocIssuerCertificateResolver: Send + Sync {
 ///
 /// The identity envelope crate owns the ISO 18013-5 CBOR model and disclosed
 /// claim structures. This result intentionally exposes only protocol-safe
-/// verification metadata so OpenID4VP consumers do not depend on unpublished
-/// envelope types through this crate's public API.
+/// verification metadata, keeping credential contents inside the owning
+/// envelope instead of exposing them through generic protocol diagnostics.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VerifiedMdocPresentation {
     /// Number of verified documents in the DeviceResponse.
@@ -334,8 +334,8 @@ fn verified_mdoc_type(verified: &VerifiedMdoc) -> &str {
 }
 
 fn map_mdoc_envelope_error(error: MdocEnvelopeError) -> MdocFormatError {
-    // SSI 0.3 makes this upstream enum non-exhaustive. Keep the fallback now
-    // so future upstream reasons fail closed without widening this API.
+    // The upstream enum is non-exhaustive. Unmapped reasons must reject the
+    // presentation without exposing backend details or widening this API.
     #[allow(unreachable_patterns)]
     let reason = match error {
         MdocEnvelopeError::InvalidInput(MdocInvalidInputReason::DocTypeMismatch) => {

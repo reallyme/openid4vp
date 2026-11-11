@@ -18,7 +18,7 @@ fn common_credential_root_admits_only_signed_fresh_issuer_status_with_rollback_f
     let second = signed_issuer_status_list(&secret, [2; 32], 9);
     let (snapshot, status_signer) = signed_status_snapshot(COMMON_CREDENTIAL_ROOT_STATUS_ROOT, 9, 200);
     let trust = ZkCommonCredentialRootTrustPolicy {
-        attestation_signer: issuer_key(0xa0),
+        attestation_signer: attestation_key(0xa0),
         assurance_policy_id: COMMON_CREDENTIAL_ROOT_POLICY_ID,
         credential_issuers: [issuer_key(0xc0), issuer_key(0xc2)],
         status_feed_id: [0x5a; 32],
@@ -165,7 +165,7 @@ fn common_credential_root_signer_rotation_keeps_the_feed_floor() {
         );
         ZkCommonCredentialRootVerificationPolicy::try_from_signed_snapshot_with_issuer_status(
             ZkCommonCredentialRootTrustPolicy {
-                attestation_signer: issuer_key(0xa0),
+                attestation_signer: attestation_key(0xa0),
                 assurance_policy_id: COMMON_CREDENTIAL_ROOT_POLICY_ID,
                 credential_issuers: [issuer_key(0xc0), issuer_key(0xc2)],
                 status_feed_id: [0x5a; 32],
@@ -218,7 +218,7 @@ fn retained_common_credential_root_policy_rejects_newer_status_observations() {
     let second = signed_issuer_status_list(&secret, [2; 32], 9);
     let (snapshot, status_signer) = signed_status_snapshot(COMMON_CREDENTIAL_ROOT_STATUS_ROOT, 9, 200);
     let trust = ZkCommonCredentialRootTrustPolicy {
-        attestation_signer: issuer_key(0xa0),
+        attestation_signer: attestation_key(0xa0),
         assurance_policy_id: COMMON_CREDENTIAL_ROOT_POLICY_ID,
         credential_issuers: [issuer_key(0xc0), issuer_key(0xc2)],
         status_feed_id: [0x5a; 32],
@@ -286,7 +286,7 @@ fn common_credential_root_status_snapshot_rejects_tampering_wrong_authority_and_
     let policy = |snapshot, pinned_signer, floor, now| {
         ZkCommonCredentialRootVerificationPolicy::try_from_signed_snapshot(
             ZkCommonCredentialRootTrustPolicy {
-                attestation_signer: issuer_key(0xa0),
+                attestation_signer: attestation_key(0xa0),
                 assurance_policy_id: COMMON_CREDENTIAL_ROOT_POLICY_ID,
                 credential_issuers: [issuer_key(0xc0), issuer_key(0xc2)],
                 status_feed_id: [0x5a; 32],
@@ -313,7 +313,7 @@ fn common_credential_root_status_snapshot_rejects_tampering_wrong_authority_and_
     .expect("tampered signature retains valid shape");
     for outcome in [
         policy(tampered, signer, 2, 10),
-        policy(snapshot, issuer_key(0xc0), 2, 10),
+        policy(snapshot, status_authority_key(0xc0), 2, 10),
         policy(snapshot, signer, 3, 10),
         policy(snapshot, signer, 2, 20),
         policy(snapshot, signer, 2, 8),

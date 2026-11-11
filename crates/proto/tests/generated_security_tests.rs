@@ -55,6 +55,7 @@ fn generated_zk_presentation_debug_output_is_redacted() -> Result<(), buffa::Dec
             stage: ZkPresentationStageKind::Session.into(),
             circuit_ref: MessageField::some(ZkPresentationCircuitRef::default()),
             artifact_manifest_sha256: vec![241, 242, 243, 244],
+            artifact_set_identity_sha256: None,
             proof: vec![241, 242, 243, 244],
             public_inputs: vec![244, 243, 242, 241],
             __buffa_unknown_fields: Default::default(),
@@ -167,6 +168,7 @@ fn generated_proto_json_round_trips_zk_suite_and_manifest_digest() -> Result<(),
             stage: ZkPresentationStageKind::Session.into(),
             circuit_ref: MessageField::some(ZkPresentationCircuitRef::default()),
             artifact_manifest_sha256: vec![241_u8; 32],
+            artifact_set_identity_sha256: None,
             proof: vec![242_u8; 32],
             public_inputs: vec![243_u8; 32],
             __buffa_unknown_fields: Default::default(),
@@ -209,6 +211,7 @@ fn generated_clear_removes_zk_presentation_material() {
             stage: ZkPresentationStageKind::Session.into(),
             circuit_ref: MessageField::some(ZkPresentationCircuitRef::default()),
             artifact_manifest_sha256: vec![241_u8; 32],
+            artifact_set_identity_sha256: None,
             proof: vec![241, 242, 243, 244],
             public_inputs: vec![244, 243, 242, 241],
             __buffa_unknown_fields: Default::default(),
@@ -316,4 +319,20 @@ fn generated_proto_json_rejects_unknown_oneof_fields() {
     if let Err(error) = result {
         assert!(error.to_string().contains("unknown field"));
     }
+}
+
+#[test]
+fn artifact_set_identity_is_redacted_and_cleared() {
+    let mut stage = ZkPresentationStage {
+        stage: ZkPresentationStageKind::Unspecified.into(),
+        circuit_ref: MessageField::default(),
+        artifact_manifest_sha256: Vec::new(),
+        artifact_set_identity_sha256: Some(vec![241, 242, 243, 244]),
+        proof: Vec::new(),
+        public_inputs: Vec::new(),
+        __buffa_unknown_fields: Default::default(),
+    };
+    assert_debug_redacts_bytes(format!("{stage:?}"), "artifact_set_identity_sha256");
+    stage.clear();
+    assert!(stage.artifact_set_identity_sha256.is_none());
 }

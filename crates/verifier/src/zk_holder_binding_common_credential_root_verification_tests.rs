@@ -51,7 +51,7 @@ fn common_credential_root_private_persona_response_uses_active_request_and_polic
         assert!(matches!(disclosure, VerifiedDisclosureSet::ZkCommonCredentialRoot(_)));
         return;
     };
-    assert_eq!(verified.profile(), ZkCommonCredentialRootV1Profile::PrivatePersona);
+    assert_eq!(verified.persona_mode(), ZkCommonCredentialRootPersonaMode::PrivatePersona);
     assert_eq!(verified.claims()[0].claim_value(), COMMON_CREDENTIAL_ROOT_FIRST_VALUE);
     assert_eq!(verified.claims()[1].claim_value(), COMMON_CREDENTIAL_ROOT_SECOND_VALUE);
     assert_eq!(common_credential_root.calls.load(Ordering::SeqCst), 1);
@@ -74,7 +74,7 @@ fn common_credential_root_rechecks_status_floor_after_backend_verification() {
     let (snapshot, authority) = signed_status_snapshot(COMMON_CREDENTIAL_ROOT_STATUS_ROOT, 9, 200);
     let policy = ZkCommonCredentialRootVerificationPolicy::try_from_signed_snapshot_with_issuer_status(
         ZkCommonCredentialRootTrustPolicy {
-            attestation_signer: issuer_key(0xa0),
+            attestation_signer: attestation_key(0xa0),
             assurance_policy_id: COMMON_CREDENTIAL_ROOT_POLICY_ID,
             credential_issuers: [issuer_key(0xc0), issuer_key(0xc2)],
             status_feed_id: [0x5a; 32],

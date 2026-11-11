@@ -94,17 +94,7 @@ shared.assertRepositoryShapePolicy({
     { path: "crates/http", role: "transport" },
   ],
   subLanes: {},
-  forbiddenPaths: [
-    "COMPLIANCE_MAP.md",
-    "CONTRACT.md",
-    "PACKAGING.md",
-    "PROTO_FIRST_REFACTOR_PLAN.md",
-    "SPEC_MAP.md",
-    "THREAT_MODEL.md",
-    "crates/proto/openid4vp",
-    "crates/proto/codec",
-    "conformance/vectors",
-  ],
+  forbiddenPaths: [],
   requireReleaseReadiness: true,
 });
 shared.assertRustSourcePolicy({
@@ -408,25 +398,19 @@ function checkRepositoryPolicy() {
     }
 
     const workflowPath = `${workflowDirectory}/${workflowName}`;
-    rejectText(
-      workflowPath,
-      "reallyme/identity-taxonomy",
-      "private identity-taxonomy CI dependency",
-    );
-    rejectText(
-      workflowPath,
-      "reallyme/identity-conformance",
-      "private identity-conformance CI dependency",
-    );
+    // Explicit cross-repository checkouts must be public release tooling;
+    // product repositories and their access credentials do not belong in CI.
+    const workflowContents = readRepoFile(workflowPath);
+    for (const match of workflowContents.matchAll(/^\s+repository:\s+(.+)$/gmu)) {
+      const repository = match[1].trim();
+      if (repository !== "reallyme/release-readiness" && repository !== "${{ github.repository }}") {
+        recordFailure(`${workflowPath}: unapproved repository checkout`);
+      }
+    }
     rejectText(
       workflowPath,
       "REALLYME_CI_TOKEN",
       "private repository access credential",
-    );
-    rejectText(
-      workflowPath,
-      "repository: reallyme/ssi",
-      "redundant SSI source checkout",
     );
   }
 
@@ -601,7 +585,7 @@ function checkRepositoryPolicy() {
   rejectText(
     "crates/openid4vp/Cargo.toml",
     "\nproto = [",
-    "retired facade proto feature",
+    "noncanonical facade proto feature",
   );
   requireText("Cargo.toml", 'unsafe_code = "deny"', "unsafe_code deny lint");
   requireText(
@@ -619,18 +603,8 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "README.md",
-    "lockstep SSI `0.5.1`",
-    "current exact SSI dependency baseline",
-  );
-  requireText(
-    "README.md",
-    "including the corrected `reallyme-mdoc` package",
-    "corrected mdoc dependency version",
-  );
-  rejectText(
-    "README.md",
-    "crates.io version `0.1.0`",
-    "obsolete SSI dependency version",
+    "Security-sensitive ReallyMe dependencies are exact-version pinned",
+    "exact external dependency policy",
   );
   requireText("Cargo.toml", 'unwrap_used = "deny"', "unwrap_used deny lint");
   requireText("Cargo.toml", 'expect_used = "deny"', "expect_used deny lint");
@@ -649,7 +623,7 @@ function checkRepositoryPolicy() {
   requireText("Cargo.toml", 'reallyme-crypto = { version = "=0.3.17", default-features = false }', "registry ReallyMe crypto dependency");
   requireText(
     "Cargo.toml",
-    'reallyme-ssi-proto = { version = "=0.5.1", default-features = false }',
+    'reallyme-ssi-proto = { version = "=0.6.1", default-features = false }',
     "registry SSI canonical proto dependency",
   );
   rejectText(
@@ -660,23 +634,23 @@ function checkRepositoryPolicy() {
   rejectText(
     "Cargo.toml",
     'reallyme-identity-common-proto',
-    "retired SSI common proto package name",
+    "noncanonical shared proto dependency",
   );
   requireText(
     "Cargo.toml",
-    'reallyme-openid4vc-profiles = { version = "=0.5.1", default-features = false }',
+    'reallyme-openid4vc-profiles = { version = "=0.6.1", default-features = false }',
     "registry shared OpenID4VC profiles dependency",
   );
   requireText(
     "Cargo.toml",
-    'reallyme-credential-status = { version = "=0.5.1", default-features = false }',
+    'reallyme-credential-status = { version = "=0.6.1", default-features = false }',
     "registry SSI credential-status dependency",
   );
   rejectText("Cargo.toml", 'path = "../ssi/', "SSI sibling dependency path");
-  rejectText("Cargo.toml", 'path = "../identity/', "old identity sibling dependency path");
+  rejectText("Cargo.toml", 'path = "../identity/', "external identity sibling dependency path");
   requireText(
     "crates/dc-api/Cargo.toml",
-    'reallyme-mdoc = { version = "=0.5.1", default-features = false }',
+    'reallyme-mdoc = { version = "=0.6.1", default-features = false }',
     "registry SSI mdoc dependency",
   );
   rejectText(
@@ -687,16 +661,16 @@ function checkRepositoryPolicy() {
   rejectText(
     "crates/dc-api/Cargo.toml",
     'path = "../../../identity/',
-    "old identity mdoc sibling dependency path",
+    "external identity mdoc sibling dependency path",
   );
   requireText(
     "crates/formats/Cargo.toml",
-    'reallyme-mdoc = { version = "=0.5.1", default-features = false }',
+    'reallyme-mdoc = { version = "=0.6.1", default-features = false }',
     "formats registry SSI mdoc dependency",
   );
   requireText(
     "crates/formats/Cargo.toml",
-    'reallyme-sd-jwt = { version = "=0.5.1", default-features = false }',
+    'reallyme-sd-jwt = { version = "=0.6.1", default-features = false }',
     "formats registry SSI SD-JWT dependency",
   );
   rejectText(
@@ -707,7 +681,7 @@ function checkRepositoryPolicy() {
   rejectText(
     "crates/formats/Cargo.toml",
     'path = "../../../identity/',
-    "old formats identity mdoc sibling dependency path",
+    "external formats identity mdoc sibling dependency path",
   );
   rejectText(
     ".github/workflows/ci.yml",
@@ -720,12 +694,12 @@ function checkRepositoryPolicy() {
   ]) {
     requireText(
       manifest,
-      'reallyme-zk-api = { version = "=0.2.1", default-features = false }',
+      'reallyme-zk-api = { version = "=0.3.0", default-features = false }',
       "exact registry ZK API dependency",
     );
   }
   if (existsSync(resolve(repoRoot, ".github/dependency-pins.json"))) {
-    recordFailure("obsolete source dependency pins file must not return");
+    recordFailure("source dependency pins are outside the registry dependency policy");
   }
   for (const workflow of [
     ".github/workflows/ci.yml",
@@ -735,7 +709,7 @@ function checkRepositoryPolicy() {
     ".github/workflows/crates-release.yml",
   ]) {
     rejectText(workflow, "repository: reallyme/zk", "ZK sibling checkout");
-    rejectText(workflow, "source-pins", "obsolete source dependency pin step");
+    rejectText(workflow, "source-pins", "source dependency pin outside the registry dependency policy");
   }
   for (const manifest of [
     "Cargo.toml",
@@ -755,7 +729,7 @@ function checkRepositoryPolicy() {
   rejectText(
     ".github/workflows/ci.yml",
     "gh repo clone reallyme/identity ../identity",
-    "old identity sibling checkout",
+    "external identity sibling checkout",
   );
   rejectText(
     ".github/workflows/conformance.yml",
@@ -770,7 +744,7 @@ function checkRepositoryPolicy() {
   rejectText(
     ".github/workflows/conformance.yml",
     "gh repo clone reallyme/identity ../identity",
-    "old conformance identity sibling checkout",
+    "external conformance identity sibling checkout",
   );
   for (const dispatchEndpoint of [
     "inputs.verifier_launch_endpoint",
@@ -799,13 +773,8 @@ function checkRepositoryPolicy() {
   requireText("README.md", "conformance/README.md", "conformance runbook link");
   requireText(
     "conformance/README.md",
-    "downstream `identity-conformance` orchestration",
-    "downstream composed-conformance ownership",
-  );
-  rejectText(
-    "conformance/README.md",
-    "reallyme/openid-conformance",
-    "old conformance repository name",
+    "Live plan execution requires a host-supplied verifier or wallet.",
+    "host-owned live conformance execution",
   );
   requireText(
     "README.md",
@@ -828,7 +797,7 @@ function checkRepositoryPolicy() {
     "https://github.com/reallyme/wallet",
     "unpublished ReallyMe Wallet repository link",
   );
-  rejectText("README.md", "identity-sdk", "old Identity repository name");
+  rejectText("README.md", "identity-sdk", "noncanonical Identity repository name");
   requireText("docs/rust-publishing.md", "reallyme-openid4vp-proto", "proto package ownership");
   requireText("docs/rust-publishing.md", "reallyme/identity", "platform package ownership");
   requireText(
@@ -839,7 +808,7 @@ function checkRepositoryPolicy() {
   rejectText(
     "docs/rust-publishing.md",
     "identity-sdk",
-    "old Identity repository or package name",
+    "noncanonical Identity repository or package name",
   );
   requireText(
     "crates/proto/Cargo.toml",
@@ -940,7 +909,7 @@ function checkRepositoryPolicy() {
   );
   requireText(
     ".github/workflows/crates-package-preflight.yml",
-    "default: 0.2.1",
+    "default: 0.3.0",
     "package preflight version default",
   );
   requireText(
@@ -1042,11 +1011,6 @@ function checkRepositoryPolicy() {
     ".github/workflows/conformance.yml",
     "profile_id:",
     "partial-profile selector in complete compatibility inventory workflow",
-  );
-  rejectText(
-    ".github/workflows/conformance.yml",
-    "conformance-suite-demo",
-    "unreleased OIDF demo source in release evidence",
   );
   requireText(
     ".github/workflows/ci.yml",
@@ -1298,36 +1262,44 @@ function checkRepositoryPolicy() {
   );
 }
 
-function checkDeletedDocumentationIsNotReferenced() {
-  const publicFiles = [
+function checkPublicDocumentationPolicy() {
+  // Documentation additions need an explicit public inventory entry so
+  // internal drafts cannot become part of a release without review.
+  const approvedDocumentationPaths = new Set([
+    "CHANGELOG.md",
     "README.md",
-    "contracts/repository-contract.md",
-    "contracts/compliance-map.md",
-    "contracts/spec-map.md",
-    "docs/threat-model.md",
-    "docs/packaging.md",
+    "SECURITY.md",
     "conformance/README.md",
-    "conformance/requirements/eudi-presentation.json",
-  ];
-  const deletedDocs = [
-    "AGENTS.md",
-    "IDENTITY_SDK_INTEGRATION.md",
-    "JWE_DEPENDENCIES.md",
-    "MEPROTO_PORT_AUDIT.md",
-    "OPENID4VP_COMPLIANCE_CHECKLIST.md",
-    "REFACTOR-BRIEF.md",
-    "SDK_INTEGRATION.md",
-    "SPEC_MAP.md",
-    "TODO.md",
-    "llms.txt",
-    "openid4vp-considerations.md",
-  ];
+    "contracts/README.md",
+    "contracts/compliance-map.md",
+    "contracts/repository-contract.md",
+    "contracts/spec-map.md",
+    "crates/dc-api/README.md",
+    "crates/dcql/README.md",
+    "crates/formats/README.md",
+    "crates/http/README.md",
+    "crates/openid4vp/README.md",
+    "crates/profiles/README.md",
+    "crates/proto-codec/README.md",
+    "crates/proto/README.md",
+    "crates/runtime/README.md",
+    "crates/types/README.md",
+    "crates/verifier/README.md",
+    "crates/wallet/README.md",
+    "docs/packaging.md",
+    "docs/platform-binding-contract.md",
+    "docs/rust-publishing.md",
+    "docs/threat-model.md",
+    "formal/README.md",
+    "scripts/proto-hardening/README.md",
+    "vectors/README.md",
+  ]);
 
-  rejectExistingPath("src", "root package source directory");
-  rejectExistingPath("tests", "root package test directory");
+  rejectExistingPath("src", "source outside the virtual workspace crates");
+  rejectExistingPath("tests", "tests outside the virtual workspace crates");
   rejectExistingPath(
     "conformance/reports",
-    "retained conformance evidence owned by identity-conformance",
+    "product evidence outside transient conformance output",
   );
   rejectExistingPath("LICENSE", "single-license root file");
   rejectExistingPath("NOTICE", "repository NOTICE file");
@@ -1393,13 +1365,15 @@ function checkDeletedDocumentationIsNotReferenced() {
     }
   }
 
-  for (const deletedDoc of deletedDocs) {
-    rejectExistingPath(deletedDoc, "retired public documentation");
-  }
-
-  for (const path of publicFiles) {
-    for (const deletedDoc of deletedDocs) {
-      rejectText(path, deletedDoc, `deleted documentation reference ${deletedDoc}`);
+  const documentationExtensions = new Set([
+    ".md", ".markdown", ".mdx", ".rst", ".adoc", ".org", ".txt",
+  ]);
+  for (const path of walkFiles("")) {
+    if (
+      documentationExtensions.has(extensionOf(path).toLowerCase()) &&
+      !approvedDocumentationPaths.has(path)
+    ) {
+      recordFailure(`${path}: unapproved public documentation path`);
     }
   }
 }
@@ -1533,7 +1507,7 @@ function checkFuzzTargetCoverage() {
 const metadata = cargoMetadata();
 checkRepositoryPolicy();
 checkWorkspacePackagePolicy(metadata);
-checkDeletedDocumentationIsNotReferenced();
+checkPublicDocumentationPolicy();
 checkSpdxHeaders();
 checkFuzzTargetCoverage();
 

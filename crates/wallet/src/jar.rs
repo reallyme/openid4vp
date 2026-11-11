@@ -137,8 +137,8 @@ impl WalletAuthorizationRequest for VerifiedWalletRequest {}
 /// Wallet capability policy for final-spec Client Identifier Prefix modes.
 ///
 /// OpenID4VP 1.0 Final Section 5.9.2 assigns an unprefixed identifier to a
-/// pre-registered client. This crate deliberately does not advertise or
-/// accept that mode until an atomic registration receipt API is available.
+/// pre-registered client. This crate does not support that mode because its
+/// verification boundary does not authenticate pre-registration evidence.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct WalletClientIdentifierPolicy {
     pre_registered_supported: bool,

@@ -278,20 +278,37 @@ def is_complete_png(content: bytes) -> bool:
 
 
 def stop_browser_process(process: subprocess.Popen[bytes] | None) -> None:
-    if process is None or process.poll() is not None:
-        # Do not signal by a stale PID after Chromium has reaped itself. A PID
-        # can be reused before cleanup runs, and the replacement process must
-        # never become part of evidence-capture teardown.
+    if process is None or not signal_owned_browser_group(process, signal.SIGTERM):
         return
-    signal_process_group(process.pid, signal.SIGTERM)
     try:
         process.wait(timeout=SCREENSHOT_PROCESS_EXIT_SECONDS)
     except subprocess.TimeoutExpired:
-        signal_process_group(process.pid, signal.SIGKILL)
+        if not signal_owned_browser_group(process, signal.SIGKILL):
+            return
         try:
             process.wait(timeout=SCREENSHOT_PROCESS_EXIT_SECONDS)
         except subprocess.TimeoutExpired as exc:
             raise EvidenceFailure("wallet_error_screen_process_cleanup_failed") from exc
+
+
+def signal_owned_browser_group(
+    process: subprocess.Popen[bytes], requested_signal: signal.Signals
+) -> bool:
+    if process.poll() is not None:
+        # Never signal a PID after the owned child has been reaped: the PID or
+        # process group may already belong to another process.
+        return False
+    try:
+        signal_process_group(process.pid, requested_signal)
+    except EvidenceFailure:
+        # The child can exit between poll and killpg. A signal failure no
+        # longer requires cleanup if waitpid confirms that our child exited
+        # during the call. A live child with denied cleanup remains a hard
+        # failure; never fall back to signaling an unverified process group.
+        if process.poll() is None:
+            raise
+        return False
+    return True
 
 
 def signal_process_group(process_group_id: int, requested_signal: signal.Signals) -> None:

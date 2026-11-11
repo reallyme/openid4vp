@@ -13,6 +13,27 @@ Without that verifier, ZK presentations fail closed. mdoc verification also
 requires a transcript provider that canonically rebuilds the active request
 binding; retained bytes alone are rejected.
 
+## ZK API 0.3 integration
+
+Implement `reallyme_zk_api::claim_bundle::ZkPresentationBoundClaimBundleVerifier`
+for the request-bound claim backend. Configure credential hash algorithms with
+`circuits::ZkCredentialHashAlgorithm` and issuer status with the typed
+`issuer_status::ZkIssuerStatusAuthority` and `ZkIssuerStatusPurpose` contracts.
+The status-qualified path verifies the four claim proofs and their joined
+issuer-status proof before returning a verified claim.
+
+Artifact manifest digests and artifact-set identities retain their distinct
+types throughout transport and backend dispatch. The standalone issuer-status
+proof requires an artifact-set identity. Substituting a manifest with the same
+bytes is rejected.
+
+Persona credential evidence uses the `persona_evidence` API. Its
+`ZkVerifiedPersonaCredentialEvidence` result authenticates the five proof stages.
+The adapter supplied through `with_persona_credential_evidence` must also check
+the live holder signature, the exact verifier-owned request, and durable replay
+state before returning success. The OpenID4VP boundary independently checks the
+returned mode, hash algorithm, production proof suite, and proof window.
+
 ## ZK credential query
 
 Use DCQL format `reallyme.openid4vp.zk_presentation.v1`. Its `meta` object

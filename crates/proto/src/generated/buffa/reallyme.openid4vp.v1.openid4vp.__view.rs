@@ -1474,6 +1474,11 @@ pub struct ZkPresentationStageView<'a> {
     pub proof: &'a [u8],
     /// Field 5: `public_inputs`
     pub public_inputs: &'a [u8],
+    /// The codec requires exactly one artifact digest. Separate fields keep the
+    /// manifest tag and its generated representation compatible with v1 readers.
+    ///
+    /// Field 6: `artifact_set_identity_sha256`
+    pub artifact_set_identity_sha256: ::core::option::Option<&'a [u8]>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::core::fmt::Debug for ZkPresentationStageView<'a> {
@@ -1557,6 +1562,13 @@ impl<'a> ::buffa::MessageView<'a> for ZkPresentationStageView<'a> {
                 )?;
                 view.public_inputs = ::buffa::types::borrow_bytes(&mut cur)?;
             }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.artifact_set_identity_sha256 = Some(::buffa::types::borrow_bytes(&mut cur)?);
+            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -1591,6 +1603,7 @@ impl<'a> ::buffa::MessageView<'a> for ZkPresentationStageView<'a> {
             artifact_manifest_sha256: (self.artifact_manifest_sha256).to_vec(),
             proof: (self.proof).to_vec(),
             public_inputs: (self.public_inputs).to_vec(),
+            artifact_set_identity_sha256: self.artifact_set_identity_sha256.map(|b| (b).to_vec()),
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -1624,6 +1637,9 @@ impl<'a> ::buffa::ViewEncode<'a> for ZkPresentationStageView<'a> {
         if !self.public_inputs.is_empty() {
             size += 1u64 + ::buffa::types::bytes_encoded_len(&self.public_inputs) as u64;
         }
+        if let Some(ref v) = self.artifact_set_identity_sha256 {
+            size += 1u64 + ::buffa::types::bytes_encoded_len(v) as u64;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
     }
@@ -1649,6 +1665,9 @@ impl<'a> ::buffa::ViewEncode<'a> for ZkPresentationStageView<'a> {
         }
         if !self.public_inputs.is_empty() {
             ::buffa::types::put_shared_bytes_field(5u32, &self.public_inputs, buf);
+        }
+        if let Some(ref v) = self.artifact_set_identity_sha256 {
+            ::buffa::types::put_shared_bytes_field(6u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -1692,6 +1711,12 @@ impl<'__a> ::serde::Serialize for ZkPresentationStageView<'__a> {
             __map.serialize_entry(
                 "publicInputs",
                 &::buffa::json_helpers::BytesJson(self.public_inputs),
+            )?;
+        }
+        if let ::core::option::Option::Some(__v) = self.artifact_set_identity_sha256 {
+            __map.serialize_entry(
+                "artifactSetIdentitySha256",
+                &::buffa::json_helpers::BytesJson(__v),
             )?;
         }
         __map.end()
@@ -1817,6 +1842,14 @@ impl ZkPresentationStageOwnedView {
     #[must_use]
     pub fn public_inputs(&self) -> &'_ [u8] {
         self.0.reborrow().public_inputs
+    }
+    /// The codec requires exactly one artifact digest. Separate fields keep the
+    /// manifest tag and its generated representation compatible with v1 readers.
+    ///
+    /// Field 6: `artifact_set_identity_sha256`
+    #[must_use]
+    pub fn artifact_set_identity_sha256(&self) -> ::core::option::Option<&'_ [u8]> {
+        self.0.reborrow().artifact_set_identity_sha256
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<ZkPresentationStageView<'static>>>
@@ -17851,8 +17884,8 @@ impl ::serde::Serialize for DecodeDcApiAuthorizationResponseRequestOwnedView {
     }
 }
 /// DecodeDcApiAuthorizationResponseResponse is retained for wire compatibility.
-/// Runtime implementations fail closed until a server-owned session and
-/// authenticated browser-origin context are supplied by a replacement endpoint.
+/// Runtime implementations return UnsupportedFeature because this operation
+/// has no server-owned session or authenticated browser-origin context.
 #[derive(Clone, Debug, Default)]
 pub struct DecodeDcApiAuthorizationResponseResponseView<'a> {
     /// Field 1: `response`

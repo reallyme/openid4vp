@@ -6,66 +6,22 @@ use core::fmt;
 
 use reallyme_openid4vp_formats::mdoc::VerifiedMdocClaim;
 use reallyme_zk_api::{
-    ZkCommonCredentialRootV1Profile, ZkHashStrategy, ZkIssuerPublicKey,
-    ZkPersonaCredentialEvidenceHolderPublicKey, ZkPersonaCredentialEvidenceProfile, ZkProofProfile,
-    ZkVerifiedClaimStatement,
+    circuits::ZkCredentialHashAlgorithm,
+    claim_bundle::ZkClaimProofBundleKind,
+    claim_bundle::ZkVerifiedClaimStatement,
+    common_root::ZkCommonCredentialRootPersonaMode,
+    keys::{ZkIssuerPublicKey, ZkPersonaPublicKey},
+    persona_evidence::{
+        ZkPersonaCredentialEvidenceHolderPublicKey, ZkPersonaCredentialEvidenceMode,
+    },
 };
-use serde_json::Value as JsonValue;
 use subtle::ConstantTimeEq;
 use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
 
-use crate::VerifierError;
+#[path = "verify_holder_binding_json.rs"]
+mod verified_json;
 
-const MAX_VERIFIED_CLAIMS_JSON_BYTES: usize = 256 * 1024;
-const MAX_VERIFIED_CLAIMS_DEPTH: usize = 64;
-
-/// Immutable issuer-authenticated JSON claims retained without reparsing.
-#[derive(Clone, PartialEq, Eq)]
-pub struct VerifiedJsonClaims {
-    value: JsonValue,
-}
-
-impl VerifiedJsonClaims {
-    /// Retain a format verifier's authenticated disclosure projection.
-    pub fn from_authenticated(value: JsonValue) -> Result<Self, VerifierError> {
-        let encoded = reallyme_openid4vp_types::canonical_presentation_json_bytes(&value)
-            .map_err(|_| VerifierError::new(crate::VerifierErrorReason::InvalidBinding))?;
-        if encoded.len() > MAX_VERIFIED_CLAIMS_JSON_BYTES
-            || json_depth(&value, 0)? > MAX_VERIFIED_CLAIMS_DEPTH
-        {
-            return Err(VerifierError::new(
-                crate::VerifierErrorReason::InvalidBinding,
-            ));
-        }
-        Ok(Self { value })
-    }
-
-    /// Borrow the already-authenticated claim tree.
-    #[must_use]
-    pub const fn as_value(&self) -> &JsonValue {
-        &self.value
-    }
-}
-
-impl fmt::Debug for VerifiedJsonClaims {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("VerifiedJsonClaims(<redacted>)")
-    }
-}
-
-impl Zeroize for VerifiedJsonClaims {
-    fn zeroize(&mut self) {
-        zeroize_json_value(&mut self.value);
-    }
-}
-
-impl Drop for VerifiedJsonClaims {
-    fn drop(&mut self) {
-        self.zeroize();
-    }
-}
-
-impl ZeroizeOnDrop for VerifiedJsonClaims {}
+pub use verified_json::VerifiedJsonClaims;
 
 /// One claim and relationship commitment authenticated by a complete ZK bundle.
 ///
@@ -74,10 +30,10 @@ impl ZeroizeOnDrop for VerifiedJsonClaims {}
 /// clears the presentation-scoped commitments when dropped.
 #[derive(Clone, PartialEq, Eq)]
 pub struct VerifiedZkClaim {
-    profile: ZkProofProfile,
-    hash_strategy: ZkHashStrategy,
+    bundle_kind: ZkClaimProofBundleKind,
+    hash_strategy: ZkCredentialHashAlgorithm,
     issuer: ZkIssuerPublicKey,
-    persona: Option<ZkIssuerPublicKey>,
+    persona: Option<ZkPersonaPublicKey>,
     credential_binding: [u8; 32],
     session_link_commitment: [u8; 32],
     claim_name_hash: [u8; 32],
@@ -86,12 +42,12 @@ pub struct VerifiedZkClaim {
 
 impl VerifiedZkClaim {
     pub(crate) fn from_verified(
-        profile: ZkProofProfile,
-        hash_strategy: ZkHashStrategy,
+        profile: ZkClaimProofBundleKind,
+        hash_strategy: ZkCredentialHashAlgorithm,
         statement: &ZkVerifiedClaimStatement,
     ) -> Self {
         Self {
-            profile,
+            bundle_kind: profile,
             hash_strategy,
             issuer: statement.issuer(),
             persona: statement.persona(),
@@ -104,13 +60,13 @@ impl VerifiedZkClaim {
 
     /// Production proof profile that established this statement.
     #[must_use]
-    pub const fn profile(&self) -> ZkProofProfile {
-        self.profile
+    pub const fn bundle_kind(&self) -> ZkClaimProofBundleKind {
+        self.bundle_kind
     }
 
     /// Hash lane of the proof's circuit public-input commitments.
     #[must_use]
-    pub const fn hash_strategy(&self) -> ZkHashStrategy {
+    pub const fn credential_hash_algorithm(&self) -> ZkCredentialHashAlgorithm {
         self.hash_strategy
     }
 
@@ -124,7 +80,7 @@ impl VerifiedZkClaim {
     /// credentials were issued to one natural person.
     #[must_use]
     pub fn same_presenting_key_in_session(&self, other: &Self) -> bool {
-        self.profile == other.profile
+        self.bundle_kind == other.bundle_kind
             && self.hash_strategy == other.hash_strategy
             && bool::from(
                 self.session_link_commitment
@@ -140,7 +96,7 @@ impl VerifiedZkClaim {
 
     /// Intentionally public persona key, when the profile exposes one.
     #[must_use]
-    pub const fn persona(&self) -> Option<ZkIssuerPublicKey> {
+    pub const fn persona(&self) -> Option<ZkPersonaPublicKey> {
         self.persona
     }
 
@@ -173,7 +129,7 @@ impl fmt::Debug for VerifiedZkClaim {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("VerifiedZkClaim")
-            .field("profile", &self.profile)
+            .field("profile", &self.bundle_kind)
             .field("hash_strategy", &self.hash_strategy)
             .field("issuer", &self.issuer)
             .field("persona", &self.persona)
@@ -206,8 +162,8 @@ impl ZeroizeOnDrop for VerifiedZkClaim {}
 /// status, and a live holder signature over the exact verifier request.
 #[derive(Clone, PartialEq, Eq)]
 pub struct VerifiedZkPersonaCredentialEvidenceClaim {
-    profile: ZkPersonaCredentialEvidenceProfile,
-    hash_strategy: ZkHashStrategy,
+    mode: ZkPersonaCredentialEvidenceMode,
+    hash_strategy: ZkCredentialHashAlgorithm,
     holder_key: ZkPersonaCredentialEvidenceHolderPublicKey,
     claim_name_hash: [u8; 32],
     claim_value: Zeroizing<Vec<u8>>,
@@ -215,14 +171,14 @@ pub struct VerifiedZkPersonaCredentialEvidenceClaim {
 
 impl VerifiedZkPersonaCredentialEvidenceClaim {
     pub(crate) fn from_verified(
-        profile: ZkPersonaCredentialEvidenceProfile,
-        hash_strategy: ZkHashStrategy,
+        profile: ZkPersonaCredentialEvidenceMode,
+        hash_strategy: ZkCredentialHashAlgorithm,
         holder_key: ZkPersonaCredentialEvidenceHolderPublicKey,
         claim_name_hash: [u8; 32],
         claim_value: &[u8],
     ) -> Self {
         Self {
-            profile,
+            mode: profile,
             hash_strategy,
             holder_key,
             claim_name_hash,
@@ -232,13 +188,13 @@ impl VerifiedZkPersonaCredentialEvidenceClaim {
 
     /// Public or private one-time prepared profile.
     #[must_use]
-    pub const fn profile(&self) -> ZkPersonaCredentialEvidenceProfile {
-        self.profile
+    pub const fn mode(&self) -> ZkPersonaCredentialEvidenceMode {
+        self.mode
     }
 
     /// Hash lane authenticated by the two prepared proofs.
     #[must_use]
-    pub const fn hash_strategy(&self) -> ZkHashStrategy {
+    pub const fn credential_hash_algorithm(&self) -> ZkCredentialHashAlgorithm {
         self.hash_strategy
     }
 
@@ -265,7 +221,7 @@ impl fmt::Debug for VerifiedZkPersonaCredentialEvidenceClaim {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("VerifiedZkPersonaCredentialEvidenceClaim")
-            .field("profile", &self.profile)
+            .field("profile", &self.mode)
             .field("hash_strategy", &self.hash_strategy)
             .field("holder_key", &"<redacted>")
             .field("claim_name_hash", &"<redacted>")
@@ -364,21 +320,21 @@ impl ZeroizeOnDrop for VerifiedZkCommonCredentialRootClaim {}
 /// Complete common-credential-root result accepted by the injected proof verifier.
 #[derive(Clone, PartialEq, Eq)]
 pub struct VerifiedZkCommonCredentialRootPresentation {
-    profile: ZkCommonCredentialRootV1Profile,
-    hash_strategy: ZkHashStrategy,
+    persona_mode: ZkCommonCredentialRootPersonaMode,
+    hash_strategy: ZkCredentialHashAlgorithm,
     verified_proof_count: u8,
     claims: [VerifiedZkCommonCredentialRootClaim; 2],
 }
 
 impl VerifiedZkCommonCredentialRootPresentation {
     pub(crate) const fn from_verified(
-        profile: ZkCommonCredentialRootV1Profile,
-        hash_strategy: ZkHashStrategy,
+        profile: ZkCommonCredentialRootPersonaMode,
+        hash_strategy: ZkCredentialHashAlgorithm,
         verified_proof_count: u8,
         claims: [VerifiedZkCommonCredentialRootClaim; 2],
     ) -> Self {
         Self {
-            profile,
+            persona_mode: profile,
             hash_strategy,
             verified_proof_count,
             claims,
@@ -387,13 +343,13 @@ impl VerifiedZkCommonCredentialRootPresentation {
 
     /// Common-credential-root profile that established the composition.
     #[must_use]
-    pub const fn profile(&self) -> ZkCommonCredentialRootV1Profile {
-        self.profile
+    pub const fn persona_mode(&self) -> ZkCommonCredentialRootPersonaMode {
+        self.persona_mode
     }
 
     /// Hash lane used by every proof in the composition.
     #[must_use]
-    pub const fn hash_strategy(&self) -> ZkHashStrategy {
+    pub const fn credential_hash_algorithm(&self) -> ZkCredentialHashAlgorithm {
         self.hash_strategy
     }
 
@@ -414,7 +370,7 @@ impl fmt::Debug for VerifiedZkCommonCredentialRootPresentation {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("VerifiedZkCommonCredentialRootPresentation")
-            .field("profile", &self.profile)
+            .field("profile", &self.persona_mode)
             .field("hash_strategy", &self.hash_strategy)
             .field("verified_proof_count", &self.verified_proof_count)
             .field("claims", &"<redacted>")
@@ -493,5 +449,3 @@ impl Drop for VerifiedDisclosureSet {
 }
 
 impl ZeroizeOnDrop for VerifiedDisclosureSet {}
-
-include!("verify_holder_binding_json.rs");

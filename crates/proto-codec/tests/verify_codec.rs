@@ -481,11 +481,9 @@ fn encodes_zk_presentation_as_typed_proto_oneof() {
         Some(pb::ZkPresentationProofSuite::BarretenbergUltraHonkKeccakZkNoIpa)
     );
     assert_eq!(
-        typed_zk.and_then(|zk| {
-            zk.stages
-                .first()
-                .map(|stage| stage.artifact_manifest_sha256.as_slice())
-        }),
+        typed_zk
+            .and_then(|zk| zk.stages.first())
+            .map(|stage| stage.artifact_manifest_sha256.as_slice()),
         Some([10_u8; 32].as_slice())
     );
     let decoded = proto_to_authorization_response(&proto).expect("typed zk proto decodes");
@@ -499,7 +497,7 @@ fn encodes_zk_presentation_as_typed_proto_oneof() {
         .and_then(|value| value.kind.as_mut())
     {
         if let Some(stage) = zk.stages.first_mut() {
-            stage.artifact_manifest_sha256.truncate(31);
+            stage.artifact_manifest_sha256 = vec![10; 31];
         }
     }
     let error = proto_to_authorization_response(&malformed_manifest)
@@ -540,7 +538,7 @@ fn encodes_zk_presentation_as_typed_proto_oneof() {
         .and_then(|value| value.kind.as_mut())
     {
         if let Some(stage) = zk.stages.first_mut() {
-            stage.artifact_manifest_sha256 = vec![10_u8; 32];
+            stage.artifact_manifest_sha256 = vec![10; 32];
         }
         zk.proof_suite = buffa::EnumValue::from(2);
     }
@@ -568,7 +566,9 @@ fn zk_presentation_stages() -> Vec<ZkPresentationStage> {
             stage: stage_name.to_owned(),
             version: 1,
         },
-        artifact_manifest_sha256: [10_u8; 32],
+        artifact_identity: reallyme_openid4vp_formats::ZkPresentationArtifactIdentity::Manifest(
+            [10_u8; 32],
+        ),
         proof: vec![1, 2, 3],
         public_inputs: vec![4, 5, 6],
     })
@@ -748,3 +748,6 @@ include!("verify_codec/dc_api.rs");
 
 #[path = "verify_codec/multisigned.rs"]
 mod multisigned_tests;
+
+#[path = "verify_codec/artifact_identity.rs"]
+mod artifact_identity_tests;

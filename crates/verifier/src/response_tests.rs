@@ -403,7 +403,9 @@ fn zk_response_for_binding(
             stage: stage_name.to_owned(),
             version: 1,
         },
-        artifact_manifest_sha256: [41_u8; 32],
+        artifact_identity: reallyme_openid4vp_formats::ZkPresentationArtifactIdentity::Manifest(
+            [41_u8; 32],
+        ),
         proof: vec![u8::try_from(index).expect("four stages fit in u8") + 1],
         public_inputs: vec![7_u8; 32],
     })

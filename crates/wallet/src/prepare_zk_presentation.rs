@@ -6,15 +6,20 @@ use reallyme_codec::base64url::{base64url_to_bytes, bytes_to_base64url};
 use reallyme_openid4vp_dcql::{CredentialFormat, QueryId};
 use reallyme_openid4vp_formats::{
     build_zk_presentation_binding, encode_zk_presentation_value, ZkPresentation,
-    ZkPresentationCircuitRef, ZkPresentationProfile, ZkPresentationProofSuite, ZkPresentationStage,
-    ZkPresentationStageKind, ZK_PRESENTATION_TYPE,
+    ZkPresentationArtifactIdentity, ZkPresentationCircuitRef, ZkPresentationProfile,
+    ZkPresentationProofSuite, ZkPresentationStage, ZkPresentationStageKind, ZK_PRESENTATION_TYPE,
 };
 use reallyme_openid4vp_types::{PresentationValue, ResponseMode, TransactionDataHash};
 use reallyme_zk_api::{
-    ZkArtifactManifestDigest, ZkCommonCredentialRootProofSlot,
-    ZkCommonCredentialRootRawPublicInputs, ZkCommonCredentialRootV1Profile, ZkHashStrategy,
-    ZkProductionStage, ZkProofBundle, ZkProofBytes, ZkProofProfile, ZkProofSuite, ZkSessionBinding,
-    ZkStatusQualifiedBundle,
+    artifacts::ZkArtifactIdentity,
+    circuits::ZkCredentialHashAlgorithm,
+    claim_bundle::{
+        ZkClaimProofBundle, ZkClaimProofBundleKind, ZkClaimProofBundleStage,
+        ZkStatusQualifiedClaimProofBundle,
+    },
+    common_root::ZkCommonCredentialRootPersonaMode,
+    common_root::{ZkCommonCredentialRootProofSlot, ZkCommonCredentialRootRawPublicInputs},
+    proofs::{ZkProofBytes, ZkProofSuite, ZkSessionBinding},
 };
 use subtle::ConstantTimeEq;
 use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
@@ -52,8 +57,8 @@ pub trait WalletCommonCredentialRootProof {
     /// Canonical proof slot.
     fn slot(&self) -> ZkCommonCredentialRootProofSlot;
 
-    /// Artifact manifest identity pinned by this proof package.
-    fn artifact_manifest_sha256(&self) -> ZkArtifactManifestDigest;
+    /// Explicit artifact identity construction pinned by this proof package.
+    fn artifact_identity(&self) -> ZkArtifactIdentity;
 
     /// Bounded proof bytes.
     fn proof_bytes(&self) -> &ZkProofBytes;
@@ -68,10 +73,10 @@ pub trait WalletCommonCredentialRootPresentation {
     type Proof: WalletCommonCredentialRootProof;
 
     /// Common-credential-root persona mode.
-    fn profile(&self) -> ZkCommonCredentialRootV1Profile;
+    fn persona_mode(&self) -> ZkCommonCredentialRootPersonaMode;
 
-    /// Shared hash strategy for every proof package.
-    fn hash_strategy(&self) -> ZkHashStrategy;
+    /// Credential hash algorithm shared by every proof package.
+    fn credential_hash_algorithm(&self) -> ZkCredentialHashAlgorithm;
 
     /// Claimed proof suite.
     fn proof_suite(&self) -> ZkProofSuite;
@@ -107,7 +112,7 @@ pub fn prepare_zk_presentation_from_bundle(
     verified_request: &impl WalletAuthorizationRequest,
     invocation: &WalletInvocationContext,
     query_id: &QueryId,
-    bundle: &ZkProofBundle,
+    bundle: &ZkClaimProofBundle,
 ) -> Result<PresentationValue, WalletError> {
     prepare_zk_presentation(build_zk_presentation_from_bundle(
         verified_request,
@@ -123,13 +128,13 @@ pub fn prepare_zk_presentation_from_status_qualified_bundle(
     verified_request: &impl WalletAuthorizationRequest,
     invocation: &WalletInvocationContext,
     query_id: &QueryId,
-    qualified: &ZkStatusQualifiedBundle,
+    qualified: &ZkStatusQualifiedClaimProofBundle,
 ) -> Result<PresentationValue, WalletError> {
     let mut presentation = build_zk_presentation_from_bundle(
         verified_request,
         invocation,
         query_id,
-        qualified.claim_bundle(),
+        qualified.claim_proof_bundle(),
     )?;
     let proof = qualified.issuer_credential_status();
     let circuit = proof.public_inputs().circuit_ref();
@@ -140,12 +145,14 @@ pub fn prepare_zk_presentation_from_status_qualified_bundle(
     presentation.stages.push(ZkPresentationStage {
         stage: ZkPresentationStageKind::IssuerCredentialStatus,
         circuit_ref: ZkPresentationCircuitRef {
-            hash_strategy: circuit.hash_strategy.as_str().to_owned(),
+            hash_strategy: circuit.credential_hash_algorithm.as_str().to_owned(),
             family: circuit.family.as_str().to_owned(),
             stage: circuit.stage.as_str().to_owned(),
-            version: circuit.version,
+            version: circuit.revision,
         },
-        artifact_manifest_sha256: *proof.artifact_manifest_sha256().as_bytes(),
+        artifact_identity: ZkPresentationArtifactIdentity::ArtifactSet(
+            *proof.artifact_set_identity_sha256().as_bytes(),
+        ),
         proof: copy_bounded(proof.proof_bytes().as_bytes())?,
         public_inputs: copy_bounded(proof.public_inputs().as_bytes())?,
     });
@@ -156,7 +163,7 @@ fn build_zk_presentation_from_bundle(
     verified_request: &impl WalletAuthorizationRequest,
     invocation: &WalletInvocationContext,
     query_id: &QueryId,
-    bundle: &ZkProofBundle,
+    bundle: &ZkClaimProofBundle,
 ) -> Result<ZkPresentation, WalletError> {
     let request = verified_request.request();
     let query = request
@@ -185,25 +192,35 @@ fn build_zk_presentation_from_bundle(
         return Err(zk_error());
     }
     let first = bundle.stage_proofs().first().ok_or_else(zk_error)?;
-    let hash_strategy = first.proof().circuit_ref().hash_strategy.as_str();
+    let hash_strategy = first
+        .proof()
+        .circuit_ref()
+        .credential_hash_algorithm
+        .as_str();
     let statement = bundle.decode_claimed_statement().map_err(|_| zk_error())?;
-    validate_query_claim(query, bundle.profile(), hash_strategy, &statement)?;
+    validate_query_claim(query, bundle.bundle_kind(), hash_strategy, &statement)?;
 
-    let profile = match bundle.profile() {
-        ZkProofProfile::CredentialSubjectClaimV1 => ZkPresentationProfile::CredentialSubjectClaimV1,
-        ZkProofProfile::PrivatePersonaClaimV1 => ZkPresentationProfile::PrivatePersonaClaimV1,
+    let profile = match bundle.bundle_kind() {
+        ZkClaimProofBundleKind::CredentialSubjectClaimV1 => {
+            ZkPresentationProfile::CredentialSubjectClaimV1
+        }
+        ZkClaimProofBundleKind::PrivatePersonaClaimV1 => {
+            ZkPresentationProfile::PrivatePersonaClaimV1
+        }
         _ => return Err(zk_error()),
     };
     let mut stages = Vec::new();
     stages
-        .try_reserve_exact(ZkProductionStage::ALL.len())
+        .try_reserve_exact(ZkClaimProofBundleStage::ALL.len())
         .map_err(|_| zk_error())?;
     for stage_proof in bundle.stage_proofs() {
         let stage = match stage_proof.stage() {
-            ZkProductionStage::Session => ZkPresentationStageKind::Session,
-            ZkProductionStage::CredentialEnvelope => ZkPresentationStageKind::CredentialEnvelope,
-            ZkProductionStage::CredentialRoot => ZkPresentationStageKind::CredentialRoot,
-            ZkProductionStage::Claim => ZkPresentationStageKind::Claim,
+            ZkClaimProofBundleStage::Session => ZkPresentationStageKind::Session,
+            ZkClaimProofBundleStage::CredentialEnvelope => {
+                ZkPresentationStageKind::CredentialEnvelope
+            }
+            ZkClaimProofBundleStage::CredentialRoot => ZkPresentationStageKind::CredentialRoot,
+            ZkClaimProofBundleStage::Claim => ZkPresentationStageKind::Claim,
             _ => return Err(zk_error()),
         };
         let proof = stage_proof.proof();
@@ -211,12 +228,12 @@ fn build_zk_presentation_from_bundle(
         stages.push(ZkPresentationStage {
             stage,
             circuit_ref: ZkPresentationCircuitRef {
-                hash_strategy: circuit.hash_strategy.as_str().to_owned(),
+                hash_strategy: circuit.credential_hash_algorithm.as_str().to_owned(),
                 family: circuit.family.as_str().to_owned(),
                 stage: circuit.stage.as_str().to_owned(),
-                version: circuit.version,
+                version: circuit.revision,
             },
-            artifact_manifest_sha256: *proof.artifact_manifest_sha256().as_bytes(),
+            artifact_identity: artifact_identity_to_wire(proof.artifact_identity()),
             proof: copy_bounded(proof.proof_bytes())?,
             public_inputs: copy_bounded(proof.public_inputs().as_bytes())?,
         });
@@ -264,8 +281,8 @@ where
     }
     let requested_claims = validate_common_credential_root_query(
         query,
-        presentation.profile(),
-        presentation.hash_strategy(),
+        presentation.persona_mode(),
+        presentation.credential_hash_algorithm(),
     )?;
 
     let audience = expected_audience(request, invocation)?;
@@ -297,8 +314,8 @@ where
         let circuit = proof.public_inputs().circuit_ref();
         if circuit
             != presentation
-                .profile()
-                .source_ref(presentation.hash_strategy(), *expected_slot)
+                .persona_mode()
+                .source_ref(presentation.credential_hash_algorithm(), *expected_slot)
         {
             return Err(zk_error());
         }
@@ -320,12 +337,12 @@ where
         stages.push(ZkPresentationStage {
             stage: common_credential_root_stage_kind(*expected_slot)?,
             circuit_ref: ZkPresentationCircuitRef {
-                hash_strategy: circuit.hash_strategy.as_str().to_owned(),
+                hash_strategy: circuit.credential_hash_algorithm.as_str().to_owned(),
                 family: circuit.family.as_str().to_owned(),
                 stage: circuit.stage.as_str().to_owned(),
-                version: circuit.version,
+                version: circuit.revision,
             },
-            artifact_manifest_sha256: *proof.artifact_manifest_sha256().as_bytes(),
+            artifact_identity: artifact_identity_to_wire(proof.artifact_identity()),
             proof: copy_bounded(proof.proof_bytes().as_bytes())?,
             public_inputs: copy_bounded(proof.public_inputs().as_bytes())?,
         });
@@ -333,7 +350,7 @@ where
 
     prepare_zk_presentation(ZkPresentation {
         type_: ZK_PRESENTATION_TYPE.to_owned(),
-        profile: common_credential_root_presentation_profile(presentation.profile())?,
+        profile: common_credential_root_presentation_profile(presentation.persona_mode())?,
         proof_suite: ZkPresentationProofSuite::BarretenbergUltraHonkKeccakZkNoIpa,
         stages,
         derived_claims: Vec::new(),
@@ -398,9 +415,9 @@ fn transaction_data_hash_for_query(
 
 fn validate_query_claim(
     query: &reallyme_openid4vp_dcql::CredentialQuery,
-    profile: ZkProofProfile,
+    profile: ZkClaimProofBundleKind,
     hash_strategy: &str,
-    statement: &reallyme_zk_api::ZkClaimedStatement,
+    statement: &reallyme_zk_api::claim_bundle::ZkClaimedStatement,
 ) -> Result<(), WalletError> {
     let meta = &query.meta;
     if !(3..=4).contains(&meta.len())
@@ -448,3 +465,14 @@ include!("prepare_zk_presentation_common_credential_root.rs");
 #[cfg(test)]
 #[path = "prepare_zk_presentation_tests.rs"]
 mod tests;
+
+fn artifact_identity_to_wire(identity: ZkArtifactIdentity) -> ZkPresentationArtifactIdentity {
+    match identity {
+        ZkArtifactIdentity::Manifest(digest) => {
+            ZkPresentationArtifactIdentity::Manifest(*digest.as_bytes())
+        }
+        ZkArtifactIdentity::ArtifactSet(digest) => {
+            ZkPresentationArtifactIdentity::ArtifactSet(*digest.as_bytes())
+        }
+    }
+}

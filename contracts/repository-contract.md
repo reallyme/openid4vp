@@ -30,9 +30,9 @@ conversion, and framework-neutral runtime operations.
   `reallyme/crypto` and the relevant JOSE, COSE, or ZK repositories.
 - Wallet inventory, consent UX, service deployment, storage, key custody, and
   platform SDK packaging belong to their host repositories.
-- Cross-repository certification orchestration belongs to private downstream
-  systems; this repository retains protocol-specific adapters and evidence and
-  must not require private repositories in its CI.
+- Product certification, deployment, and retained submission evidence are
+  host responsibilities. Public CI verifies protocol compatibility without
+  private repositories, product endpoints, or deployment credentials.
 
 ## Compatibility Rules
 

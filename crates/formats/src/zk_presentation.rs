@@ -14,8 +14,9 @@ mod types;
 mod validation;
 
 pub use types::{
-    DerivedClaimStatement, ZkPresentation, ZkPresentationBinding, ZkPresentationCircuitRef,
-    ZkPresentationProfile, ZkPresentationProofSuite, ZkPresentationStage, ZkPresentationStageKind,
+    DerivedClaimStatement, ZkPresentation, ZkPresentationArtifactIdentity, ZkPresentationBinding,
+    ZkPresentationCircuitRef, ZkPresentationProfile, ZkPresentationProofSuite, ZkPresentationStage,
+    ZkPresentationStageKind,
 };
 pub use validation::{validate_zk_presentation_binding, validate_zk_presentation_shape};
 

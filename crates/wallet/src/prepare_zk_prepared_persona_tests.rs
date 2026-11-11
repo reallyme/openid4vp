@@ -9,7 +9,7 @@ use reallyme_openid4vp_formats::parse_zk_prepared_persona_value;
 use reallyme_openid4vp_types::{
     AuthorizationRequestObject, ClientIdentifier, ResponseMode, ResponseType,
 };
-use reallyme_zk_api::ZkPersonaCredentialEvidenceProfile;
+use reallyme_zk_api::persona_evidence::ZkPersonaCredentialEvidenceMode;
 use serde_json::json;
 use zeroize::Zeroizing;
 
@@ -36,8 +36,8 @@ impl ZkPersonaCredentialEvidencePresentationProvider for PreparedProvider {
     ) -> Result<Zeroizing<Vec<u8>>, WalletError> {
         self.calls += 1;
         assert_eq!(
-            request.profile(),
-            ZkPersonaCredentialEvidenceProfile::PublicPersonaV1
+            request.mode(),
+            ZkPersonaCredentialEvidenceMode::PublicPersonaV1
         );
         Ok(Zeroizing::new(vec![7_u8; 32]))
     }
@@ -125,12 +125,12 @@ fn prepared_wallet_request_binds_both_profiles_to_the_verified_request() {
     )
     .expect("second request is valid");
     assert_eq!(
-        public.profile(),
-        ZkPersonaCredentialEvidenceProfile::PublicPersonaV1
+        public.mode(),
+        ZkPersonaCredentialEvidenceMode::PublicPersonaV1
     );
     assert_eq!(
-        private.profile(),
-        ZkPersonaCredentialEvidenceProfile::PrivatePersonaOneTimeV1
+        private.mode(),
+        ZkPersonaCredentialEvidenceMode::PrivatePersonaOneTimeV1
     );
     assert_ne!(
         public.hashes().requested_claims_sha256,

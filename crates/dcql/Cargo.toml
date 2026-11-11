@@ -4,7 +4,7 @@
 
 [package]
 name = "reallyme-openid4vp-dcql"
-version = "0.2.1"
+version = "0.3.0"
 description = "Digital Credentials Query Language model and evaluation engine."
 edition.workspace = true
 rust-version.workspace = true

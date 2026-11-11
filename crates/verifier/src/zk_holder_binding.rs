@@ -8,13 +8,22 @@ use reallyme_openid4vp_dcql::CredentialFormat;
 use reallyme_openid4vp_formats::{build_zk_presentation_binding, parse_zk_presentation_value};
 use reallyme_openid4vp_types::{PresentationValue, TransactionDataHashAlgorithm};
 use reallyme_zk_api::{
-    verify_common_credential_root_with, verify_status_qualified_bundle_with, ZkBundleVerifier,
-    ZkBundleVerifyRequest, ZkCommonCredentialRootClaimExpectation,
-    ZkCommonCredentialRootIssuerStatusPurpose, ZkCommonCredentialRootJoinPolicy,
-    ZkCommonCredentialRootProof, ZkCommonCredentialRootProofSlot, ZkCommonCredentialRootVerifier,
-    ZkCommonCredentialRootVerifyRequest, ZkIssuerCredentialStatusVerifier, ZkIssuerPublicKey,
-    ZkPersonaCredentialEvidenceStatusAuthority, ZkProofSuite, ZkSessionBinding,
-    ZkStatusQualifiedBundleVerifyRequest, MAX_PRESENTATION_LIFETIME_SECONDS,
+    claim_bundle::MAX_PRESENTATION_LIFETIME_SECONDS,
+    claim_bundle::{
+        verify_status_qualified_claim_proof_bundle_with, ZkPresentationBoundClaimBundleVerifier,
+        ZkPresentationBoundClaimBundleVerifyRequest,
+        ZkStatusQualifiedClaimProofBundleVerifyRequest,
+    },
+    common_root::{
+        verify_common_credential_root_with, ZkCommonCredentialRootClaimExpectation,
+        ZkCommonCredentialRootJoinPolicy, ZkCommonCredentialRootProof,
+        ZkCommonCredentialRootProofSlot, ZkCommonCredentialRootVerifier,
+        ZkCommonCredentialRootVerifyRequest,
+    },
+    issuer_status::ZkIssuerCredentialStatusVerifier,
+    issuer_status::{ZkIssuerStatusAuthority, ZkIssuerStatusPurpose},
+    keys::ZkIssuerPublicKey,
+    proofs::{ZkProofSuite, ZkSessionBinding},
 };
 use subtle::ConstantTimeEq;
 
@@ -38,7 +47,7 @@ pub use prepared::{
 
 use query::{
     build_bundle, build_common_credential_root_proofs, build_issuer_credential_status_proof,
-    common_credential_root_persona_mode, common_credential_root_profile_from_meta, invalid_zk,
+    common_credential_root_persona_mode_from_meta, invalid_zk,
     parse_common_credential_root_query_policy, parse_query_policy, transaction_data_hash,
 };
 #[cfg(any(feature = "native", feature = "wasm"))]
@@ -59,7 +68,7 @@ pub use status::{
 /// Issuer trust is supplied by the deployment rather than by the presentation.
 /// The common-credential-root profile requires issuer-signed validity and current status.
 pub struct ZkHolderBindingVerifier<'a> {
-    bundle_verifier: &'a dyn ZkBundleVerifier,
+    bundle_verifier: &'a dyn ZkPresentationBoundClaimBundleVerifier,
     trusted_issuers: &'a [ZkIssuerPublicKey],
     requirements: ZkVerificationRequirements,
     common_credential_root: Option<ZkCommonCredentialRootVerifierConfig<'a>>,
@@ -69,8 +78,8 @@ pub struct ZkHolderBindingVerifier<'a> {
 
 struct ZkIssuerCredentialStatusVerifierConfig<'a> {
     verifier: &'a dyn ZkIssuerCredentialStatusVerifier,
-    authority: &'a dyn ZkPersonaCredentialEvidenceStatusAuthority,
-    purpose: ZkCommonCredentialRootIssuerStatusPurpose,
+    authority: &'a dyn ZkIssuerStatusAuthority,
+    purpose: ZkIssuerStatusPurpose,
 }
 
 /// Deployment assurance requirements for a ZK credential presentation.
@@ -89,7 +98,7 @@ impl<'a> ZkHolderBindingVerifier<'a> {
     /// Bind proof verification to the deployment's reviewed backend and issuer keys.
     #[must_use]
     pub const fn new(
-        bundle_verifier: &'a dyn ZkBundleVerifier,
+        bundle_verifier: &'a dyn ZkPresentationBoundClaimBundleVerifier,
         trusted_issuers: &'a [ZkIssuerPublicKey],
         requirements: ZkVerificationRequirements,
     ) -> Self {
@@ -106,7 +115,7 @@ impl<'a> ZkHolderBindingVerifier<'a> {
     /// Bind proof verification to both legacy bundles and common-credential-root policy.
     #[must_use]
     pub const fn new_with_common_credential_root(
-        bundle_verifier: &'a dyn ZkBundleVerifier,
+        bundle_verifier: &'a dyn ZkPresentationBoundClaimBundleVerifier,
         trusted_issuers: &'a [ZkIssuerPublicKey],
         requirements: ZkVerificationRequirements,
         common_credential_root_verifier: &'a dyn ZkCommonCredentialRootVerifier,
@@ -142,8 +151,8 @@ impl<'a> ZkHolderBindingVerifier<'a> {
     pub fn with_issuer_credential_status(
         mut self,
         verifier: &'a dyn ZkIssuerCredentialStatusVerifier,
-        authority: &'a dyn ZkPersonaCredentialEvidenceStatusAuthority,
-        purpose: ZkCommonCredentialRootIssuerStatusPurpose,
+        authority: &'a dyn ZkIssuerStatusAuthority,
+        purpose: ZkIssuerStatusPurpose,
     ) -> Self {
         self.issuer_status = Some(ZkIssuerCredentialStatusVerifierConfig {
             verifier,
@@ -171,10 +180,10 @@ impl HolderBindingVerifier for ZkHolderBindingVerifier<'_> {
                 VerifierErrorReason::VpTokenQueryMismatch,
             ));
         }
-        if query::prepared_profile_from_meta(&query.meta).is_some() {
+        if query::evidence_mode_from_meta(&query.meta).is_some() {
             return self.verify_prepared_holder_binding(presentation, context);
         }
-        if common_credential_root_profile_from_meta(&query.meta).is_some() {
+        if common_credential_root_persona_mode_from_meta(&query.meta).is_some() {
             return self.verify_common_credential_root_holder_binding(presentation, context);
         }
         if !self.requirements.issuer_signed_validity || !self.requirements.credential_status {
@@ -211,10 +220,15 @@ impl HolderBindingVerifier for ZkHolderBindingVerifier<'_> {
             audience_hash: expected.audience_hash,
             transaction_data_hash: expected.transaction_data_hash,
         };
-        let bundle = build_bundle(&presentation, policy.profile, policy.hash_strategy, binding)?;
+        let bundle = build_bundle(
+            &presentation,
+            policy.bundle_kind,
+            policy.hash_strategy,
+            binding,
+        )?;
         let status_proof =
             build_issuer_credential_status_proof(&presentation, policy.hash_strategy)?;
-        let request = ZkBundleVerifyRequest::try_new(
+        let request = ZkPresentationBoundClaimBundleVerifyRequest::try_new(
             &bundle,
             ZkProofSuite::PRODUCTION,
             binding,
@@ -222,14 +236,14 @@ impl HolderBindingVerifier for ZkHolderBindingVerifier<'_> {
             context.now_unix(),
         )
         .map_err(|_| invalid_zk())?;
-        let request = ZkStatusQualifiedBundleVerifyRequest::try_new(
+        let request = ZkStatusQualifiedClaimProofBundleVerifyRequest::try_new(
             request,
             &status_proof,
             issuer_status.authority,
-            issuer_status.purpose.wire_value(),
+            issuer_status.purpose,
         )
         .map_err(|_| invalid_zk())?;
-        let verified = verify_status_qualified_bundle_with(
+        let verified = verify_status_qualified_claim_proof_bundle_with(
             self.bundle_verifier,
             issuer_status.verifier,
             request,
@@ -258,7 +272,7 @@ impl HolderBindingVerifier for ZkHolderBindingVerifier<'_> {
                     .map(|_| TransactionDataHashAlgorithm::Sha256),
             },
             VerifiedDisclosureSet::ZkClaim(Box::new(VerifiedZkClaim::from_verified(
-                verified.profile(),
+                verified.bundle_kind(),
                 policy.hash_strategy,
                 statement,
             ))),
@@ -309,7 +323,7 @@ impl ZkHolderBindingVerifier<'_> {
         };
         let proofs = build_common_credential_root_proofs(
             &presentation,
-            query_policy.profile,
+            query_policy.persona_mode,
             query_policy.hash_strategy,
         )?;
         let status_validation_time = accepted_status_validation_time(
@@ -344,10 +358,10 @@ impl ZkHolderBindingVerifier<'_> {
                 },
             ],
             issuer_status: [issuer_status[0].expectation, issuer_status[1].expectation],
-            persona_mode: common_credential_root_persona_mode(query_policy.profile)?,
+            persona_mode: query_policy.persona_mode,
         };
         let request = ZkCommonCredentialRootVerifyRequest::try_new(
-            query_policy.profile,
+            query_policy.persona_mode,
             query_policy.hash_strategy,
             ZkProofSuite::PRODUCTION,
             binding,
@@ -381,7 +395,7 @@ impl ZkHolderBindingVerifier<'_> {
             },
             VerifiedDisclosureSet::ZkCommonCredentialRoot(Box::new(
                 VerifiedZkCommonCredentialRootPresentation::from_verified(
-                    verified.profile(),
+                    verified.persona_mode(),
                     query_policy.hash_strategy,
                     verified.verified_proof_count(),
                     [

@@ -135,9 +135,9 @@ impl ZeroizeOnDrop for VerifiedPresentation {}
 
 /// Validate a final OpenID4VP Authorization Response against verifier session state.
 ///
-/// This ports the useful meproto response guard while preserving final-spec
-/// response shape: `vp_token` is a DCQL-query-id-keyed object rather than the
-/// old vector of opaque VP bytes.
+/// The final-spec `vp_token` is an object keyed by DCQL credential-query id.
+/// Diagnostics check response shape and session correlation; they do not
+/// authorize a presentation or replace cryptographic holder verification.
 pub fn diagnose_authorization_response(
     session: &SessionRecord,
     response: &AuthorizationResponse,

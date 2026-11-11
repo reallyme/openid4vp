@@ -119,6 +119,30 @@ class WalletConfigVerifierTests(unittest.TestCase):
         self.template.write_text(text, encoding="utf-8")
         MODULE.verify_wallet_config(self.suite, self.template, "iso_mdl")
 
+    def test_mdoc_profile_rejects_sd_jwt_root_even_with_correct_document_type(self) -> None:
+        text = self.template.read_text(encoding="utf-8")
+        text = text.replace('"format": "dc+sd-jwt"', '"format": "mso_mdoc"')
+        text = text.replace(
+            '"meta": {"vct_values": ["urn:eudi:pid:1"]}',
+            '"meta": {"doctype_value": "org.iso.18013.5.1.mDL"}',
+        )
+        self.template.write_text(text, encoding="utf-8")
+        with self.assertRaises(MODULE.ConfigFailure) as context:
+            MODULE.verify_wallet_config(self.suite, self.template, "iso_mdl")
+        self.assertEqual(context.exception.reason, "wallet_config_trust_anchor_material_mismatch")
+
+    def test_combined_credential_root_bundle_is_not_a_single_profile_anchor(self) -> None:
+        materials = MODULE.load_materials(self.suite)
+        config = MODULE.parse_json_object(
+            MODULE.expand_template(self.template.read_text(encoding="utf-8"), materials),
+            "wallet_config_json_invalid",
+        )
+        credential = MODULE.require_object(config, "credential")
+        credential["trust_anchor_pem"] = materials["vci-test-root.crt"] + materials["mdoc-iaca-root.crt"]
+        with self.assertRaises(MODULE.ConfigFailure) as context:
+            MODULE.validate_config(config, materials, "sd_jwt_vc")
+        self.assertEqual(context.exception.reason, "wallet_config_trust_anchor_material_mismatch")
+
     def test_rejects_request_object_root_as_credential_root(self) -> None:
         text = self.template.read_text(encoding="utf-8")
         text = text.replace("{vci-test-root.crt}", "{vp-signing-ca.crt}")

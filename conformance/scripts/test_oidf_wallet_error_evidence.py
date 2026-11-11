@@ -152,6 +152,50 @@ class OidfWalletErrorEvidenceTests(unittest.TestCase):
         signal_process_group.assert_not_called()
         process.wait.assert_not_called()
 
+    def test_permission_denial_after_child_exit_does_not_signal_a_reused_group(self) -> None:
+        process = mock.Mock()
+        process.pid = 123
+        process.poll.side_effect = [None, 0]
+        with mock.patch.object(
+            oidf_wallet_error_evidence.os, "killpg", side_effect=PermissionError(1, "denied")
+        ) as killpg:
+            oidf_wallet_error_evidence.stop_browser_process(process)
+        killpg.assert_called_once_with(123, signal.SIGTERM)
+        process.wait.assert_not_called()
+
+    def test_live_child_permission_denial_is_not_waived(self) -> None:
+        process = mock.Mock()
+        process.pid = 123
+        process.poll.return_value = None
+        with mock.patch.object(
+            oidf_wallet_error_evidence.os, "killpg", side_effect=PermissionError(1, "denied")
+        ), self.assertRaises(oidf_wallet_error_evidence.EvidenceFailure) as caught:
+            oidf_wallet_error_evidence.stop_browser_process(process)
+        self.assertEqual(caught.exception.reason, "wallet_error_screen_process_cleanup_failed")
+        process.wait.assert_not_called()
+
+    def test_child_exit_after_term_timeout_does_not_send_kill_to_a_stale_group(self) -> None:
+        process = mock.Mock()
+        process.pid = 123
+        process.poll.side_effect = [None, 0]
+        process.wait.side_effect = subprocess.TimeoutExpired(cmd="browser", timeout=5)
+        with mock.patch.object(oidf_wallet_error_evidence.os, "killpg") as killpg:
+            oidf_wallet_error_evidence.stop_browser_process(process)
+        killpg.assert_called_once_with(123, signal.SIGTERM)
+        self.assertEqual(process.wait.call_count, 1)
+
+    def test_permission_denial_at_kill_is_waived_only_after_owned_child_exit(self) -> None:
+        process = mock.Mock()
+        process.pid = 123
+        process.poll.side_effect = [None, None, 0]
+        process.wait.side_effect = subprocess.TimeoutExpired(cmd="browser", timeout=5)
+        with mock.patch.object(
+            oidf_wallet_error_evidence.os, "killpg", side_effect=[None, PermissionError(1, "denied")]
+        ) as killpg:
+            oidf_wallet_error_evidence.stop_browser_process(process)
+        self.assertEqual(killpg.call_count, 2)
+        self.assertEqual(process.wait.call_count, 1)
+
     def test_browser_api_rejection_stays_on_the_conformance_origin(self) -> None:
         with self.assertRaises(
             oidf_wallet_error_evidence.EvidenceFailure

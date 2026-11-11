@@ -98,7 +98,10 @@ fn validate_stages(presentation: &ZkPresentation) -> Result<(), ZkFormatError> {
             || invalid_label(&circuit_ref.hash_strategy)
             || invalid_label(&circuit_ref.family)
             || invalid_label(&circuit_ref.stage)
-            || all_zero(&stage.artifact_manifest_sha256)
+            || all_zero(match &stage.artifact_identity {
+                super::ZkPresentationArtifactIdentity::Manifest(digest)
+                | super::ZkPresentationArtifactIdentity::ArtifactSet(digest) => digest,
+            })
         {
             return Err(invalid_encoding());
         }
@@ -121,9 +124,9 @@ const fn valid_stage_count(profile: ZkPresentationProfile, count: usize) -> bool
     match profile {
         ZkPresentationProfile::CredentialSubjectClaimV1
         | ZkPresentationProfile::PrivatePersonaClaimV1 => {
-            // The format parser admits historical four-stage data so the
-            // verifier can return a typed unsupported result. It grants no
-            // claim without the issuer-status fifth proof.
+            // Four-stage envelopes are structurally parseable so the verifier
+            // can return a typed unsupported result. They cannot authorize a
+            // credential claim without the issuer-status fifth proof.
             count == ZK_PRESENTATION_STAGE_COUNT || count == 4
         }
         _ => count == expected_stage_count(profile),

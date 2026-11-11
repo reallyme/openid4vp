@@ -29,19 +29,13 @@ management, network access, and platform SDKs. Those capabilities are supplied
 through explicit interfaces, keeping the protocol core portable across server,
 native, and WebAssembly environments.
 
-> **Looking for the ReallyMe SDK?** Start with ReallyMe Identity, the
-> application-facing SDK for building verifiers,
-> wallets, and identity-enabled applications. This repository provides the
-> underlying OpenID4VP protocol implementation.
-
 ## Quick start
 
-Application developers should normally use ReallyMe Identity. For direct DCQL
-validation and wallet-side evaluation, add the standalone public crate:
+For direct DCQL validation and wallet-side evaluation, add the standalone crate:
 
 ```toml
 [dependencies]
-reallyme-openid4vp-dcql = "0.2"
+reallyme-openid4vp-dcql = "0.3"
 serde_json = "1"
 ```
 
@@ -189,10 +183,9 @@ expiry, profile, or hash lane differs.
 | Compose the complete Rust protocol surface | Use the feature-gated `reallyme-openid4vp` facade. |
 | Integrate one focused verifier, profile, transport, codec, or runtime boundary | Use its corresponding `reallyme-openid4vp-*` crate. |
 
-Released dependencies resolve from crates.io; a sibling checkout is not
-required. Released SSI dependencies are exact-version pinned by the workspace
-and release gate; the current assurance baseline is the lockstep SSI `0.5.1`
-release, including the corrected `reallyme-mdoc` package.
+Security-sensitive ReallyMe dependencies are exact-version pinned in the
+package manifests and verified by the release gate. The workspace resolves
+the SSI 0.6.1 crates and `reallyme-zk-api` 0.3.0 from crates.io.
 
 ## Repository structure
 

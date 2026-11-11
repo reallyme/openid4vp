@@ -32,6 +32,7 @@ export const OPENID4VP_SCALAR_FIELD_CLASSIFICATIONS = Object.freeze([
   sensitive("ZkPresentationBinding", "transaction_data_hash", "bytes"),
   publicScalar("ZkPresentation", "type", "string"),
   sensitive("ZkPresentationStage", "artifact_manifest_sha256", "bytes"),
+  sensitive("ZkPresentationStage", "artifact_set_identity_sha256", "bytes"),
   sensitive("ZkPresentationStage", "proof", "bytes"),
   sensitive("ZkPresentationStage", "public_inputs", "bytes"),
   publicScalar("ZkPresentationCircuitRef", "hash_strategy", "string"),

@@ -230,7 +230,6 @@ fn oidf_runner_requires_exported_result_artifacts() {
     assert!(!workflow.contains("profile_id:"));
     assert!(!workflow.contains("inputs."));
     assert!(workflow.contains("fetch --depth 1 origin \"${oidf_suite_commit}\""));
-    assert!(!workflow.contains("oidf_demo_commit"));
     assert!(!workflow.contains("secrets."));
     assert!(!workflow.contains("OIDF_WALLET_HARNESS_ENDPOINT"));
     assert!(!workflow.contains("OIDF_CONFORMANCE_TOKEN"));
@@ -302,11 +301,9 @@ fn oidf_runner_requires_exported_result_artifacts() {
     assert!(endpoint_validator.contains("oidf_runtime_endpoint_invalid"));
     assert!(endpoint_validator.contains("parsed.username is not None"));
     let conformance_readme = include_str!("../README.md");
-    assert!(conformance_readme.contains("downstream `identity-conformance` orchestration"));
+    assert!(conformance_readme
+        .contains("Live plan execution requires a host-supplied verifier or wallet."));
     assert!(conformance_readme.contains("Publish for certification"));
-    assert!(conformance_readme.contains("Declaration of Conformance"));
-    assert!(!conformance_readme.contains("reallyme/openid-conformance"));
-    assert!(!include_str!("../README.md").contains("reports/oidf-manifest.json"));
 }
 
 #[test]

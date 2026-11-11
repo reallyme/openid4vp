@@ -31,14 +31,14 @@ Use the default native verifier and wallet surface:
 
 ```toml
 [dependencies]
-reallyme-openid4vp = "0.2"
+reallyme-openid4vp = "0.3"
 ```
 
 Enable only the additional boundaries the application owns:
 
 ```toml
 [dependencies]
-reallyme-openid4vp = { version = "0.2", features = [
+reallyme-openid4vp = { version = "0.3", features = [
   "codec",
   "formats",
   "http",
@@ -51,7 +51,7 @@ For WebAssembly composition, disable the default native feature explicitly:
 
 ```toml
 [dependencies]
-reallyme-openid4vp = { version = "0.2", default-features = false, features = [
+reallyme-openid4vp = { version = "0.3", default-features = false, features = [
   "wasm",
   "codec",
   "formats",

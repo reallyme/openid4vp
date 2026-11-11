@@ -172,7 +172,7 @@ jobs:
             --draft \
             --target "$RELEASE_SHA" \
             --title "$RELEASE_TAG" \
-            --notes $'- crates.io release of the OpenID4VP wallet protocol boundary and its public protocol dependencies'
+            --notes $'- OpenID4VP protocol libraries for verifier, wallet, DCQL, credential-format, protobuf, and runtime integration'
 
   publish:
     name: Publish ReallyMe OpenID4VP crates

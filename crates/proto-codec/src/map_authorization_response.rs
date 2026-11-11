@@ -8,9 +8,9 @@ use buffa::MessageField;
 use reallyme_openid4vp_dcql::QueryId;
 use reallyme_openid4vp_formats::{
     encode_zk_prepared_persona_value, parse_zk_prepared_persona_value, parse_zk_presentation_value,
-    validate_zk_presentation_shape, DerivedClaimStatement, ZkPresentation, ZkPresentationBinding,
-    ZkPresentationCircuitRef, ZkPresentationProfile, ZkPresentationProofSuite, ZkPresentationStage,
-    ZkPresentationStageKind,
+    validate_zk_presentation_shape, DerivedClaimStatement, ZkPresentation,
+    ZkPresentationArtifactIdentity, ZkPresentationBinding, ZkPresentationCircuitRef,
+    ZkPresentationProfile, ZkPresentationProofSuite, ZkPresentationStage, ZkPresentationStageKind,
 };
 use reallyme_openid4vp_proto::generated::proto::reallyme::openid4vp::v1 as pb;
 use reallyme_openid4vp_types::{AuthorizationResponse, PresentationValue, VpToken};
@@ -229,10 +229,15 @@ fn proto_to_zk_presentation_profile(
 }
 
 fn zk_presentation_stage_to_proto(stage: &ZkPresentationStage) -> pb::ZkPresentationStage {
+    let (artifact_manifest_sha256, artifact_set_identity_sha256) = match &stage.artifact_identity {
+        ZkPresentationArtifactIdentity::Manifest(digest) => (digest.to_vec(), None),
+        ZkPresentationArtifactIdentity::ArtifactSet(digest) => (Vec::new(), Some(digest.to_vec())),
+    };
     pb::ZkPresentationStage {
         stage: buffa::EnumValue::from(zk_presentation_stage_kind_to_proto(stage.stage)),
         circuit_ref: MessageField::some(zk_presentation_circuit_ref_to_proto(&stage.circuit_ref)),
-        artifact_manifest_sha256: stage.artifact_manifest_sha256.to_vec(),
+        artifact_manifest_sha256,
+        artifact_set_identity_sha256,
         proof: stage.proof.clone(),
         public_inputs: stage.public_inputs.clone(),
         __buffa_unknown_fields: Default::default(),
@@ -245,10 +250,24 @@ fn proto_to_zk_presentation_stage(
     let Some(circuit_ref) = stage.circuit_ref.as_option() else {
         return Err(OpenId4VpProtoError::MissingField);
     };
+    let stage_kind = proto_to_zk_presentation_stage_kind(&stage.stage)?;
+    let artifact_identity = match (
+        stage.artifact_manifest_sha256.as_slice(),
+        stage.artifact_set_identity_sha256.as_deref(),
+    ) {
+        ([], None) => return Err(OpenId4VpProtoError::MissingField),
+        ([], Some(digest)) => {
+            ZkPresentationArtifactIdentity::ArtifactSet(hash_bytes_to_array(digest)?)
+        }
+        (digest, None) => ZkPresentationArtifactIdentity::Manifest(hash_bytes_to_array(digest)?),
+        // Choosing one of two supplied digests would let different consumers
+        // verify the same stage against different artifact constructions.
+        (_, Some(_)) => return Err(OpenId4VpProtoError::InvalidField),
+    };
     Ok(ZkPresentationStage {
-        stage: proto_to_zk_presentation_stage_kind(&stage.stage)?,
+        stage: stage_kind,
         circuit_ref: proto_to_zk_presentation_circuit_ref(circuit_ref),
-        artifact_manifest_sha256: hash_bytes_to_array(stage.artifact_manifest_sha256.clone())?,
+        artifact_identity,
         proof: stage.proof.clone(),
         public_inputs: stage.public_inputs.clone(),
     })
@@ -376,12 +395,13 @@ fn proto_to_zk_presentation_binding(
     binding: &pb::ZkPresentationBinding,
 ) -> Result<ZkPresentationBinding, OpenId4VpProtoError> {
     Ok(ZkPresentationBinding {
-        nonce_hash: hash_bytes_to_array(binding.nonce_hash.clone())?,
-        audience_hash: hash_bytes_to_array(binding.audience_hash.clone())?,
-        transaction_data_hash: match binding.transaction_data_hash.clone() {
-            Some(hash) => Some(hash_bytes_to_array(hash)?),
-            None => None,
-        },
+        nonce_hash: hash_bytes_to_array(&binding.nonce_hash)?,
+        audience_hash: hash_bytes_to_array(&binding.audience_hash)?,
+        transaction_data_hash: binding
+            .transaction_data_hash
+            .as_deref()
+            .map(hash_bytes_to_array)
+            .transpose()?,
     })
 }
 
@@ -408,6 +428,6 @@ fn proto_to_zk_presentation_circuit_ref(
     }
 }
 
-fn hash_bytes_to_array(value: Vec<u8>) -> Result<[u8; 32], OpenId4VpProtoError> {
+fn hash_bytes_to_array(value: &[u8]) -> Result<[u8; 32], OpenId4VpProtoError> {
     <[u8; 32]>::try_from(value).map_err(|_| OpenId4VpProtoError::InvalidField)
 }

@@ -21,7 +21,6 @@ import json
 import math
 import os
 import re
-import signal
 import ssl
 import subprocess
 import sys
@@ -60,7 +59,6 @@ MAX_HARNESS_SESSION_ID = (1 << 64) - 1
 # Keep the browser alive long enough for cold Chromium startup and local TLS
 # negotiation while preserving headroom for the suite to record the callback.
 HANDOFF_BROWSER_NAVIGATION_SECONDS = 20.0
-HANDOFF_BROWSER_EXIT_SECONDS = 5.0
 MIN_CONTROL_TOKEN_BYTES = 32
 MAX_CONTROL_TOKEN_BYTES = 4096
 PLAN_PAGE_SIZE = 200
@@ -863,21 +861,10 @@ def open_browser_handoff(config: DriverConfig, redirect_uri: str) -> None:
 
 
 def stop_handoff_browser(process: subprocess.Popen[bytes] | None) -> None:
-    if process is None or process.poll() is not None:
-        return
     try:
-        os.killpg(process.pid, signal.SIGTERM)
-        process.wait(timeout=HANDOFF_BROWSER_EXIT_SECONDS)
-    except ProcessLookupError:
-        return
-    except subprocess.TimeoutExpired:
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-            process.wait(timeout=HANDOFF_BROWSER_EXIT_SECONDS)
-        except (OSError, subprocess.TimeoutExpired) as exc:
-            raise DriverFailure("wallet_browser_handoff_cleanup_failed") from exc
-    except OSError as exc:
-        raise DriverFailure("wallet_browser_handoff_cleanup_failed") from exc
+        oidf_wallet_error_evidence.stop_browser_process(process)
+    except oidf_wallet_error_evidence.EvidenceFailure as error:
+        raise DriverFailure("wallet_browser_handoff_cleanup_failed") from error
 
 
 def submit_browser_api_rejection(config: DriverConfig, launch: WalletLaunch) -> None:

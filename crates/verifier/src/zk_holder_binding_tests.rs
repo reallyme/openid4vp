@@ -26,16 +26,26 @@ use reallyme_openid4vp_types::{
     TransactionDataHashAlgorithm,
 };
 use reallyme_zk_api::{
-    ZkBundleVerifier, ZkBundleVerifyRequest, ZkCircuitRef,
-    ZkCommonCredentialRootIssuerStatusExpectation, ZkCommonCredentialRootIssuerStatusPurpose,
-    ZkCommonCredentialRootProofSlot, ZkCommonCredentialRootRawPublicInputs,
-    ZkCommonCredentialRootV1Profile, ZkCommonCredentialRootVerifier,
-    ZkCommonCredentialRootVerifyRequest, ZkError, ZkErrorReason, ZkHashStrategy,
-    ZkIssuerCredentialStatusProof, ZkIssuerCredentialStatusVerifier, ZkIssuerPublicKey,
-    ZkPersonaCredentialEvidenceStatusAuthority, ZkPersonaCredentialEvidenceStatusFeed,
-    ZkPersonaCredentialEvidenceStatusListPointer, ZkProductionStage, ZkProofProfile,
-    ZkPublicInputDescriptor, ZkPublicInputName, ZkRootStatusSnapshot, ZkRootStatusTrustPolicy,
-    ZkSessionBinding,
+    circuits::ZkCircuitRef,
+    circuits::ZkCredentialHashAlgorithm,
+    claim_bundle::{
+        ZkClaimProofBundleKind, ZkClaimProofBundleStage, ZkPresentationBoundClaimBundleVerifier,
+        ZkPresentationBoundClaimBundleVerifyRequest,
+    },
+    common_root::ZkCommonCredentialRootPersonaMode,
+    common_root::{
+        ZkCommonCredentialRootIssuerStatusExpectation, ZkCommonCredentialRootProofSlot,
+        ZkCommonCredentialRootRawPublicInputs, ZkCommonCredentialRootVerifier,
+        ZkCommonCredentialRootVerifyRequest, ZkRootStatusSnapshot, ZkRootStatusTrustPolicy,
+    },
+    errors::{ZkError, ZkErrorReason},
+    issuer_status::{ZkIssuerCredentialStatusProof, ZkIssuerCredentialStatusVerifier},
+    issuer_status::{
+        ZkIssuerStatusAuthority, ZkIssuerStatusFeed, ZkIssuerStatusListPointer,
+        ZkIssuerStatusPurpose,
+    },
+    keys::ZkIssuerPublicKey,
+    proofs::{ZkPublicInputDescriptor, ZkPublicInputName, ZkSessionBinding},
 };
 
 use super::query::{parse_lower_hex_hash, parse_query_policy};
@@ -111,8 +121,11 @@ struct EvidenceVerifier {
     accept: bool,
 }
 
-impl ZkBundleVerifier for EvidenceVerifier {
-    fn verify_bundle_evidence(&self, _request: ZkBundleVerifyRequest<'_>) -> Result<(), ZkError> {
+impl ZkPresentationBoundClaimBundleVerifier for EvidenceVerifier {
+    fn verify_presentation_bound_claim_bundle_evidence(
+        &self,
+        _request: ZkPresentationBoundClaimBundleVerifyRequest<'_>,
+    ) -> Result<(), ZkError> {
         self.calls.fetch_add(1, Ordering::SeqCst);
         if self.accept {
             Ok(())
@@ -135,26 +148,26 @@ impl ZkIssuerCredentialStatusVerifier for StatusEvidenceVerifier {
 
 struct StatusAuthority;
 
-impl ZkPersonaCredentialEvidenceStatusAuthority for StatusAuthority {
+impl ZkIssuerStatusAuthority for StatusAuthority {
     fn current_feed_for_issuer(
         &self,
         issuer: &ZkIssuerPublicKey,
-        pointer: &ZkPersonaCredentialEvidenceStatusListPointer,
+        pointer: &ZkIssuerStatusListPointer,
         _verification_time_unix: u64,
-    ) -> Result<ZkPersonaCredentialEvidenceStatusFeed, ZkError> {
+    ) -> Result<ZkIssuerStatusFeed, ZkError> {
         if *issuer != TRUSTED_ISSUER
             || pointer.list_id != [0x42; 32]
             || pointer.url_hash != [0x43; 32]
-            || pointer.purpose != 1
+            || pointer.purpose != ZkIssuerStatusPurpose::Revocation
         {
             return Err(ZkError::new(ZkErrorReason::BindingMismatch));
         }
-        Ok(ZkPersonaCredentialEvidenceStatusFeed {
+        Ok(ZkIssuerStatusFeed {
             root: [0x41; 32],
             length: 256,
             list_id: [0x42; 32],
             url_hash: [0x43; 32],
-            purpose: 1,
+            purpose: ZkIssuerStatusPurpose::Revocation,
         })
     }
 }
@@ -170,7 +183,7 @@ fn status_qualified_verifier<'a>(
         .with_issuer_credential_status(
             &STATUS_EVIDENCE_VERIFIER,
             &STATUS_AUTHORITY,
-            ZkCommonCredentialRootIssuerStatusPurpose::Revocation,
+            ZkIssuerStatusPurpose::Revocation,
         )
 }
 
@@ -210,12 +223,12 @@ fn session() -> SessionRecord {
 }
 
 #[allow(clippy::panic)]
-fn stage_kind(stage: ZkProductionStage) -> ZkPresentationStageKind {
+fn stage_kind(stage: ZkClaimProofBundleStage) -> ZkPresentationStageKind {
     match stage {
-        ZkProductionStage::Session => ZkPresentationStageKind::Session,
-        ZkProductionStage::CredentialEnvelope => ZkPresentationStageKind::CredentialEnvelope,
-        ZkProductionStage::CredentialRoot => ZkPresentationStageKind::CredentialRoot,
-        ZkProductionStage::Claim => ZkPresentationStageKind::Claim,
+        ZkClaimProofBundleStage::Session => ZkPresentationStageKind::Session,
+        ZkClaimProofBundleStage::CredentialEnvelope => ZkPresentationStageKind::CredentialEnvelope,
+        ZkClaimProofBundleStage::CredentialRoot => ZkPresentationStageKind::CredentialRoot,
+        ZkClaimProofBundleStage::Claim => ZkPresentationStageKind::Claim,
         _ => panic!("test fixture covers the production stages"),
     }
 }
@@ -275,7 +288,7 @@ fn public_inputs(circuit_ref: ZkCircuitRef, binding: ZkSessionBinding) -> Vec<u8
                 write_field(&mut bytes, descriptor, field.name, &value);
             }
             ZkPublicInputName::IssuerPublicKeyX | ZkPublicInputName::IssuerPublicKeyY => {}
-            _ => panic!("fixture does not use an experimental public input"),
+            _ => panic!("fixture does not support this public input"),
         }
     }
     bytes
@@ -294,9 +307,9 @@ fn write_raw_u64(bytes: &mut [u8], field: usize, value: u64) {
 
 fn issuer_status_stage(binding: ZkSessionBinding) -> ZkPresentationStage {
     let circuit_ref = ZkCircuitRef::new(
-        ZkHashStrategy::Sha256,
-        reallyme_zk_api::ZkCircuitFamily::CommonCredentialRootV1,
-        reallyme_zk_api::ZkCircuitStage::IssuerCredentialStatus,
+        ZkCredentialHashAlgorithm::Sha256,
+        reallyme_zk_api::circuits::ZkCircuitFamily::CommonCredentialRootV1,
+        reallyme_zk_api::circuits::ZkCircuitStage::IssuerCredentialStatus,
     );
     let mut public_inputs = vec![0_u8; 292 * 32];
     write_raw_bytes32(&mut public_inputs, 0, binding.nonce_hash);
@@ -321,12 +334,14 @@ fn issuer_status_stage(binding: ZkSessionBinding) -> ZkPresentationStage {
     ZkPresentationStage {
         stage: ZkPresentationStageKind::IssuerCredentialStatus,
         circuit_ref: ZkPresentationCircuitRef {
-            hash_strategy: circuit_ref.hash_strategy.as_str().to_owned(),
+            hash_strategy: circuit_ref.credential_hash_algorithm.as_str().to_owned(),
             family: circuit_ref.family.as_str().to_owned(),
             stage: circuit_ref.stage.as_str().to_owned(),
-            version: circuit_ref.version,
+            version: circuit_ref.revision,
         },
-        artifact_manifest_sha256: [7; 32],
+        artifact_identity: reallyme_openid4vp_formats::ZkPresentationArtifactIdentity::ArtifactSet(
+            [7; 32],
+        ),
         proof: vec![5],
         public_inputs,
     }
@@ -344,25 +359,29 @@ fn presentation_for(audience: &str, transaction_data_hash: Option<[u8; 32]>) -> 
         audience_hash: binding.audience_hash,
         transaction_data_hash,
     };
-    let mut stages: Vec<_> = ZkProductionStage::ALL
-        .iter()
-        .map(|stage| {
-            let circuit_ref =
-                ZkProofProfile::CredentialSubjectClaimV1.source_ref(ZkHashStrategy::Sha256, *stage);
-            ZkPresentationStage {
-                stage: stage_kind(*stage),
-                circuit_ref: ZkPresentationCircuitRef {
-                    hash_strategy: circuit_ref.hash_strategy.as_str().to_owned(),
-                    family: circuit_ref.family.as_str().to_owned(),
-                    stage: circuit_ref.stage.as_str().to_owned(),
-                    version: circuit_ref.version,
-                },
-                artifact_manifest_sha256: [7_u8; 32],
-                proof: vec![stage.index() + 1],
-                public_inputs: public_inputs(circuit_ref, session_binding),
-            }
-        })
-        .collect();
+    let mut stages: Vec<_> =
+        ZkClaimProofBundleStage::ALL
+            .iter()
+            .map(|stage| {
+                let circuit_ref = ZkClaimProofBundleKind::CredentialSubjectClaimV1
+                    .source_ref(ZkCredentialHashAlgorithm::Sha256, *stage);
+                ZkPresentationStage {
+                    stage: stage_kind(*stage),
+                    circuit_ref: ZkPresentationCircuitRef {
+                        hash_strategy: circuit_ref.credential_hash_algorithm.as_str().to_owned(),
+                        family: circuit_ref.family.as_str().to_owned(),
+                        stage: circuit_ref.stage.as_str().to_owned(),
+                        version: circuit_ref.revision,
+                    },
+                    artifact_identity:
+                        reallyme_openid4vp_formats::ZkPresentationArtifactIdentity::Manifest(
+                            [7_u8; 32],
+                        ),
+                    proof: vec![stage.index() + 1],
+                    public_inputs: public_inputs(circuit_ref, session_binding),
+                }
+            })
+            .collect();
     stages.push(issuer_status_stage(session_binding));
     encode_zk_presentation_value(ZkPresentation {
         type_: ZK_PRESENTATION_TYPE.to_owned(),
@@ -729,4 +748,29 @@ fn status_proof_time_allows_delay_but_rejects_future_or_predating_request() {
             Some(VerifierErrorReason::InvalidZkPresentation),
         );
     }
+}
+
+#[test]
+fn issuer_status_rejects_manifest_identity_even_when_digest_bytes_match() {
+    let backend = EvidenceVerifier {
+        calls: AtomicUsize::new(0),
+        accept: true,
+    };
+    let verifier = status_qualified_verifier(&backend, &[TRUSTED_ISSUER]);
+    let session = session();
+    let mut parsed = reallyme_openid4vp_formats::parse_zk_presentation_value(&presentation())
+        .expect("fixture parses")
+        .expect("fixture is ZK");
+    parsed.stages[4].artifact_identity =
+        reallyme_openid4vp_formats::ZkPresentationArtifactIdentity::Manifest([7; 32]);
+    let malformed =
+        encode_zk_presentation_value(parsed).expect("shape is valid but construction is wrong");
+    let error = verifier
+        .verify_holder_binding(
+            &malformed,
+            HolderBindingVerificationContext::new(&session, &session.dcql_query.credentials[0], 10),
+        )
+        .expect_err("issuer status requires a derived artifact-set identity");
+    assert_eq!(error.reason(), VerifierErrorReason::InvalidZkPresentation);
+    assert_eq!(backend.calls.load(Ordering::SeqCst), 0);
 }

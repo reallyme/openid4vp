@@ -19,9 +19,8 @@ const SHA256_DIGEST_BYTES: usize = 32;
 /// Decoded holder-binding JWT claims relevant to OpenID4VP binding.
 ///
 /// Signature verification and format-specific JWT parsing live in
-/// `reallyme/ssi` envelope crates and thin format adapters. This pure
-/// validator ports the meproto claim checks that remain valid after the
-/// final-spec DCQL rewrite.
+/// `reallyme/ssi` envelope crates and thin format adapters. The pure validator
+/// compares authenticated proof claims with the active verifier session.
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HolderBindingClaims {
     /// Audience values from the holder-binding proof.

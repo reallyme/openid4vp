@@ -14,7 +14,9 @@ use reallyme_openid4vp_formats::{
     PreparedOpenId4VpRequestHashes, PreparedOpenId4VpRequestInput,
 };
 use reallyme_openid4vp_types::{PresentationValue, ResponseMode, TransactionDataHash};
-use reallyme_zk_api::{ZkHashStrategy, ZkPersonaCredentialEvidenceProfile};
+use reallyme_zk_api::{
+    circuits::ZkCredentialHashAlgorithm, persona_evidence::ZkPersonaCredentialEvidenceMode,
+};
 use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
 
 use crate::prepare_zk_presentation::expected_audience;
@@ -33,8 +35,8 @@ fn invalid() -> WalletError {
 /// One selected claim and the exact live transcript to be signed by the
 /// prepared public persona or the reserved one-time private token key.
 pub struct WalletPreparedPersonaRequest {
-    profile: ZkPersonaCredentialEvidenceProfile,
-    hash_strategy: ZkHashStrategy,
+    mode: ZkPersonaCredentialEvidenceMode,
+    hash_strategy: ZkCredentialHashAlgorithm,
     claim_name_hash: [u8; 32],
     claim_value: Zeroizing<Vec<u8>>,
     hashes: PreparedOpenId4VpRequestHashes,
@@ -54,13 +56,13 @@ impl ZeroizeOnDrop for WalletPreparedPersonaRequest {}
 impl WalletPreparedPersonaRequest {
     /// Circuit profile demanded by the verified query.
     #[must_use]
-    pub const fn profile(&self) -> ZkPersonaCredentialEvidenceProfile {
-        self.profile
+    pub const fn mode(&self) -> ZkPersonaCredentialEvidenceMode {
+        self.mode
     }
 
     /// Circuit hash lane demanded by the verified query.
     #[must_use]
-    pub const fn hash_strategy(&self) -> ZkHashStrategy {
+    pub const fn credential_hash_algorithm(&self) -> ZkCredentialHashAlgorithm {
         self.hash_strategy
     }
 
@@ -165,15 +167,15 @@ fn prepare_zk_prepared_persona_request_at(
         .meta
         .get("profile")
         .and_then(serde_json::Value::as_str)
-        .and_then(ZkPersonaCredentialEvidenceProfile::from_identifier)
+        .and_then(ZkPersonaCredentialEvidenceMode::from_identifier)
         .ok_or_else(invalid)?;
     let hash_strategy = match query
         .meta
         .get("hash_strategy")
         .and_then(serde_json::Value::as_str)
     {
-        Some("sha256") => ZkHashStrategy::Sha256,
-        Some("poseidon2") => ZkHashStrategy::Poseidon2,
+        Some("sha256") => ZkCredentialHashAlgorithm::Sha256,
+        Some("poseidon2") => ZkCredentialHashAlgorithm::Poseidon2,
         _ => return Err(invalid()),
     };
     let encoded_name = query
@@ -235,7 +237,7 @@ fn prepare_zk_prepared_persona_request_at(
     })
     .map_err(|_| invalid())?;
     Ok(WalletPreparedPersonaRequest {
-        profile,
+        mode: profile,
         hash_strategy,
         claim_name_hash,
         claim_value,

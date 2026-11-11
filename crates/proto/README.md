@@ -16,9 +16,8 @@ bytes encoded as hexadecimal text. Keeping that corpus outside this crate makes
 its ownership explicit and allows Rust, Swift, Kotlin, and TypeScript consumers
 to share the same vectors without treating them as Rust package internals.
 
-Connect service declarations remain in `openid4vp_service.proto`, but Connect
-Rust generation belongs to a separate adapter package. This crate deliberately
-has no Connect dependency or feature.
+Transport-neutral service declarations live in `openid4vp_service.proto`.
+This message-only crate provides no Connect runtime, dependency, or feature.
 
 Regenerate bindings from the repository root with:
 
@@ -27,6 +26,15 @@ buf generate
 node scripts/harden-generated-openid4vp-proto.mjs
 cargo fmt --package reallyme-openid4vp-proto
 ```
+
+## ZK artifact identities
+
+The codec maps each `ZkPresentationStage` to either a canonical manifest digest
+or a derived artifact-set identity. Protobuf keeps the manifest digest on field
+3 and carries the artifact-set identity on field 6. The codec rejects missing
+or conflicting identities, invalid digest lengths, and all-zero digests.
+The issuer-status proof in a status-qualified claim bundle requires the
+artifact-set construction.
 
 ## License
 

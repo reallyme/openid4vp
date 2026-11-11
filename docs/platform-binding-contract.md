@@ -16,11 +16,19 @@ The repository packages the language-neutral contract corpus under the root
 
 Rust tests decode each ProtoJSON fixture into a generated message, assert its
 exact protobuf encoding, decode those wire bytes with bounded Buffa options,
-and compare the generated messages. Platform package tests in
-`reallyme/identity` must consume the same pairs and prove equivalent
-binary/ProtoJSON behavior before release.
+and compare the generated messages. Consumers generating platform bindings
+must use the same pairs to verify equivalent binary/ProtoJSON behavior.
 
 Service declarations remain alongside the messages in
 `openid4vp_service.proto`. They define transport operations, not a second DTO
 model. Connect client generation and SDK facades may wrap the generated
 messages, but cannot redefine their fields or JSON representation.
+
+## Compatibility
+
+Rust source APIs follow the crate's pre-1.0 minor-version compatibility boundary.
+Binary-compatible protobuf additions can still require regenerated platform
+bindings or affect ProtoJSON names. Consumers must regenerate from the schema
+for the selected release and verify the shared vectors before upgrading.
+Reserved field numbers and names must not be reused: persisted messages can
+outlive a deployment and must retain their original interpretation.

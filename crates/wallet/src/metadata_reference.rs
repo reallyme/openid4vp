@@ -12,8 +12,8 @@ use crate::{WalletError, WalletErrorReason};
 /// Fresh, trusted verifier metadata resolved outside the pure wallet parser.
 ///
 /// OpenID4VP 1.0 final carries verifier metadata inline in `client_metadata`.
-/// Some deployments experiment with metadata-by-reference. This evidence type
-/// lets ReallyMe Identity or a service host inject a cache/trust decision without
+/// Metadata-by-reference is a non-standard extension. This evidence type
+/// lets a service host inject a fresh cache/trust decision without
 /// teaching wallet request parsing to fetch network resources.
 #[derive(Clone, PartialEq)]
 pub struct VerifiedClientMetadataReference {

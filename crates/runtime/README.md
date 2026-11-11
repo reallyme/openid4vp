@@ -31,7 +31,7 @@ validated before injected JOSE decryption, hosted Request Objects use their
 registered media type, and the OIDF launch endpoint uses a bounded,
 deny-unknown-fields JSON model only for conformance-driver integration.
 
-Certification hosts attach a `VerifierEvidenceContext` to each planned OIDF
+Conformance hosts attach a `VerifierEvidenceContext` to each OIDF
 launch. The launch store receives that profile/module identity in the same
 atomic record as the single-use verifier session and repeatable hosted Request
 Object. Runtime observations use the resulting private lookup keys, so a host

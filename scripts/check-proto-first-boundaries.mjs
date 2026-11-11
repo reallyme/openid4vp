@@ -110,13 +110,13 @@ requireText(
 );
 
 if (existsSync(resolve(repoRoot, "protos/reallyme/openid4vp/v1/openid4vp.proto"))) {
-  failures.push("legacy protos/reallyme/openid4vp/v1/openid4vp.proto must not return");
+  failures.push("noncanonical protos/reallyme/openid4vp/v1/openid4vp.proto is outside the canonical repository layout");
 }
 if (existsSync(resolve(repoRoot, "crates/proto/openid4vp"))) {
-  failures.push("legacy nested crates/proto/openid4vp directory must not return");
+  failures.push("noncanonical nested crates/proto/openid4vp directory is outside the canonical repository layout");
 }
 if (existsSync(resolve(repoRoot, "crates/proto/codec"))) {
-  failures.push("legacy nested crates/proto/codec directory must not return");
+  failures.push("noncanonical nested crates/proto/codec directory is outside the canonical repository layout");
 }
 if (existsSync(resolve(repoRoot, "crates/proto/src/generated/connect"))) {
   failures.push("message-only proto crate must not contain generated Connect Rust");
@@ -128,10 +128,10 @@ if (existsSync(resolve(repoRoot, "conformance/vectors"))) {
   failures.push("reusable protocol vectors must remain in the root vectors directory");
 }
 if (existsSync(resolve(repoRoot, "LICENSE"))) {
-  failures.push("single-license root LICENSE file must not return");
+  failures.push("single-license root LICENSE file is outside the canonical repository layout");
 }
 if (existsSync(resolve(repoRoot, "NOTICE"))) {
-  failures.push("repository NOTICE file must not return");
+  failures.push("repository NOTICE file is outside the canonical repository layout");
 }
 for (const crateDirectory of [
   "crates/openid4vp",
@@ -148,10 +148,10 @@ for (const crateDirectory of [
   "crates/http",
 ]) {
   if (existsSync(resolve(repoRoot, crateDirectory, "LICENSE"))) {
-    failures.push(`${crateDirectory}/LICENSE: per-crate license copy must not return`);
+    failures.push(`${crateDirectory}/LICENSE: per-crate license copy is outside the canonical repository layout`);
   }
   if (existsSync(resolve(repoRoot, crateDirectory, "NOTICE"))) {
-    failures.push(`${crateDirectory}/NOTICE: per-crate NOTICE file must not return`);
+    failures.push(`${crateDirectory}/NOTICE: per-crate NOTICE file is outside the canonical repository layout`);
   }
 }
 
@@ -352,8 +352,7 @@ requireText("README.md", "ReallyMe Identity");
 rejectText("README.md", "https://github.com/reallyme/identity");
 rejectText("README.md", "https://github.com/reallyme/wallet");
 rejectText("README.md", "identity-sdk");
-requireText("conformance/README.md", "downstream `identity-conformance` orchestration");
-rejectText("conformance/README.md", "reallyme/openid-conformance");
+requireText("conformance/README.md", "Live plan execution requires a host-supplied verifier or wallet.");
 requireText(
   ".github/workflows/ci.yml",
   "node scripts/publish-crates-in-order.mjs inspect",

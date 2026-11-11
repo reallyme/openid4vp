@@ -271,10 +271,10 @@ fn credential_matches_query(
         return Ok(None);
     }
     if query.trusted_authorities.is_some() {
-        // Candidate metadata is not authenticated authority evidence. Until a
-        // format verifier supplies typed AKI, ETSI trust-list, or federation
-        // receipts, both wallet selection and verifier-side matching must fail
-        // closed instead of treating this member as an informational hint.
+        // Candidate metadata cannot authenticate AKI, ETSI trust-list, or
+        // federation constraints. Queries with trusted_authorities therefore
+        // cannot match through this boundary; ignoring the constraint would
+        // turn an authorization requirement into an informational hint.
         return Ok(None);
     }
     if !meta_matches(&query.format, &query.meta, &candidate.meta, remaining_work)? {

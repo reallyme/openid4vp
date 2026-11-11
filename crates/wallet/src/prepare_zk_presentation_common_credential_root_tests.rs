@@ -303,3 +303,33 @@ fn rejects_wrong_claim_value_and_multiple_transaction_items() {
     .expect_err("two applicable transaction values cannot fit one public input");
     assert_eq!(error.reason(), WalletErrorReason::ZkDerivationFailed);
 }
+
+#[test]
+fn common_root_wallet_preserves_artifact_construction_for_every_slot() {
+    use reallyme_openid4vp_formats::ZkPresentationArtifactIdentity;
+    use reallyme_zk_api::artifacts::ZkArtifactSetIdentity;
+
+    let request = verified_common_credential_root_request(false);
+    let mut presentation = common_credential_root_presentation(None);
+    for (index, proof) in presentation.proofs.iter_mut().enumerate() {
+        if index % 2 == 0 {
+            proof.artifact_identity = ZkArtifactSetIdentity::from_bytes([0x77; 32]).into();
+        }
+    }
+    let value = prepare_zk_presentation_from_common_credential_root(
+        &request,
+        &WalletInvocationContext::ProtocolTransport,
+        &QueryId::parse("pid").expect("fixture query"),
+        &presentation,
+    ).expect("both artifact constructions are transported");
+    let parsed = parse_zk_presentation_value(&value).expect("valid envelope")
+        .expect("ZK presentation");
+    for (index, stage) in parsed.stages.iter().enumerate() {
+        let expected = if index % 2 == 0 {
+            ZkPresentationArtifactIdentity::ArtifactSet([0x77; 32])
+        } else {
+            ZkPresentationArtifactIdentity::Manifest([0x77; 32])
+        };
+        assert_eq!(stage.artifact_identity, expected);
+    }
+}

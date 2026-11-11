@@ -17,6 +17,13 @@ The lower-level
 shape; it does not authenticate any proof. Verifiers must check each proof
 stage with an injected backend and deployment issuer policy.
 
+The 0.3 API accepts `claim_bundle::ZkClaimProofBundle` and
+`ZkStatusQualifiedClaimProofBundle`. Common-root adapters expose
+`common_root::ZkCommonCredentialRootPersonaMode` and preserve each proof's
+`artifacts::ZkArtifactIdentity` construction. Wallet serialization keeps
+manifest and artifact-set digests distinct, including the artifact-set identity
+required by the issuer-status proof.
+
 X.509 Request Object resolvers return one atomic key-and-trust result. For the
 X.509 modes, that result contains a typed `Trusted`, `Rejected`, or `Indeterminate` WRPAC
 decision, a bounded leaf-first chain, the leaf public key, DNS SANs, evaluation

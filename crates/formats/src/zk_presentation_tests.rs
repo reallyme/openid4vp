@@ -80,7 +80,8 @@ fn rejects_noncanonical_stage_order_and_metadata() {
     assert_invalid_encoding(&presentation);
 
     let mut presentation = presentation_fixture();
-    presentation.stages[0].artifact_manifest_sha256 = [0_u8; 32];
+    presentation.stages[0].artifact_identity =
+        crate::ZkPresentationArtifactIdentity::Manifest([0_u8; 32]);
     assert_invalid_encoding(&presentation);
 }
 
@@ -204,7 +205,7 @@ fn presentation_fixture() -> ZkPresentation {
             stage: stage_name.to_owned(),
             version: 1,
         },
-        artifact_manifest_sha256: [41_u8; 32],
+        artifact_identity: crate::ZkPresentationArtifactIdentity::Manifest([41_u8; 32]),
         proof: vec![u8::try_from(index).expect("four stages fit in u8") + 1],
         public_inputs: vec![9_u8, 8_u8, 7_u8],
     })
@@ -223,5 +224,65 @@ fn presentation_fixture() -> ZkPresentation {
             audience_hash: [2_u8; 32],
             transaction_data_hash: None,
         },
+    }
+}
+
+#[test]
+fn artifact_identity_round_trips_both_constructions_without_equating_them() {
+    use crate::ZkPresentationArtifactIdentity;
+
+    let manifest = ZkPresentationArtifactIdentity::Manifest([41; 32]);
+    let artifact_set = ZkPresentationArtifactIdentity::ArtifactSet([41; 32]);
+    assert_ne!(manifest, artifact_set);
+    for identity in [manifest, artifact_set] {
+        let mut presentation = presentation_fixture();
+        presentation.stages[0].artifact_identity = identity;
+        let value = encode_zk_presentation_value(presentation.clone())
+            .expect("each explicit identity construction is structurally valid");
+        let parsed = parse_zk_presentation_value(&value)
+            .expect("tagged identity parses")
+            .expect("ZK marker is present");
+        assert_eq!(parsed, presentation);
+    }
+}
+
+#[test]
+fn rejects_zero_artifact_set_identity_and_legacy_json_identity() {
+    let mut presentation = presentation_fixture();
+    presentation.stages[0].artifact_identity =
+        crate::ZkPresentationArtifactIdentity::ArtifactSet([0; 32]);
+    assert_invalid_encoding(&presentation);
+
+    for retain_tagged_identity in [false, true] {
+        let mut json =
+            serde_json::to_value(presentation_fixture()).expect("test presentation serializes");
+        let stage = json["stages"][0]
+            .as_object_mut()
+            .expect("test stage is an object");
+        if !retain_tagged_identity {
+            stage.remove("artifact_identity");
+        }
+        stage.insert(
+            "artifact_manifest_sha256".to_owned(),
+            serde_json::json!(vec![41; 32]),
+        );
+        let error = parse_zk_presentation_value(&PresentationValue::Json(json))
+            .expect_err("an obsolete untagged field cannot supply or accompany an identity");
+        assert_eq!(
+            error.reason(),
+            ZkFormatErrorReason::InvalidPresentationEncoding
+        );
+    }
+}
+
+#[test]
+fn artifact_identity_debug_redacts_both_constructions() {
+    for identity in [
+        crate::ZkPresentationArtifactIdentity::Manifest([241; 32]),
+        crate::ZkPresentationArtifactIdentity::ArtifactSet([241; 32]),
+    ] {
+        let debug = format!("{identity:?}");
+        assert!(debug.contains("<redacted>"));
+        assert!(!debug.contains("241"));
     }
 }
