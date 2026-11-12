@@ -1856,9 +1856,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-credential-status"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "096d3d6524a2bca87b6ba0dfbc1ae83436f0807164c519a93e6b00faf9135003"
+checksum = "c08d5d7c9fdb08491efa70ee0109be87122d9d1b55cd5869e280dc67b6d232fe"
 dependencies = [
  "flate2",
  "reallyme-codec",
@@ -2424,9 +2424,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-mdoc"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f8f562a49201ad12ca496d3ec6cadcecb0ff91a66b5b5a81fbc22f8d80aad87"
+checksum = "c5e6f552bbafa23700c6922720fc01ccaf905e9d8f5eb269665ee9e9ee5bc8e3"
 dependencies = [
  "ciborium",
  "reallyme-codec",
@@ -2443,7 +2443,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-dc-api"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "reallyme-codec",
  "reallyme-mdoc",
@@ -2458,7 +2458,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-dcql"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "reallyme-codec",
  "serde",
@@ -2469,7 +2469,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-formats"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "reallyme-codec",
  "reallyme-crypto",
@@ -2488,7 +2488,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-proto"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "buffa",
  "serde",
@@ -2497,7 +2497,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-proto-codec"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "buffa",
  "reallyme-openid4vp-dc-api",
@@ -2516,7 +2516,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-runtime"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "buffa",
  "reallyme-codec",
@@ -2538,7 +2538,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-types"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "idna",
  "reallyme-codec",
@@ -2553,7 +2553,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-verifier"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "reallyme-codec",
  "reallyme-credential-status",
@@ -2573,7 +2573,7 @@ dependencies = [
 
 [[package]]
 name = "reallyme-openid4vp-wallet"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "reallyme-codec",
  "reallyme-openid4vp-dc-api",
@@ -2593,9 +2593,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-sd-jwt"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb607c9e3958d6d30fa53eed3370affa117ec2bc4198b183af11a83b36b4d6c0"
+checksum = "1af705fb8c3488c45cd3137625356a7e9e9c5d82321c33885bee8da5c7196420"
 dependencies = [
  "reallyme-codec",
  "reallyme-crypto",
@@ -2608,9 +2608,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-ssi-proto"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19d7bf491dfb8d9c30b2ea89640a491422e09c2d5b07f2d6ea81eb41a650a4e7"
+checksum = "9fca1cd25c7a36693df6d627ce4275b5179d06fe8bd7aad3a525db2e54bafc42"
 dependencies = [
  "buffa",
  "buffa-types",
@@ -2621,9 +2621,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-zk-api"
-version = "0.3.0"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56471d66ee49df2aed2aafa40f7936c38feaa7ccbc0e96caa8e67c77aeaadf50"
+checksum = "b8b0fbc13a802a0fb4f54d5678a352c29ccadb0eea34139de4549a95c3f8f881"
 dependencies = [
  "reallyme-crypto-core",
  "reallyme-crypto-csprng",

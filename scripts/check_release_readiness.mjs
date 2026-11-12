@@ -623,7 +623,7 @@ function checkRepositoryPolicy() {
   requireText("Cargo.toml", 'reallyme-crypto = { version = "=0.3.17", default-features = false }', "registry ReallyMe crypto dependency");
   requireText(
     "Cargo.toml",
-    'reallyme-ssi-proto = { version = "=0.6.1", default-features = false }',
+    'reallyme-ssi-proto = { version = "=0.6.2", default-features = false }',
     "registry SSI canonical proto dependency",
   );
   rejectText(
@@ -638,19 +638,19 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "Cargo.toml",
-    'reallyme-openid4vc-profiles = { version = "=0.6.1", default-features = false }',
+    'reallyme-openid4vc-profiles = { version = "=0.6.2", default-features = false }',
     "registry shared OpenID4VC profiles dependency",
   );
   requireText(
     "Cargo.toml",
-    'reallyme-credential-status = { version = "=0.6.1", default-features = false }',
+    'reallyme-credential-status = { version = "=0.6.2", default-features = false }',
     "registry SSI credential-status dependency",
   );
   rejectText("Cargo.toml", 'path = "../ssi/', "SSI sibling dependency path");
   rejectText("Cargo.toml", 'path = "../identity/', "external identity sibling dependency path");
   requireText(
     "crates/dc-api/Cargo.toml",
-    'reallyme-mdoc = { version = "=0.6.1", default-features = false }',
+    'reallyme-mdoc = { version = "=0.6.2", default-features = false }',
     "registry SSI mdoc dependency",
   );
   rejectText(
@@ -665,12 +665,12 @@ function checkRepositoryPolicy() {
   );
   requireText(
     "crates/formats/Cargo.toml",
-    'reallyme-mdoc = { version = "=0.6.1", default-features = false }',
+    'reallyme-mdoc = { version = "=0.6.2", default-features = false }',
     "formats registry SSI mdoc dependency",
   );
   requireText(
     "crates/formats/Cargo.toml",
-    'reallyme-sd-jwt = { version = "=0.6.1", default-features = false }',
+    'reallyme-sd-jwt = { version = "=0.6.2", default-features = false }',
     "formats registry SSI SD-JWT dependency",
   );
   rejectText(
@@ -694,7 +694,7 @@ function checkRepositoryPolicy() {
   ]) {
     requireText(
       manifest,
-      'reallyme-zk-api = { version = "=0.3.0", default-features = false }',
+      'reallyme-zk-api = { version = "=0.3.2", default-features = false }',
       "exact registry ZK API dependency",
     );
   }
@@ -909,7 +909,7 @@ function checkRepositoryPolicy() {
   );
   requireText(
     ".github/workflows/crates-package-preflight.yml",
-    "default: 0.3.0",
+    "default: 0.3.1",
     "package preflight version default",
   );
   requireText(

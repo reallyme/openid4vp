@@ -41,18 +41,18 @@ fields or JSON representation.
 
 The exact release order is enforced by release tooling:
 
-1. `reallyme-openid4vp-proto` 0.3.0
-2. `reallyme-openid4vp-dcql` 0.3.0
-3. `reallyme-openid4vp-types` 0.3.0
-4. `reallyme-openid4vp-dc-api` 0.3.0
-5. `reallyme-openid4vp-formats` 0.3.0
-6. `reallyme-openid4vp-wallet` 0.3.0
-7. `reallyme-openid4vp-profiles` 0.3.0
-8. `reallyme-openid4vp-verifier` 0.3.0
-9. `reallyme-openid4vp-http` 0.3.0
-10. `reallyme-openid4vp-proto-codec` 0.3.0
-11. `reallyme-openid4vp-runtime` 0.3.0
-12. `reallyme-openid4vp` 0.3.0
+1. `reallyme-openid4vp-proto` 0.3.1
+2. `reallyme-openid4vp-dcql` 0.3.1
+3. `reallyme-openid4vp-types` 0.3.1
+4. `reallyme-openid4vp-dc-api` 0.3.1
+5. `reallyme-openid4vp-formats` 0.3.1
+6. `reallyme-openid4vp-wallet` 0.3.1
+7. `reallyme-openid4vp-profiles` 0.3.1
+8. `reallyme-openid4vp-verifier` 0.3.1
+9. `reallyme-openid4vp-http` 0.3.1
+10. `reallyme-openid4vp-proto-codec` 0.3.1
+11. `reallyme-openid4vp-runtime` 0.3.1
+12. `reallyme-openid4vp` 0.3.1
 
 Adding or publishing any other crate requires a separately reviewed policy and
 release-tooling change. Cargo metadata alone cannot expand the publish set.
@@ -82,7 +82,7 @@ node scripts/check-proto-first-boundaries.mjs
 # v0.6.9: https://github.com/reallyme/release-readiness/releases/tag/v0.6.9
 npm exec --yes --package=github:reallyme/release-readiness#9cf40c7da1def8a8d809af51789284097c572dd5 -- \
   reallyme-release-readiness
-RELEASE_VERSION=0.3.0 node scripts/publish-crates-in-order.mjs inspect --allow-dirty
+RELEASE_VERSION=0.3.1 node scripts/publish-crates-in-order.mjs inspect --allow-dirty
 ```
 
 The inspector derives dependency order from Cargo metadata, constructs the
@@ -128,8 +128,8 @@ release artifacts.
 For local review only:
 
 ```sh
-RELEASE_VERSION=0.3.0 node scripts/publish-crates-in-order.mjs order
-RELEASE_VERSION=0.3.0 node scripts/publish-crates-in-order.mjs inspect --allow-dirty
+RELEASE_VERSION=0.3.1 node scripts/publish-crates-in-order.mjs order
+RELEASE_VERSION=0.3.1 node scripts/publish-crates-in-order.mjs inspect --allow-dirty
 node --test scripts/*.test.mjs
 ```
 

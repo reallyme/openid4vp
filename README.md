@@ -185,7 +185,7 @@ expiry, profile, or hash lane differs.
 
 Security-sensitive ReallyMe dependencies are exact-version pinned in the
 package manifests and verified by the release gate. The workspace resolves
-the SSI 0.6.1 crates and `reallyme-zk-api` 0.3.0 from crates.io.
+the SSI 0.6.2 crates and `reallyme-zk-api` 0.3.2 from crates.io.
 
 ## Repository structure
 

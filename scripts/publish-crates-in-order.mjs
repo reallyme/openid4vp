@@ -23,18 +23,18 @@ const CRATES_IO_ARCHIVE_VERIFY_RETRIES = "12";
 const CRATES_IO_ARCHIVE_VERIFY_RETRY_DELAY_SECONDS = "10";
 const CRATES_IO_ARCHIVE_VERIFY_MAX_SECONDS = "180";
 const APPROVED_PUBLISH_SEQUENCE = [
-  { name: "reallyme-openid4vp-proto", version: "0.3.0" },
-  { name: "reallyme-openid4vp-dcql", version: "0.3.0" },
-  { name: "reallyme-openid4vp-types", version: "0.3.0" },
-  { name: "reallyme-openid4vp-dc-api", version: "0.3.0" },
-  { name: "reallyme-openid4vp-formats", version: "0.3.0" },
-  { name: "reallyme-openid4vp-wallet", version: "0.3.0" },
-  { name: "reallyme-openid4vp-profiles", version: "0.3.0" },
-  { name: "reallyme-openid4vp-verifier", version: "0.3.0" },
-  { name: "reallyme-openid4vp-http", version: "0.3.0" },
-  { name: "reallyme-openid4vp-proto-codec", version: "0.3.0" },
-  { name: "reallyme-openid4vp-runtime", version: "0.3.0" },
-  { name: "reallyme-openid4vp", version: "0.3.0" },
+  { name: "reallyme-openid4vp-proto", version: "0.3.1" },
+  { name: "reallyme-openid4vp-dcql", version: "0.3.1" },
+  { name: "reallyme-openid4vp-types", version: "0.3.1" },
+  { name: "reallyme-openid4vp-dc-api", version: "0.3.1" },
+  { name: "reallyme-openid4vp-formats", version: "0.3.1" },
+  { name: "reallyme-openid4vp-wallet", version: "0.3.1" },
+  { name: "reallyme-openid4vp-profiles", version: "0.3.1" },
+  { name: "reallyme-openid4vp-verifier", version: "0.3.1" },
+  { name: "reallyme-openid4vp-http", version: "0.3.1" },
+  { name: "reallyme-openid4vp-proto-codec", version: "0.3.1" },
+  { name: "reallyme-openid4vp-runtime", version: "0.3.1" },
+  { name: "reallyme-openid4vp", version: "0.3.1" },
 ];
 const APPROVED_MSRV = "1.99";
 const REQUIRED_PUBLISH_ORDER_EDGES = [

@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.3.0 (unreleased)
+## 0.3.1 (unreleased)
+
+- Upgrade the registry ZK API dependency to 0.3.2.
+- Upgrade the lockstep SSI dependency cohort to 0.6.2 and refresh the main and
+  fuzz lockfiles, dependency-policy checks, and release package versions.
+
+## 0.3.0
 
 - Enforce final-spec nonce and state syntax, transaction-data query binding,
   verifier key-ID uniqueness, and complete encryption-capability validation.
